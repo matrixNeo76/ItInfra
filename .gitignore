@@ -1,0 +1,39 @@
+# ============================================================================
+# .gitignore — ItInfra Repository
+# ============================================================================
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-*
+
+# Node / Bun (se futuro modulo UI)
+node_modules/
+dist/
+build/
+*.log
+.env
+.env.local
+.env.*.local
+
+# File temporanei e backup
+*.tmp
+*.bak
+*.backup
+_legacy/
+cache/
+
+# Secret (mai committere credenziali)
+*.pem
+*.key
+secrets/
+credentials.json
+
+# File di sistema
+.directory
+.Trash-*
