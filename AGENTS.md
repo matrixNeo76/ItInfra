@@ -139,14 +139,30 @@ Il KnowledgeGraph del Vault ha 5 livelli di correlazione: il 1° livello usa `re
 - NON creare link a documenti che non esistono ancora: in quel caso, usa `[[<id>]] (da compilare)` come placeholder
 - Per ogni `related_docs`, crea una `relations` corrispondente con `targetId` uguale
 
-### 6. Validazione finale
+### 6. Strumenti di Automazione e CLI (scripts/itinfra.py)
 
-Prima di restituire il documento compilato, **completa la checklist di validazione** in fondo a ogni template:
+Il repository include lo strumento di automazione `scripts/itinfra.py`:
 
-- Tutti i flag `[ ]` devono diventare `[x]` (se la condizione è soddisfatta) o restare `[ ]` con una nota che spiega perché non lo sono.
-- Se la checklist non è completamente soddisfatta, il documento NON può passare a `status: in-review`.
+```bash
+# Inizializzare un nuovo progetto con manifesto condiviso:
+python scripts/itinfra.py init <slug> --client "<Nome Cliente>" --name "<Titolo Progetto>"
 
-### 7. Cosa NON fare
+# Controllare l'avanzamento delle 7 fasi:
+python scripts/itinfra.py status <slug>
+
+# Validare la conformità formale OKF v0.2 di un file o cartella:
+python scripts/itinfra.py validate projects/<slug>/01-RSD-URS.md
+```
+
+### 7. Validazione finale
+
+Prima di restituire il documento compilato:
+1. Esegui sempre `python scripts/itinfra.py validate <percorso_file>`
+2. **Completa la checklist di validazione** in fondo al template:
+   - Tutti i flag `[ ]` devono diventare `[x]` (se la condizione è soddisfatta) o restare `[ ]` con una nota esplicativa.
+   - Se la checklist o il linter segnalano errori, il documento NON può passare a `status: in-review`.
+
+### 8. Cosa NON fare
 
 - ❌ Non inventare requisiti, IP, seriali, MAC, versioni firmware non forniti.
 - ❌ Non cambiare la struttura del template (sezioni, tabelle, ordine) senza esplicita richiesta dell'utente.
@@ -159,30 +175,27 @@ Prima di restituire il documento compilato, **completa la checklist di validazio
 
 ---
 
-## Workflow di compilazione consigliato
+## Workflow di compilazione guidato (Step-by-Step)
 
 ```
-1. Ricevi il prompt dell'utente (esempi in examples/)
+1. Carica / Inizializza progetto (`python scripts/itinfra.py init <slug>`)
    ↓
-2. Identifica il template da compilare (NN-TIPO.md)
+2. Leggi il manifesto di progetto (`projects/<slug>/project-manifest.yaml`)
    ↓
-3. Leggi il blocco AI-INSTRUCTIONS nel template
+3. Identifica il template (NN-TIPO.md) e verifica `depends_on`
    ↓
-4. Identifica depends_on nel frontmatter
+4. CONDUCI L'INTERVISTA GUIDATA A BLOCCHI TEMATICI (non chiedere tutto insieme):
+   - Blocco 1: Scope, Stakeholder e SLA
+   - Blocco 2: Topologia, Rete e Indirizzamento IP
+   - Blocco 3: Compute, Storage e Virtualizzazione
+   - Blocco 4: Sicurezza, Matrice Accessi e Compliance
+   - Blocco 5: Piano di Rollback, ATP e Operations
    ↓
-5. Leggi i documenti depends_on dal vault (se esistono già)
+5. Compila il template inserendo diagrammi Mermaid per topologie e rack
    ↓
-6. Compila il frontmatter YAML (id, project_id, status, related_docs, ...)
+6. Esegui validazione formale (`python scripts/itinfra.py validate <file>`)
    ↓
-7. Compila tutte le sezioni del body
-   ↓
-8. Sostituisci TUTTI i placeholder <...>
-   ↓
-9. Verifica la checklist di validazione
-   ↓
-10. Restituisci il documento completo all'utente
-    ↓
-11. Suggerisci all'utente dove salvarlo e quale id usare
+7. Salva in `projects/<slug>/<NN-TIPO>.md` e aggiorna `status <slug>`
 ```
 
 ---

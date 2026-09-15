@@ -218,7 +218,7 @@ Le contribuzioni sono benvenute! Apri una issue o una PR se:
 1. Mantieni lo schema OKF v0.2 nativo nel frontmatter
 2. Aggiorna la checklist di validazione in fondo a ogni template
 3. Verifica la coerenza `relations` vs `related_docs`
-4. Testa con il parser: `python3 scripts/validate_okf_templates.py`
+4. Testa con il linter: `python scripts/itinfra.py validate templates/`
 
 ---
 

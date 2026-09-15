@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ITInfraProjectManifest",
+  "description": "Schema di validazione per il manifesto di progetto di infrastrutture IT in standard OKF v0.2",
+  "type": "object",
+  "required": [
+    "project_id",
+    "project_name",
+    "customer",
+    "lead_architect",
+    "status",
+    "version",
+    "sites",
+    "network_baseline"
+  ],
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "project_name": {
+      "type": "string"
+    },
+    "customer": {
+      "type": "string"
+    },
+    "lead_architect": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "in-planning", "in-execution", "completed", "archived"]
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "sites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "name", "role", "location"],
+        "properties": {
+          "code": { "type": "string" },
+          "name": { "type": "string" },
+          "role": { "type": "string", "enum": ["Primary DC", "Secondary DC", "Branch", "DR Site", "Cloud Region"] },
+          "location": { "type": "string" }
+        }
+      }
+    },
+    "network_baseline": {
+      "type": "object",
+      "required": ["supernet_ipv4", "bgp_asn_internal"],
+      "properties": {
+        "supernet_ipv4": { "type": "string" },
+        "supernet_ipv6": { "type": "string" },
+        "bgp_asn_internal": { "type": "integer" },
+        "dns_servers": { "type": "array", "items": { "type": "string" } },
+        "ntp_servers": { "type": "array", "items": { "type": "string" } },
+        "vault_secret_prefix": { "type": "string" }
+      }
+    },
+    "sla_baseline": {
+      "type": "object",
+      "properties": {
+        "tier1_rto": { "type": "string" },
+        "tier1_rpo": { "type": "string" },
+        "change_window": { "type": "string" }
+      }
+    },
+    "documents": {
+      "type": "object",
+      "description": "Stato di compilazione dei 9 documenti del ciclo IT",
+      "properties": {
+        "01-RSD-URS": { "type": "string", "enum": ["missing", "draft", "in-review", "approved"] },
+        "02-HLD": { "type": "string", "enum": ["missing", "draft", "in-review", "approved"] },
+        "03-LLD": { "type": "string", "enum": ["missing", "draft", "in-review", "approved"] },
+        "04-MOP": { "type": "string", "enum": ["missing", "draft", "in-review", "approved"] },
+        "05-Rollback": { "type": "string", "enum": ["missing", "draft", "in-review", "approved"] },
+        "06-As-Built": { "type": "string", "enum": ["missing", "draft", "in-review", "approved"] },
+        "07-ATP": { "type": "string", "enum": ["missing", "draft", "in-review", "approved"] },
+        "08-SOP-Runbook": { "type": "string", "enum": ["missing", "draft", "in-review", "approved"] },
+        "09-Handover-Inventory": { "type": "string", "enum": ["missing", "draft", "in-review", "approved"] }
+      }
+    }
+  }
+}

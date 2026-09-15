@@ -1,0 +1,63 @@
+# ITInfra Project Manifest
+# Questo file definisce i parametri globali condivisi per tutti i 9 documenti del ciclo IT.
+# L'agente AI attinge a questo manifesto per ereditare automaticamente i valori nei template.
+
+project_id: "demo-acme"
+project_name: "Modernizzazione Rete Datacenter"
+customer: "Acme Corporation"
+lead_architect: "Mario Rossi"
+owner_team: "Network & Infrastructure Engineering"
+status: "in-planning" # draft | in-planning | in-execution | completed | archived
+version: "0.1.0"
+created_at: "2026-09-15"
+updated_at: "2026-09-15"
+
+# Siti e Data Center coinvolti
+sites:
+  - code: "DC-MIL-01"
+    name: "Primary Data Center Milano Caldera"
+    role: "Primary DC"
+    location: "Via Caldera 21, Milano"
+  - code: "DC-ROM-02"
+    name: "Disaster Recovery Data Center Roma"
+    role: "DR Site"
+    location: "Via Tiburtina 1020, Roma"
+  - code: "HQ-MIL"
+    name: "Headquarters Acme Milano"
+    role: "Branch"
+    location: "Corso Buenos Aires 45, Milano"
+
+# Baseline di rete condivisa (ereditata in HLD, LLD, MOP, As-Built)
+network_baseline:
+  supernet_ipv4: "10.100.0.0/16"
+  supernet_ipv6: "2001:db8:100::/48"
+  bgp_asn_internal: 65100
+  bgp_asn_external_primary: 65200
+  dns_servers:
+    - "10.100.10.11"
+    - "10.100.10.12"
+  ntp_servers:
+    - "10.100.10.21"
+    - "10.100.10.22"
+  syslog_server: "10.100.20.50"
+  vault_secret_prefix: "vault://it/projects/acme-milano-dc"
+
+# Requisiti di SLA e Operativi
+sla_baseline:
+  tier1_rto: "15 minuti"
+  tier1_rpo: "0 minuti (RPO zero sincrono)"
+  tier2_rto: "4 ore"
+  tier2_rpo: "1 ora"
+  change_window: "Sabato 22:00 - Domenica 06:00 CET"
+
+# Matrice di avanzamento del ciclo lavorativo a 7 fasi
+documents:
+  01-RSD-URS: "missing"          # missing | draft | in-review | approved
+  02-HLD: "missing"
+  03-LLD: "missing"
+  04-MOP: "missing"
+  05-Rollback: "missing"
+  06-As-Built: "missing"
+  07-ATP: "missing"
+  08-SOP-Runbook: "missing"
+  09-Handover-Inventory: "missing"

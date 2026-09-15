@@ -60,6 +60,13 @@ Se l'utente chiede di "aggiornare" un documento esistente:
 3. Aggiorna `updated_at`
 4. Se la nuova versione sostituisce completamente la precedente: popola `supersedes` con l'id della vecchia versione, e segnala all'utente di aggiornare la vecchia con `status: superseded` e `superseded_by`
 
+### Uso della CLI (scripts/itinfra.py)
+
+Claude Code dispone dell'esecuzione di comandi da terminale (`Bash`). Usala attivamente per:
+- Inizializzare un progetto: `python scripts/itinfra.py init <slug> --client "<Cliente>"`
+- Verificare lo stato di avanzamento delle 7 fasi: `python scripts/itinfra.py status <slug>`
+- Validare il documento Markdown compilato prima di restituirlo: `python scripts/itinfra.py validate projects/<slug>/<NN-TIPO>.md`
+
 ### Anti-pattern da evitare
 
 - ❌ Non usare `Complete` tool: non stai sviluppando un'app web, stai compilando documentazione

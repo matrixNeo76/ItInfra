@@ -37,3 +37,11 @@ credentials.json
 # File di sistema
 .directory
 .Trash-*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
