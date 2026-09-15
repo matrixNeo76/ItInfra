@@ -25,11 +25,27 @@
 ```
 ItInfra/
 ├── README.md                          ← Questo file (orientamento GitHub)
-├── AGENTS.md                          ← Istruzioni auto-caricate da Cursor/Aider/Continue/Cline/Roo Code
+├── ROADMAP.md                         ← Roadmap strategica del repository (OKF v0.2)
+├── AGENTS.md                          ← Istruzioni per agenti AI (Cursor, Aider, Cline, Roo Code)
 ├── CLAUDE.md                          ← Istruzioni auto-caricate da Claude Code (CLI Anthropic)
 ├── INTEGRAZIONE-REPO.md               ← Guida master in formato OKF v0.2: come integrare tutto nel Knowledge Vault
 ├── LICENSE                            ← MIT License
 ├── .gitignore
+│
+├── docs/                              ← Documentazione architetturale interna (OKF v0.2)
+│   ├── 01-SPEC-ITINFRA-ASSISTANT.md   ← Specifica tecnica suite agentica e CLI
+│   └── 02-ROADMAP-PIANO-SVILUPPO.md   ← Piano di sviluppo esecutivo e milestone
+│
+├── projects/                          ← Registro progetti e manifest globali
+│   ├── _schema/                       ← Schema JSON formale del manifest
+│   ├── _template/                     ← Template di project-manifest.yaml
+│   └── demo-acme/                     ← Progetto demo collaudato (Acme Corporation)
+│
+├── scripts/                           ← Toolchain CLI e automazione
+│   └── itinfra.py                     ← CLI: init progetti, linter OKF v0.2, status avanzamento
+│
+├── skills/                            ← Skill agentiche per compilazione guidata
+│   └── itinfra-assistant/SKILL.md     ← Procedura guidata a turni (intervista a blocchi)
 │
 ├── templates/                         ← 10 template documentali OKF v0.2 + 3 file orientamento
 │   ├── 00-INDEX.md                    ← Indice navigazionale con link graph Mermaid
@@ -85,20 +101,30 @@ ItInfra/
 
 ## 🚀 Quick Start
 
-### 1. Usare i template documentali (Livello 1)
+### 1. Gestione Progetti e Validazione con la CLI ITInfra (Consigliato)
 
-Per usare solo i 10 template con un agente AI (Claude, Cursor, ecc.):
+Il repository include la CLI standalone `scripts/itinfra.py` per automatizzare il ciclo documentale:
 
 ```bash
-git clone https://github.com/matrixNeo76/ItInfra.git
-cd ItInfra
-cat templates/00-INDEX.md  # mappa delle 7 fasi e dei 9 tipi documentali
-cat examples/01-prompt-RSD-URS.md  # prompt di esempio da personalizzare
+# Mostra tutti i template e le 7 fasi:
+python scripts/itinfra.py list-templates
+
+# Inizializza un nuovo progetto con manifesto condiviso:
+python scripts/itinfra.py init acme-dc --client "Acme S.p.A." --name "Modernizzazione Data Center"
+
+# Verifica lo stato di avanzamento dei 9 documenti:
+python scripts/itinfra.py status acme-dc
+
+# Valida formalmente la conformità OKF v0.2 di un file o dell'intero progetto:
+python scripts/itinfra.py validate projects/acme-dc/01-RSD-URS.md
 ```
 
-Apri la chat del tuo agente AI e incolla il prompt personalizzato. L'agente leggerà `AGENTS.md` (o `CLAUDE.md` se usi Claude Code) automaticamente e compilerà il template rispettando lo standard OKF v0.2.
+### 2. Compilazione Interattiva con Agenti AI
 
-### 2. Integrare nel Knowledge Vault (Livello 2 + 3)
+- **Google Antigravity**: Dispone della skill nativa `.agents/skills/itinfra-assistant/` che avvia un'**intervista guidata per blocchi logici** (Scope & SLA → Rete & IP → Compute & Storage → Sicurezza → Collaudo) prima di compilare e validare il documento.
+- **Claude Code / Cursor / Cline**: Leggono automaticamente `CLAUDE.md` o `AGENTS.md` e possono eseguire i comandi `scripts/itinfra.py` dal terminale integrato.
+
+### 3. Integrare nel Knowledge Vault (Livello 2 + 3)
 
 Per integrare il modulo completo nel tuo Knowledge Vault:
 
@@ -152,9 +178,10 @@ Vedi [`templates/00-INDEX.md`](./templates/00-INDEX.md) per dettagli completi.
 
 I file `AGENTS.md` e `CLAUDE.md` vengono letti automaticamente da:
 
-| Agente | File letto |
-|--------|-----------|
-| **Claude Code** (Anthropic CLI) | `CLAUDE.md` |
+| Agente | File letto / Modalità |
+|--------|----------------------|
+| **Google Antigravity** | `.agents/skills/itinfra-assistant/` (Skill nativa per intervista guidata a turni) |
+| **Claude Code** (Anthropic CLI) | `CLAUDE.md` + comandi terminale `scripts/itinfra.py` |
 | **Cursor** | `AGENTS.md` |
 | **Aider** | `AGENTS.md` |
 | **Continue** | `AGENTS.md` |
@@ -187,19 +214,22 @@ graph TD
 
 ## 🛣️ Roadmap
 
-### ✅ Completato
-- [x] **Livello 1**: 10 template OKF v0.2 nativi
-- [x] **Livello 2**: Estensione parser con 9 alias IT + 9 boilerplate
-- [x] **Livello 3**: Modulo UI completo + API AI compiler (Gemini)
-- [x] **Documentazione**: guide migrazione, PR descriptions, file integrazione repo
+> Per la visione strategica dettagliata e la pianificazione delle prossime release (v0.3, v0.4, v1.0), consulta il documento ufficiale [`ROADMAP.md`](./ROADMAP.md).
 
-### 🔮 Candidati per Livello 4 (futuro)
-- [ ] Colori D3 dedicati per i 9 tipi IT (patch a `KnowledgeGraph.tsx`)
-- [ ] Export Excel/CSV degli asset inventariati
-- [ ] Modifica inline dei metadati IT (estensione di `useVaultMutations.ts`)
-- [ ] Integrazione con calendar per scadenze contratti
-- [ ] Tool MCP per agenti AI esterni (estensione di `mcpRoutes.ts`)
-- [ ] Auto-salvataggio diretto dei documenti compilati nel vault
+### ✅ Completato (v0.2)
+- [x] **Livello 1**: 10 template OKF v0.2 nativi per le 7 fasi IT
+- [x] **Livello 2**: Estensione parser Knowledge Vault con 9 alias IT + 9 boilerplate
+- [x] **Livello 3**: Modulo UI completo + API AI compiler (Gemini) per Knowledge Vault
+- [x] **Automation CLI (`scripts/itinfra.py`)**: Linter OKF v0.2, init progetti, status avanzamento
+- [x] **Project Registry (`projects/`)**: Manifesto globale condiviso per parametri di rete e SLA
+- [x] **Antigravity Custom Skill**: Procedura a turni per intervista guidata per blocchi logici
+
+### 🔮 Prossimi Traguardi (v0.3+)
+- [ ] Checklist e requisiti di conformità integrati (NIS2, ISO 27001, DORA)
+- [ ] Generazione automatica di diagrammi topologici Spine-Leaf e rack layout in Mermaid
+- [ ] Export tabelle VLAN e IP per import bulk in NetBox / IPAM
+- [ ] GitHub Actions per validazione automatica PR
+- [ ] Wrapper MCP per integrazione con Claude Desktop
 
 ---
 
