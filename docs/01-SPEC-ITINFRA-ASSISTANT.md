@@ -121,9 +121,35 @@ Script Python standalone che fornisce:
   - Conteggio e segnalazione di placeholder orfani (`<DA-RICHIEDERE>`, `<...>`).
 - `python scripts/itinfra.py status <slug>`: visualizza la matrice di avanzamento del ciclo a 7 fasi.
 - `python scripts/itinfra.py list-templates`: catalogo dei template con fasi e dipendenze.
+- `python scripts/itinfra.py audit-consistency <slug>`: linter semantico anti-allucinazione che valida la coerenza incrociata di subnet, IP, hostname, ruoli AD e contratti tra tutti i 9 documenti e il manifesto.
+- `python scripts/itinfra.py vault [init|set|get|list|audit] <slug>`: gestione crittografica locale dei secret (AES-256-GCM) concurrency-safe con file locking.
+- `python scripts/itinfra.py worktree [add|sync|status|cleanup]`: gestione orchestrata di Git Worktrees per agenti AI paralleli.
+- `python scripts/itinfra.py export-configs <slug> --out <dir>`: estrazione automatica degli script operativi RouterOS e PowerShell dai documenti tecnici.
 
-### 2.3 Antigravity Native Skill (`skills/itinfra-assistant/SKILL.md`)
-Istruisce Antigravity a:
-- Condurre interviste a blocchi prima di compilare un template.
-- Estrarre e inserire automaticamente le variabili dal `project-manifest.yaml`.
-- Eseguire il linter `itinfra.py validate` prima di restituire il documento all'utente.
+### 2.3 Local Encrypted Secret Vault (`scripts/itinfra_vault.py`)
+- Cifratura simmetrica autenticata **AES-256-GCM** / PBKDF2-HMAC-SHA256 (100.000 iterazioni con salt casuale a 16 byte).
+- Storage centralizzato in `projects/<slug>/.vault.enc`, rigorosamente escluso da git (`.gitignore`).
+- Meccanismo di **File Locking atomico** (`.vault.lock`) per consentire accessi sicuri e privi di race condition da worktree paralleli.
+- Sintassi nei documenti Markdown conforme allo standard `vault://it/projects/<slug>/<path/to/secret>`.
+- Funzione di `audit` per rilevare riferimenti a secret inesistenti o chiavi non utilizzate.
+
+### 2.4 Multi-Agent Worktree Orchestration Pattern
+Per consentire a più agenti AI (Antigravity, Cursor, Claude Code, Cline) di lavorare in parallelo senza conflitti:
+- Ogni subagente opera in un **Git Worktree** isolato su un branch feature dedicato:
+  - `infra-architect`: branch `feat/architecture` (HLD, LLD, topologie Mermaid)
+  - `infra-security`: branch `feat/security-vault` (Vault, audit credenziali, compliance NIS2/ISO 27001)
+  - `infra-automation`: branch `feat/ops-mop` (MOP, script RouterOS, PowerShell Hyper-V, Runbook)
+  - `infra-qa`: branch `feat/testing-atp` (Casi di test ATP, verifica consistenza e reportistica)
+- Condivisione sicura del Vault e del Manifest tramite risoluzione della root repository (`git rev-parse --show-toplevel`).
+- Sincronizzazione atomica tramite merge non distruttivo o pull request review.
+
+### 2.5 Strict Grounding & Motore Anti-Allucinazione
+- **Regola Tassativa Zero-Hallucination:** L'AI ha il divieto assoluto di inventare parametri tecnici (IP, MAC, seriali, versioni firmware, password o date).
+- **Fallback Standardizzato:** Qualsiasi informazione non fornita esplicitamente dall'utente o non presente nel `project-manifest.yaml` deve essere registrata come `<DA-RICHIEDERE>` e inclusa nella tabella "Open Issues".
+- **Cross-Document Consistency Audit:** Verifica automatica che nessun documento contenga parametri contraddittori rispetto al resto dell'infrastruttura.
+
+### 2.6 Multi-Framework Skills (`.agents/skills/`)
+Struttura standard compatibile con tutti i moderni agenti:
+- `.agents/skills/itinfra-assistant/SKILL.md`: wizard interattivo per la stesura dei 9 documenti tecnici.
+- `.agents/skills/itinfra-vault/SKILL.md`: procedure operative per l'interazione con il vault cifrato e la gestione dei secret.
+

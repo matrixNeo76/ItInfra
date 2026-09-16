@@ -67,36 +67,35 @@ gantt
     dateFormat  YYYY-MM-DD
     section Fase 1: Project Registry
     Schema & Template Manifest         :done, p1, 2026-09-16, 1d
-    section Fase 2: CLI & Linter
-    Sviluppo scripts/itinfra.py        :active, p2, 2026-09-16, 1d
-    Test di validazione su templates/  :p3, 2026-09-16, 1d
-    section Fase 3: Antigravity Skill
-    Creazione Skill e Schede Wizard    :p4, 2026-09-17, 1d
-    Aggiornamento AGENTS.md & CLAUDE.md:p5, 2026-09-17, 1d
-    section Fase 4: Collaudo E2E
-    Test Progetto Demo Acme            :p6, 2026-09-17, 1d
+    section Fase 2: CLI, Linter & Validazione
+    Sviluppo scripts/itinfra.py        :done, p2, 2026-09-16, 1d
+    Test di validazione su templates/  :done, p3, 2026-09-16, 1d
+    section Fase 3: Visual & Pilota
+    Mermaid Diagram & IPAM Export      :done, p4, 2026-09-16, 1d
+    Progetto Pilota Severino (9 docs)  :done, p5, 2026-09-16, 1d
+    Export Dashboard HTML Consolidata  :done, p6, 2026-09-16, 1d
+    section Fase 4: v0.4 Enterprise
+    Local Encrypted Vault AES-256-GCM  :active, p7, 2026-09-16, 1d
+    Multi-Agent Git Worktree Engine    :active, p8, 2026-09-16, 1d
+    Anti-Hallucination Consistency Linter:active, p9, 2026-09-16, 1d
+    Multi-Framework Skills (.agents/)  :active, p10, 2026-09-16, 1d
 ```
 
 ---
 
-## 2. Dettaglio Deliverable
+## 2. Dettaglio Deliverable per Release
 
-### Step 1: Base Progetti & Manifest (`projects/`)
-- `projects/_schema/project-manifest.schema.json`
-- `projects/_template/project-manifest.yaml`
-- `.gitignore` aggiornato
+### Release v0.2 / v0.3 (Completati)
+- Schema JSON e template per `project-manifest.yaml`.
+- CLI Python `scripts/itinfra.py` (comandi `init`, `validate`, `status`, `list-templates`, `generate-diagram`, `export-ipam`, `export-html`).
+- Integrazione framework di compliance (NIS2, ISO 27001, DORA).
+- Completamento al 100% di tutte le 7 fasi del progetto reale Severino Srl (9 documenti OKF v0.2 convalidati).
+- Generatore di reportistica HTML offline con diagrammi vettoriali Mermaid.js.
 
-### Step 2: CLI Python & Validatore OKF v0.2 (`scripts/itinfra.py`)
-- Sviluppo della CLI Python standalone (senza dipendenze pesanti obbligatorie)
-- Comandi: `init`, `validate`, `status`, `list-templates`
-- Verifica su tutti i file in `templates/`
+### Release v0.4 — Security, Multi-Agent & Zero-Hallucination (In Corso)
+- **Local Encrypted Vault:** modulo `scripts/itinfra_vault.py` (AES-256-GCM, PBKDF2-HMAC-SHA256, lock atomico `.vault.lock`) e comandi CLI `vault`.
+- **Git Worktree Orchestration:** comando CLI `itinfra.py worktree` per orchestrare agenti paralleli su branch isolati (`feat/architecture`, `feat/security-vault`, `feat/ops-mop`, `feat/testing-atp`).
+- **Motore Anti-Allucinazione:** comando CLI `itinfra.py audit-consistency` e linter con regole di Strict Grounding (fallback obbligatorio a `<DA-RICHIEDERE>`).
+- **Multi-Framework Skills:** cartella standard `.agents/skills/` con `itinfra-assistant` e `itinfra-vault`, allineate a `AGENTS.md` e `CLAUDE.md`.
+- **Esportazione Script Operativi:** comando `export-configs` per estrarre script RouterOS `.rsc` e PowerShell `.ps1`.
 
-### Step 3: Antigravity Skill & Istruzioni Agenti
-- `skills/itinfra-assistant/SKILL.md` (e registrazione in `.gemini/antigravity/skills/itinfra-assistant/SKILL.md`)
-- Schede guida per intervista a blocchi logici (Networking, Compute, Storage, Security, ATP, Runbook)
-- Aggiornamento di `AGENTS.md` e `CLAUDE.md` con riferimenti alla CLI `scripts/itinfra.py`
-
-### Step 4: Collaudo E2E
-- Creazione progetto di test demo tramite CLI
-- Compilazione assistita e validazione automatica
-- Verifica di conformità e assenza errori

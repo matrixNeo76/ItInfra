@@ -127,23 +127,44 @@ timeline
 
 ---
 
-### ✅ Release v0.3 — Compliance, Visualizzazioni, IPAM Export & CI/CD (Completato)
+### ✅ Release v0.3 — Compliance, Visualizzazioni, IPAM Export, CI/CD & Pilota 100% (Completato)
 - [x] **Integrazione Framework di Compliance:**
   - Estensione di `01-RSD-URS.md` e `02-HLD.md` con checklist specifiche per **NIS2** (gestione rischi e early warning), **ISO 27001:2022** (domini A.5-A.8) e **DORA** (resilienza digitale e test TLPT).
 - [x] **Generatore Automatico Topologie Mermaid:**
-  - Comando CLI `python scripts/itinfra.py generate-diagram <file> --type [topology|rack|all]` per estrarre la tabella delle connessioni inter-switch e generare il diagramma topologico Mermaid Spine-Leaf e il rack elevation 42U.
+  - Comando CLI `python scripts/itinfra.py generate-diagram <file> --type [topology|rack|all]` per estrarre la tabella delle connessioni inter-switch e generare diagramma topologico Spine-Leaf e rack elevation.
 - [x] **Esportazione Matrici IPAM verso NetBox / CSV / JSON:**
-  - Comando CLI `python scripts/itinfra.py export-ipam <file> --format [csv|json] --out <dir>` per estrarre VLAN, Subnet e IP host da `03-LLD.md` ed esportarle per l'import bulk in NetBox.
+  - Comando CLI `python scripts/itinfra.py export-ipam <file> --format [csv|json] --out <dir>` per estrarre VLAN, Subnet e IP host per l'import bulk.
 - [x] **GitHub Actions per Validazione Continua:**
-  - Workflow `.github/workflows/validate.yml` che esegue su ogni push e PR la validazione completa dei template, la documentazione e i test di export e diagrammi.
+  - Workflow `.github/workflows/validate.yml` con validazione continua ad ogni push e PR.
+- [x] **Progetto Reale Pilota Severino Srl (100% delle 7 Fasi):**
+  - Redazione, collaudo e validazione formale di tutti i 9 documenti tecnici (`01-RSD` fino a `09-Handover`).
+- [x] **Generatore di Report HTML Consolidato Interattivo:**
+  - Comando CLI `python scripts/itinfra.py export-html <slug>` con dashboard moderna, KPI, rendering vettoriale Mermaid.js e tab navigabili offline.
 
 ---
 
-### 🚀 Release v0.4 — Framework Agentici Esterni & Automation (Prossimo Traguardo)
-- [ ] **Server MCP (Model Context Protocol) Standalone:**
-  - Wrapper FastMCP o Node.js che espone i tool di `itinfra.py` per Claude Desktop senza shell diretta.
-- [ ] **Generatore di Script di Esecuzione Operativa:**
-  - Estrazione dei comandi di staging e collaudo da `04-MOP.md` e `07-ATP.md` in playbook Ansible o script PowerShell/Bash pronti per l'esecuzione in staging.
+### 🚀 Release v0.4 — Security Vault, Multi-Agent Git Worktree & Anti-Hallucination (In Corso)
+- [ ] **Local Encrypted Secret Vault (AES-256-GCM) Concurrency-Safe:**
+  - Gestione crittografica locale con CLI `scripts/itinfra.py vault [init|set|get|list|audit]`.
+  - Storage centralizzato del file `.vault.enc` condiviso tra tutti i worktree con meccanismo di **file locking atomico** (`.vault.lock`).
+  - Cifratura sicura con master passphrase o keyfile (PBKDF2-HMAC-SHA256, 100k iterazioni, AES-256-GCM).
+  - Validazione e audit automatico di tutti i riferimenti `vault://...` presenti nei documenti Markdown.
+- [ ] **Orchestrazione Multi-Agente Parallela con Git Worktree:**
+  - CLI `scripts/itinfra.py worktree [add|sync|status|cleanup]` per consentire a più agenti AI di operare simultaneamente su rami dedicati in directory isolate:
+    - `infra-architect`: HLD, LLD, topologie e routing.
+    - `infra-security`: Vault, audit chiavi e compliance (NIS2/ISO 27001/DORA).
+    - `infra-automation`: MOP, configurazioni RouterOS, script PowerShell Hyper-V e Runbook.
+    - `infra-qa`: Casi di test ATP, verifica consistenza e reportistica.
+  - Sincronizzazione automatica tramite workspace sharing e merge assistito privo di conflitti.
+- [ ] **Anti-Hallucination & Cross-Document Consistency Engine:**
+  - Linter semantico avanzato con **Strict Grounding**: blocco immediato se l'AI inventa IP, VLAN, MAC, seriali o requisiti.
+  - In assenza di dati forniti dall'operatore o dal file di config, l'unico valore ammesso è tassativamente `<DA-RICHIEDERE>`.
+  - Verifica automatica di coerenza incrociata tra `project-manifest.yaml` e tutti i 9 documenti tecnici.
+- [ ] **Multi-Framework Agent Skills (.agents/skills, Antigravity, Claude Code, Cursor, Cline, Aider):**
+  - Standardizzazione universale delle skill in `.agents/skills/itinfra-assistant/` e `.agents/skills/itinfra-vault/`.
+  - Istruzioni operative e guardrail vincolanti allineati in `AGENTS.md` e `CLAUDE.md`.
+- [ ] **Generatore di Configuration Playbooks Eseguibili:**
+  - Comando `python scripts/itinfra.py export-configs <slug> --out <dir>` per esportare script RouterOS e PowerShell convalidati.
 
 ---
 
@@ -161,5 +182,5 @@ timeline
 
 Tutti i contributi al repository devono rispettare i seguenti principi:
 1. **Nessuna regressione sullo standard OKF v0.2:** Ogni modifica ai template o alla documentazione deve superare `python scripts/itinfra.py validate`.
-2. **Idempotenza e sicurezza:** Nessun dato sensibile o credenziale deve essere inserito nei template o negli esempi.
-3. **Approccio guidato:** Qualsiasi nuova funzionalità deve prioritizzare l'esperienza dell'ingegnere guidato passo-passo dall'AI.
+2. **Idempotenza e sicurezza:** Nessun dato sensibile o credenziale deve essere inserito nei template o negli esempi; utilizzare sempre il vault cifrato.
+3. **Approccio guidato e Zero-Hallucination:** L'AI non deve mai inventare requisiti, IP, seriali o configurazioni; in assenza di dati certi, utilizzare `<DA-RICHIEDERE>` e segnalare la voce tra le Open Issues.
