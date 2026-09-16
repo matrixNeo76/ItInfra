@@ -21,6 +21,8 @@ sites:
 # Baseline di rete condivisa (ereditata in HLD, LLD, MOP, As-Built)
 network_baseline:
   supernet_ipv4: "192.168.120.0/24"
+  zerotier_subnet_ipv4: "10.147.0.0/16"
+  wan_modem_subnet_ipv4: "192.168.1.0/24"
   active_directory_domain: "severino"
   dc_ip: "192.168.120.239"
   core_switch_model: "MikroTik CRS326-24G-2S+RM"

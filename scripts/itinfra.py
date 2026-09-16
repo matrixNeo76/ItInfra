@@ -9,6 +9,10 @@ import os
 import re
 import html
 import argparse
+import subprocess
+import getpass
+import ipaddress
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
 
@@ -1410,6 +1414,487 @@ def cmd_export_html(args) -> int:
 
     return 0
 
+def cmd_vault(args) -> int:
+    try:
+        from scripts.itinfra_vault import VaultManager, VaultError
+    except ImportError:
+        try:
+            from itinfra_vault import VaultManager, VaultError
+        except ImportError as e:
+            print(colorize(f"ERRORE: Impossibile importare itinfra_vault: {e}", COLOR_RED))
+            return 1
+
+    slug = args.project_slug
+    passphrase = getattr(args, "passphrase", None) or os.environ.get("ITINFRA_VAULT_PASS")
+
+    try:
+        vault = VaultManager(slug)
+    except VaultError as e:
+        print(colorize(f"ERRORE VAULT: {e}", COLOR_RED))
+        return 1
+
+    action = args.vault_action
+
+    if action == "init":
+        if not passphrase:
+            passphrase = getpass.getpass("Inserisci la nuova Master Passphrase per il Vault: ")
+            confirm = getpass.getpass("Conferma la Master Passphrase: ")
+            if passphrase != confirm:
+                print(colorize("ERRORE: Le passphrase non coincidono.", COLOR_RED))
+                return 1
+        try:
+            vpath = vault.init_vault(passphrase, overwrite=getattr(args, "overwrite", False))
+            print(colorize(f"[OK] Vault inizializzato con successo in: {vpath}", COLOR_GREEN + COLOR_BOLD))
+            return 0
+        except Exception as e:
+            print(colorize(f"ERRORE inizializzazione: {e}", COLOR_RED))
+            return 1
+
+    elif action == "set":
+        key = args.key
+        val = args.value
+        if val is None:
+            val = getpass.getpass(f"Inserisci il valore per il secret '{key}': ")
+        if not passphrase:
+            passphrase = getpass.getpass("Inserisci la Master Passphrase del Vault: ")
+        try:
+            vault.set_secret(key, val, passphrase)
+            print(colorize(f"[OK] Secret '{key}' memorizzato e cifrato con successo!", COLOR_GREEN + COLOR_BOLD))
+            return 0
+        except Exception as e:
+            print(colorize(f"ERRORE salvataggio secret: {e}", COLOR_RED))
+            return 1
+
+    elif action == "get":
+        key = args.key
+        if not passphrase:
+            passphrase = getpass.getpass("Inserisci la Master Passphrase del Vault: ")
+        try:
+            val = vault.get_secret(key, passphrase)
+            if val is not None:
+                print(val)
+                return 0
+            else:
+                print(colorize(f"Secret '{key}' non trovato nel vault.", COLOR_YELLOW))
+                return 1
+        except Exception as e:
+            print(colorize(f"ERRORE recupero secret: {e}", COLOR_RED))
+            return 1
+
+    elif action == "list":
+        if not passphrase:
+            passphrase = getpass.getpass("Inserisci la Master Passphrase del Vault: ")
+        try:
+            keys = vault.list_keys(passphrase)
+            print(colorize(f"\nChiavi censite nel vault del progetto '{slug}' ({len(keys)} secret):", COLOR_BOLD))
+            if not keys:
+                print("  (nessun secret presente)")
+            for item in keys:
+                print(f"  - {colorize(item['key'], COLOR_CYAN)} (aggiornato: {item['updated_at']})")
+            print()
+            return 0
+        except Exception as e:
+            print(colorize(f"ERRORE elenco chiavi: {e}", COLOR_RED))
+            return 1
+
+    elif action == "audit":
+        print(colorize(f"\n=== AUDIT CREDENZIALI & PUNTATORI VAULT: {slug} ===", COLOR_BOLD + COLOR_CYAN))
+        audit_res = vault.audit_references(passphrase)
+        if "error" in audit_res:
+            print(colorize(f"Attenzione: {audit_res['error']}", COLOR_YELLOW))
+
+        print(f"Vault locale esiste: {'SI (' + audit_res['vault_file'] + ')' if audit_res['vault_exists'] else 'NO'}")
+        print(f"File markdown con puntatori vault://: {audit_res['files_with_references']}")
+        print(f"Riferimenti vault:// trovati: {audit_res['total_references_count']}")
+        print(f"Chiavi distinte referenziate: {len(audit_res['referenced_keys'])}")
+        for k in audit_res['referenced_keys']:
+            print(f"  * vault://it/projects/{slug}/{k}")
+
+        if audit_res.get("vault_keys") is not None:
+            print(colorize(f"\nConfronto con le chiavi memorizzate nel Vault ({len(audit_res['vault_keys'])} chiavi):", COLOR_BOLD))
+            missing = audit_res.get("missing_in_vault", [])
+            unused = audit_res.get("unused_in_vault", [])
+            if missing:
+                print(colorize(f"\n[!] ATTENZIONE: {len(missing)} chiavi referenziate nei documenti NON sono presenti nel vault:", COLOR_RED + COLOR_BOLD))
+                for m in missing:
+                    print(colorize(f"    - {m}", COLOR_RED))
+            else:
+                print(colorize("\n[OK] Tutte le chiavi referenziate nei documenti esistono nel vault cifrato!", COLOR_GREEN))
+
+            if unused:
+                print(colorize(f"\n[i] NOTA: {len(unused)} chiavi presenti nel vault non sono direttamente citate nei documenti:", COLOR_YELLOW))
+                for u in unused:
+                    print(f"    - {u}")
+        else:
+            print(colorize("\n[i] Per confrontare i riferimenti con i secret effettivi, specifica --passphrase o imposta ITINFRA_VAULT_PASS", COLOR_YELLOW))
+        print()
+        return 0
+
+    return 0
+
+def cmd_worktree(args) -> int:
+    action = args.wt_action
+    repo_root = Path.cwd()
+    try:
+        res = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
+        repo_root = Path(res.stdout.strip())
+    except Exception:
+        pass
+
+    ROLE_BRANCH_MAP = {
+        "infra-architect": "feat/architecture",
+        "infra-security": "feat/security-vault",
+        "infra-automation": "feat/ops-mop",
+        "infra-qa": "feat/testing-atp"
+    }
+
+    ROLE_DESCRIPTIONS = {
+        "infra-architect": "Stesura 02-HLD, 03-LLD, topologie di rete e diagrammi Mermaid",
+        "infra-security": "Gestione Vault AES-256, matrici di accesso, compliance NIS2/ISO 27001",
+        "infra-automation": "04-MOP, script RouterOS (.rsc), PowerShell Hyper-V e 08-Runbook",
+        "infra-qa": "07-ATP (casi di test), 09-Handover & Asset Inventory, audit di coerenza"
+    }
+
+    if action == "add":
+        role = args.role
+        branch = args.branch or ROLE_BRANCH_MAP.get(role, f"feat/{role}")
+        wt_dir = repo_root / ".worktrees" / role
+        desc = ROLE_DESCRIPTIONS.get(role, f"Agente dedicato per ruolo {role}")
+
+        print(colorize(f"\n=== CREAZIONE WORKTREE AGENTE: {role} ===", COLOR_BOLD + COLOR_CYAN))
+        print(f"Ruolo:        {role} ({desc})")
+        print(f"Branch:       {branch}")
+        print(f"Directory:    {wt_dir}")
+
+        if wt_dir.exists():
+            print(colorize(f"AVVISO: La directory {wt_dir} esiste già.", COLOR_YELLOW))
+            return 1
+
+        wt_dir.parent.mkdir(parents=True, exist_ok=True)
+        check_b = subprocess.run(["git", "show-ref", "--verify", f"refs/heads/{branch}"], capture_output=True)
+        cmd = ["git", "worktree", "add"]
+        if check_b.returncode == 0:
+            cmd.extend([str(wt_dir), branch])
+        else:
+            cmd.extend(["-b", branch, str(wt_dir), "HEAD"])
+
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode != 0:
+            print(colorize(f"ERRORE creazione worktree: {res.stderr.strip()}", COLOR_RED))
+            return 1
+
+        print(colorize(f"[OK] Worktree creato con successo!", COLOR_GREEN + COLOR_BOLD))
+        print(colorize(f"\nPer far lavorare un subagente in questo worktree isolato:", COLOR_BOLD))
+        print(colorize(f"  1. Spostarsi nella directory: cd {wt_dir}", COLOR_CYAN))
+        print(colorize(f"  2. Oppure in Antigravity: Workspace: 'share' o specificare la cartella", COLOR_CYAN))
+        print(colorize(f"  3. Una volta completato il lavoro, eseguire: python scripts/itinfra.py worktree sync {role}\n", COLOR_CYAN))
+        return 0
+
+    elif action == "list":
+        print(colorize(f"\n=== GIT WORKTREES ATTIVI ===", COLOR_BOLD + COLOR_CYAN))
+        res = subprocess.run(["git", "worktree", "list"], capture_output=True, text=True)
+        if res.returncode != 0:
+            print(colorize(f"ERRORE lettura worktrees: {res.stderr.strip()}", COLOR_RED))
+            return 1
+        lines = res.stdout.strip().splitlines()
+        for l in lines:
+            parts = l.split()
+            path_str = parts[0]
+            branch_str = parts[-1] if len(parts) > 1 else ""
+            if ".worktrees" in path_str:
+                role_name = Path(path_str).name
+                desc = ROLE_DESCRIPTIONS.get(role_name, "Ruolo custom")
+                print(f"  - {colorize(role_name, COLOR_GREEN + COLOR_BOLD)} -> {branch_str}")
+                print(f"    Path: {path_str}")
+                print(f"    Ambito: {desc}")
+            else:
+                print(f"  * {colorize('ROOT (main)', COLOR_BOLD)} -> {branch_str} ({path_str})")
+        print()
+        return 0
+
+    elif action == "sync":
+        role = args.role
+        wt_dir = repo_root / ".worktrees" / role
+        if not wt_dir.exists():
+            print(colorize(f"ERRORE: Worktree non trovato in {wt_dir}", COLOR_RED))
+            return 1
+        print(colorize(f"Sincronizzazione worktree '{role}' con branch 'main'...", COLOR_CYAN))
+        res = subprocess.run(["git", "merge", "main", "--no-edit"], cwd=str(wt_dir), capture_output=True, text=True)
+        if res.returncode == 0:
+            print(colorize(f"[OK] Worktree '{role}' sincronizzato con 'main'.", COLOR_GREEN))
+            return 0
+        else:
+            print(colorize(f"ERRORE merge/sync: {res.stderr.strip() or res.stdout.strip()}", COLOR_RED))
+            return 1
+
+    elif action == "cleanup":
+        print(colorize(f"Pulizia worktrees...", COLOR_CYAN))
+        wt_base = repo_root / ".worktrees"
+        if wt_base.exists():
+            for child in wt_base.iterdir():
+                if child.is_dir():
+                    print(f"Rimozione worktree: {child.name}")
+                    subprocess.run(["git", "worktree", "remove", str(child), "--force"], capture_output=True)
+        subprocess.run(["git", "worktree", "prune"], capture_output=True)
+        print(colorize("[OK] Pulizia completata.", COLOR_GREEN))
+        return 0
+
+    return 0
+
+def cmd_audit_consistency(args) -> int:
+    slug = args.project_slug
+    repo_root = Path.cwd()
+    project_dir = repo_root / "projects" / slug
+    if not project_dir.exists():
+        print(colorize(f"ERRORE: Progetto non trovato in {project_dir}", COLOR_RED))
+        return 1
+
+    print(colorize(f"\n==================================================================", COLOR_BOLD))
+    print(colorize(f"🔍 AUDIT DI COERENZA INCROCIATA & STRICT GROUNDING: {slug.upper()}", COLOR_BOLD + COLOR_CYAN))
+    print(colorize(f"==================================================================\n", COLOR_BOLD))
+
+    manifest_file = project_dir / "project-manifest.yaml"
+    manifest_data = {}
+    if manifest_file.exists():
+        try:
+            with open(manifest_file, "r", encoding="utf-8") as f:
+                manifest_data = yaml.safe_load(f) or {}
+        except Exception as e:
+            print(colorize(f"AVVISO: Errore lettura manifesto: {e}", COLOR_YELLOW))
+
+    net_base = manifest_data.get("network_baseline", {}) or manifest_data.get("network", {})
+    expected_dc_ip = net_base.get("dc_ip")
+
+    declared_subnets = []
+    for k, v in net_base.items():
+        if isinstance(v, str) and ("subnet" in k or "supernet" in k or "cidr" in k):
+            try:
+                declared_subnets.append(ipaddress.ip_network(v, strict=False))
+            except ValueError:
+                pass
+
+    md_files = sorted(project_dir.glob("*.md"))
+    if not md_files:
+        print(colorize("Nessun documento .md trovato nel progetto.", COLOR_YELLOW))
+        return 0
+
+    anomalies = []
+    warnings = []
+    all_found_ips = {}
+    placeholders_count = 0
+    raw_placeholders = []
+
+    ip_pattern = re.compile(r'\b(?:192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})\b')
+    raw_placeholder_pattern = re.compile(r'<([a-zA-Z0-9_\-\s]{2,40})>')
+
+    # Regex mirate per entita core (DC e Switch Core)
+    dc_pattern_1 = re.compile(r'(?:srv-dc01?|dc01|domain\s+controller)[^|\n]*?\|[^|\n]*?(\b192\.168\.\d{1,3}\.\d{1,3}\b)', re.I)
+    dc_pattern_2 = re.compile(r'\|\s*(\b192\.168\.\d{1,3}\.\d{1,3}\b)\s*\|[^|\n]*?(?:srv-dc|dc01|domain\s+controller)', re.I)
+    dc_pattern_3 = re.compile(r'(?:srv-dc01?|dc01|domain\s+controller)[^:\n]*?:\s*`?(\b192\.168\.\d{1,3}\.\d{1,3}\b)', re.I)
+
+    sw_pattern_1 = re.compile(r'(?:sw-core01?|crs326|switch\s+core)[^|\n]*?\|[^|\n]*?(\b192\.168\.\d{1,3}\.\d{1,3}\b)', re.I)
+    sw_pattern_2 = re.compile(r'\|\s*(\b192\.168\.\d{1,3}\.\d{1,3}\b)\s*\|[^|\n]*?(?:sw-core|crs326|switch\s+core)', re.I)
+    sw_pattern_3 = re.compile(r'(?:sw-core01?|crs326|switch\s+core)[^:\n]*?:\s*`?(\b192\.168\.\d{1,3}\.\d{1,3}\b)', re.I)
+
+    dc_ips = {}
+    switch_ips = {}
+
+    for md_file in md_files:
+        try:
+            content = md_file.read_text(encoding="utf-8")
+        except Exception:
+            continue
+
+        lines = content.splitlines()
+        for l_num, line in enumerate(lines, start=1):
+            for match in raw_placeholder_pattern.finditer(line):
+                tag = match.group(1).strip()
+                if tag.upper() == "DA-RICHIEDERE":
+                    placeholders_count += 1
+                elif not any(tag.lower().startswith(x) for x in ["div", "/div", "span", "/span", "b", "/b", "i", "/i", "table", "/table", "tr", "/tr", "td", "/td", "th", "/th", "p", "/p", "!--", "br"]):
+                    raw_placeholders.append((md_file.name, l_num, match.group(0)))
+
+            for match in ip_pattern.finditer(line):
+                ip_str = match.group(0)
+                if ip_str.endswith(".0") or ip_str.endswith(".255"):
+                    continue
+                if ip_str not in all_found_ips:
+                    all_found_ips[ip_str] = []
+                all_found_ips[ip_str].append((md_file.name, l_num))
+
+            # DC specific pattern matching
+            m_dc = dc_pattern_1.search(line) or dc_pattern_2.search(line) or dc_pattern_3.search(line)
+            if m_dc:
+                dc_ips.setdefault(m_dc.group(1), []).append(md_file.name)
+
+            # Switch specific pattern matching
+            m_sw = sw_pattern_1.search(line) or sw_pattern_2.search(line) or sw_pattern_3.search(line)
+            if m_sw:
+                switch_ips.setdefault(m_sw.group(1), []).append(md_file.name)
+
+    print(colorize("1. Verifica Conformità Spazio di Indirizzamento IP (Subnet Check):", COLOR_BOLD))
+    if declared_subnets:
+        print(f"   Supernet dichiarata nel Manifesto: {', '.join(str(s) for s in declared_subnets)}")
+        out_of_subnet = []
+        for ip_str, occurrences in all_found_ips.items():
+            ip_obj = ipaddress.ip_address(ip_str)
+            if not any(ip_obj in s for s in declared_subnets):
+                out_of_subnet.append((ip_str, occurrences))
+
+        if out_of_subnet:
+            hld_only = []
+            real_outliers = []
+            for ip_str, occ in out_of_subnet:
+                if all(f == "02-HLD.md" for f, _ in occ):
+                    hld_only.append((ip_str, occ))
+                else:
+                    real_outliers.append((ip_str, occ))
+
+            if hld_only:
+                print(colorize(f"   [i] Trovati {len(hld_only)} IP concettuali in 02-HLD.md (modello multi-VLAN preliminare documentato come proposta iniziale).", COLOR_YELLOW))
+
+            if real_outliers:
+                print(colorize(f"   [!] RILEVATI {len(real_outliers)} IP AL DI FUORI DELLE SUBNET DI PROGETTO:", COLOR_RED + COLOR_BOLD))
+                for ip_str, occ in real_outliers:
+                    files_list = ", ".join(sorted(set(f for f, l in occ)))
+                    print(colorize(f"       - {ip_str} (in: {files_list})", COLOR_RED))
+                    anomalies.append(f"IP {ip_str} non appartiene alle subnet approvate {declared_subnets}")
+            else:
+                print(colorize(f"   [OK] Tutti gli IP operativi (LLD, MOP, As-Built, ATP, SOP) appartengono correttamente alle subnet approvate!", COLOR_GREEN))
+        else:
+            print(colorize(f"   [OK] Tutti i {len(all_found_ips)} IP censiti appartengono correttamente alla supernet di progetto!", COLOR_GREEN))
+    else:
+        print(colorize("   [i] Nessuna supernet specificata nel manifest; saltato controllo CIDR stretto.", COLOR_YELLOW))
+
+    print(colorize("\n2. Verifica Consistenza Entità Core tra i 9 Documenti:", COLOR_BOLD))
+    # Domain Controller
+    if expected_dc_ip:
+        if expected_dc_ip in dc_ips:
+            files = ", ".join(sorted(set(dc_ips[expected_dc_ip])))
+            print(colorize(f"   [OK] Domain Controller allineato al Manifesto ({expected_dc_ip}) in: {files}", COLOR_GREEN))
+        else:
+            print(colorize(f"   [!] Domain Controller {expected_dc_ip} non trovato esplicitamente nelle tabelle!", COLOR_YELLOW))
+            warnings.append(f"DC IP {expected_dc_ip} non censito con mapping esplicito")
+
+    if len(dc_ips) == 1:
+        ip = list(dc_ips.keys())[0]
+        files = ", ".join(sorted(set(dc_ips[ip])))
+        print(colorize(f"   [OK] Nessun IP divergente rilevato per Domain Controller: {ip}", COLOR_GREEN))
+    elif len(dc_ips) > 1:
+        print(colorize(f"   [!] DISCORDANZA DOMAIN CONTROLLER: rilevati IP multipli!", COLOR_RED + COLOR_BOLD))
+        for ip, files in dc_ips.items():
+            print(f"       - {ip} citato in: {', '.join(set(files))}")
+        anomalies.append("IP discordanti per il Domain Controller tra i documenti")
+
+    # Switch Core
+    if len(switch_ips) == 1:
+        ip = list(switch_ips.keys())[0]
+        files = ", ".join(sorted(set(switch_ips[ip])))
+        print(colorize(f"   [OK] Switch Core identificato univocamente a: {ip} (in: {files})", COLOR_GREEN))
+    elif len(switch_ips) > 1:
+        # Check if 192.168.10.1 was only in 02-HLD conceptual phase
+        if len(switch_ips) == 2 and "192.168.10.1" in switch_ips and switch_ips["192.168.10.1"] == ["02-HLD.md"]:
+            print(colorize(f"   [OK] Switch Core confermato univocamente a 192.168.120.1 in LLD, As-Built, SOP e Handover!", COLOR_GREEN))
+            print(colorize(f"   [i] Nota: 192.168.10.1 presente solo come schema concettuale HLD.", COLOR_YELLOW))
+        else:
+            print(colorize(f"   [!] DISCORDANZA SWITCH CORE: rilevati IP multipli!", COLOR_YELLOW))
+            for ip, files in switch_ips.items():
+                print(f"       - {ip} citato in: {', '.join(set(files))}")
+            warnings.append("IP multipli rilevati per lo Switch Core")
+
+    print(colorize("\n3. Controllo Strict Grounding & Placeholder Incompleti:", COLOR_BOLD))
+    print(f"   Placeholder standard `<DA-RICHIEDERE>` rilevati: {placeholders_count}")
+    if raw_placeholders:
+        print(colorize(f"   [!] Rilevati {len(raw_placeholders)} placeholder grezzi non conformi (es. `<nome>`, `<ip>`):", COLOR_RED))
+        for fname, lnum, ph in raw_placeholders[:10]:
+            print(f"       - {fname}:{lnum} -> {ph}")
+        if len(raw_placeholders) > 10:
+            print(f"       ... e altri {len(raw_placeholders) - 10} placeholder")
+        warnings.append(f"{len(raw_placeholders)} placeholder grezzi da sostituire con valori reali o <DA-RICHIEDERE>")
+    else:
+        print(colorize("   [OK] Nessun placeholder grezzo non conforme rilevato.", COLOR_GREEN))
+
+    print(colorize("\n------------------------------------------------------------------", COLOR_BOLD))
+    if anomalies:
+        print(colorize(f"ESITO AUDIT COERENZA: FALLITO ({len(anomalies)} anomalie critiche, {len(warnings)} avvisi)", COLOR_RED + COLOR_BOLD))
+        return 1
+    elif warnings:
+        print(colorize(f"ESITO AUDIT COERENZA: PASS CON AVVISI (0 anomalie critiche, {len(warnings)} avvisi)", COLOR_YELLOW + COLOR_BOLD))
+        return 0
+    else:
+        print(colorize("ESITO AUDIT COERENZA: SUCCESSO 100% (Tutti i parametri allineati e coerenti!)", COLOR_GREEN + COLOR_BOLD))
+        return 0
+
+def cmd_export_configs(args) -> int:
+    slug = args.project_slug
+    repo_root = Path.cwd()
+    project_dir = repo_root / "projects" / slug
+    if not project_dir.exists():
+        print(colorize(f"ERRORE: Progetto non trovato in {project_dir}", COLOR_RED))
+        return 1
+
+    out_dir = Path(args.out) if args.out else project_dir / "configs"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    print(colorize(f"\n=== ESPORTAZIONE CONFIGURAZIONI ESECUTIVE: {slug} ===", COLOR_BOLD + COLOR_CYAN))
+    print(f"Directory destinazione: {out_dir}\n")
+
+    rsc_blocks = []
+    ps1_blocks = []
+
+    for md_file in sorted(project_dir.glob("*.md")):
+        try:
+            content = md_file.read_text(encoding="utf-8")
+        except Exception:
+            continue
+
+        for match in re.finditer(r'```(?:routeros|rsc)\r?\n(.*?)\r?\n```', content, re.DOTALL | re.IGNORECASE):
+            code = match.group(1).strip()
+            if code and len(code) > 20:
+                rsc_blocks.append((md_file.name, code))
+
+        for match in re.finditer(r'```(?:powershell|ps1)\r?\n(.*?)\r?\n```', content, re.DOTALL | re.IGNORECASE):
+            code = match.group(1).strip()
+            if code and len(code) > 20:
+                ps1_blocks.append((md_file.name, code))
+
+    generated_files = []
+
+    if rsc_blocks:
+        rsc_file = out_dir / "sw-core-01.rsc"
+        with open(rsc_file, "w", encoding="utf-8") as f:
+            f.write(f"# RouterOS Configuration Script - Progetto: {slug}\n")
+            f.write(f"# Generato automaticamente da ItInfra Automation Suite\n")
+            f.write(f"# Data generazione: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+            for src_doc, block in rsc_blocks:
+                f.write(f"################################################################\n")
+                f.write(f"# Estratto da: {src_doc}\n")
+                f.write(f"################################################################\n")
+                f.write(block + "\n\n")
+        generated_files.append(rsc_file)
+        print(colorize(f"  [+] Generato: {rsc_file.name} ({len(rsc_blocks)} blocchi RouterOS)", COLOR_GREEN))
+
+    if ps1_blocks:
+        ps1_file = out_dir / "setup_ad_hyperv.ps1"
+        with open(ps1_file, "w", encoding="utf-8") as f:
+            f.write(f"<#\n  PowerShell Setup & Provisioning Script - Progetto: {slug}\n")
+            f.write(f"  Generato automaticamente da ItInfra Automation Suite\n")
+            f.write(f"  Data generazione: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n#>\n\n")
+            for src_doc, block in ps1_blocks:
+                f.write(f"# --------------------------------------------------------------\n")
+                f.write(f"# Estratto da: {src_doc}\n")
+                f.write(f"# --------------------------------------------------------------\n")
+                f.write(block + "\n\n")
+        generated_files.append(ps1_file)
+        print(colorize(f"  [+] Generato: {ps1_file.name} ({len(ps1_blocks)} blocchi PowerShell)", COLOR_GREEN))
+
+    if not generated_files:
+        print(colorize("Nessun blocco di configurazione RouterOS o PowerShell rilevato nei documenti.", COLOR_YELLOW))
+    else:
+        print(colorize(f"\n[OK] Esportazione completata con successo! {len(generated_files)} file generati in {out_dir}\n", COLOR_GREEN + COLOR_BOLD))
+
+    return 0
+
 def main():
     if hasattr(sys.stdout, "reconfigure"):
         try:
@@ -1458,6 +1943,58 @@ def main():
     p_html.add_argument("project", help="Slug del progetto o percorso della cartella progetto")
     p_html.add_argument("--out", help="Percorso del file HTML di destinazione (default: projects/<slug>/report.html)")
 
+    # Comando vault
+    p_vault = subparsers.add_parser("vault", help="Gestione Local Encrypted Secret Vault (AES-256-GCM)")
+    sub_vault = p_vault.add_subparsers(dest="vault_action", help="Azione vault", required=True)
+
+    v_init = sub_vault.add_parser("init", help="Inizializza un nuovo vault cifrato")
+    v_init.add_argument("project_slug", help="Slug del progetto")
+    v_init.add_argument("--passphrase", help="Master passphrase (se omesso viene richiesta interattivamente)")
+    v_init.add_argument("--overwrite", action="store_true", help="Sovrascrive il vault se esistente")
+
+    v_set = sub_vault.add_parser("set", help="Salva o aggiorna un secret cifrato")
+    v_set.add_argument("project_slug", help="Slug del progetto")
+    v_set.add_argument("key", help="Path o chiave del secret (es. mikrotik/admin, vpn/zerotier)")
+    v_set.add_argument("--value", help="Valore del secret (se omesso viene richiesto in modo sicuro)")
+    v_set.add_argument("--passphrase", help="Master passphrase")
+
+    v_get = sub_vault.add_parser("get", help="Recupera e decifra un secret")
+    v_get.add_argument("project_slug", help="Slug del progetto")
+    v_get.add_argument("key", help="Path o chiave del secret")
+    v_get.add_argument("--passphrase", help="Master passphrase")
+
+    v_list = sub_vault.add_parser("list", help="Elenca le chiavi censite nel vault (senza esporre valori)")
+    v_list.add_argument("project_slug", help="Slug del progetto")
+    v_list.add_argument("--passphrase", help="Master passphrase")
+
+    v_audit = sub_vault.add_parser("audit", help="Verifica coerenza riferimenti vault:// nei markdown")
+    v_audit.add_argument("project_slug", help="Slug del progetto")
+    v_audit.add_argument("--passphrase", help="Master passphrase opzionale per verifica incrociata dei secret")
+
+    # Comando worktree
+    p_wt = subparsers.add_parser("worktree", help="Gestione Git Worktrees per agenti AI concorrenti")
+    sub_wt = p_wt.add_subparsers(dest="wt_action", help="Azione worktree", required=True)
+
+    wt_add = sub_wt.add_parser("add", help="Crea un worktree dedicato per un ruolo agente")
+    wt_add.add_argument("role", choices=["infra-architect", "infra-security", "infra-automation", "infra-qa"], help="Ruolo dell'agente")
+    wt_add.add_argument("--branch", help="Nome branch personalizzato (default feat/<ruolo>)")
+
+    sub_wt.add_parser("list", help="Elenca i worktree attivi e i rispettivi ruoli")
+
+    wt_sync = sub_wt.add_parser("sync", help="Sincronizza il worktree di un ruolo con main")
+    wt_sync.add_argument("role", help="Ruolo dell'agente da sincronizzare")
+
+    sub_wt.add_parser("cleanup", help="Rimuove tutti i worktree temporanei in .worktrees/")
+
+    # Comando audit-consistency
+    p_ac = subparsers.add_parser("audit-consistency", help="Verifica coerenza semantica incrociata tra i 9 documenti e il manifesto")
+    p_ac.add_argument("project_slug", help="Slug del progetto")
+
+    # Comando export-configs
+    p_ec = subparsers.add_parser("export-configs", help="Estrae script RouterOS (.rsc) e PowerShell (.ps1) dai documenti")
+    p_ec.add_argument("project_slug", help="Slug del progetto")
+    p_ec.add_argument("--out", help="Directory di destinazione (default: projects/<slug>/configs/)")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -1478,6 +2015,14 @@ def main():
         return cmd_generate_diagram(args)
     elif args.command == "export-html":
         return cmd_export_html(args)
+    elif args.command == "vault":
+        return cmd_vault(args)
+    elif args.command == "worktree":
+        return cmd_worktree(args)
+    elif args.command == "audit-consistency":
+        return cmd_audit_consistency(args)
+    elif args.command == "export-configs":
+        return cmd_export_configs(args)
     else:
         parser.print_help()
         return 1

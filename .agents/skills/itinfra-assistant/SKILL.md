@@ -82,10 +82,44 @@ Non fare 30 domande in una volta sola. Suddividi l'intervista in moduli da 3-4 d
 - **Coerenza OBBLIGATORIA:** Per ogni stringa in `related_docs`, inserisci una riga corrispondente in `relations` con medesimo `targetId`.
 - Includi diagrammi Mermaid topologici direttamente nel corpo Markdown.
 
-### Step 5: Validazione Automatica con la CLI
-Prima di proporre il documento completato, lancia:
+### Step 5: Validazione Automatica & Audit di Coerenza con la CLI
+Prima di proporre il documento completato, lancia obbligatoriamente:
 ```powershell
+# 1. Validazione formale OKF v0.2
 python scripts/itinfra.py validate projects/<project_slug>/<NN-TIPO>.md
+
+# 2. Audit di coerenza semantica incrociata (Strict Grounding & Zero-Hallucination)
+python scripts/itinfra.py audit-consistency <project_slug>
 ```
-- Se il linter segnala violazioni (es. credenziali in chiaro, disallineamento `related_docs` vs `relations`), correggi il documento prima di consegnarlo.
+- Se il linter segnala violazioni (es. credenziali in chiaro, disallineamento `related_docs` vs `relations`, IP fuori subnet), correggi il documento prima di consegnarlo.
+- L'AI non deve mai inventare valori mancanti: in caso di dato non noto, usa tassativamente `<DA-RICHIEDERE>` e segnalalo tra le Open Issues.
 - Mostra all'utente l'esito della validazione (`[V] Validazione completata con successo`).
+
+---
+
+## 3. Parallelismo e Git Worktree per Multi-Agente
+
+Se più agenti o sessioni operano in parallelo sul medesimo progetto:
+1. Crea un worktree dedicato per il ruolo operativo dell'agente:
+   ```powershell
+   python scripts/itinfra.py worktree add [infra-architect|infra-security|infra-automation|infra-qa]
+   ```
+2. Ciascun agente lavora nel proprio branch e directory isolata `.worktrees/<ruolo>/`.
+3. Il vault crittografico e il manifesto rimangono sincronizzati alla radice del repository.
+4. Al termine del lavoro sul documento, sincronizza con `main`:
+   ```powershell
+   python scripts/itinfra.py worktree sync <ruolo>
+   ```
+
+---
+
+## 4. Esportazione Configuration Playbooks
+
+Per estrarre dai documenti tecnici gli script operativi pronti per l'esecuzione sistemistica:
+```powershell
+python scripts/itinfra.py export-configs <slug> --out projects/<slug>/configs
+```
+Vengono estratti e validati:
+- `sw-core-01.rsc`: comandi RouterOS v7 per MikroTik Switch/Firewall.
+- `setup_ad_hyperv.ps1`: script PowerShell esecutivo per il provisioning di VM, vSwitch e utenti AD.
+

@@ -66,9 +66,14 @@ Claude Code dispone dell'esecuzione di comandi da terminale (`Bash`). Usala atti
 - Inizializzare un progetto: `python scripts/itinfra.py init <slug> --client "<Cliente>"`
 - Verificare lo stato di avanzamento delle 7 fasi: `python scripts/itinfra.py status <slug>`
 - Validare il documento Markdown compilato prima di restituirlo: `python scripts/itinfra.py validate projects/<slug>/<NN-TIPO>.md`
+- Audit di coerenza semantica (Zero-Hallucination): `python scripts/itinfra.py audit-consistency <slug>`
+- Gestione credenziali e secret vault AES-256-GCM: `python scripts/itinfra.py vault [init|set|get|list|audit] <slug>`
+- Gestione worktree per subagenti paralleli: `python scripts/itinfra.py worktree [add|list|sync|cleanup]`
+- Esportazione script RouterOS e PowerShell: `python scripts/itinfra.py export-configs <slug>`
 
-### Anti-pattern da evitare
+### Anti-pattern da evitare (Zero-Hallucination Policy)
 
+- ❌ **Non inventare parametri:** divieto assoluto di generare IP, subnet, password o seriali non forniti; usa sempre `<DA-RICHIEDERE>`
 - ❌ Non usare `Complete` tool: non stai sviluppando un'app web, stai compilando documentazione
 - ❌ Non creare file README o documentazione aggiuntiva non richiesta
 - ❌ Non eseguire comandi bash per modificare il vault senza esplicita autorizzazione

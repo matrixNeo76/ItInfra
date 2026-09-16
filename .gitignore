@@ -31,8 +31,13 @@ cache/
 # Secret (mai committere credenziali)
 *.pem
 *.key
+*.secret
 secrets/
 credentials.json
+**/.vault.enc
+**/.vault.lock
+vault-keys/
+.worktrees/
 
 # File di sistema
 .directory

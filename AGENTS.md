@@ -141,7 +141,7 @@ Il KnowledgeGraph del Vault ha 5 livelli di correlazione: il 1° livello usa `re
 
 ### 6. Strumenti di Automazione e CLI (scripts/itinfra.py)
 
-Il repository include lo strumento di automazione `scripts/itinfra.py`:
+Il repository include la suite di automazione `scripts/itinfra.py`:
 
 ```bash
 # Inizializzare un nuovo progetto con manifesto condiviso:
@@ -152,23 +152,37 @@ python scripts/itinfra.py status <slug>
 
 # Validare la conformità formale OKF v0.2 di un file o cartella:
 python scripts/itinfra.py validate projects/<slug>/01-RSD-URS.md
+
+# Audit di coerenza semantica incrociata & Zero-Hallucination (Strict Grounding):
+python scripts/itinfra.py audit-consistency <slug>
+
+# Gestione Local Encrypted Secret Vault (AES-256-GCM con File Lock atomico):
+python scripts/itinfra.py vault [init|set|get|list|audit] <slug>
+
+# Orchestrazione Multi-Agente su Git Worktree isolati:
+python scripts/itinfra.py worktree [add|list|sync|cleanup]
+
+# Esportazione Configuration Playbooks (RouterOS .rsc e PowerShell .ps1):
+python scripts/itinfra.py export-configs <slug> --out projects/<slug>/configs
 ```
 
-### 7. Validazione finale
+### 7. Validazione finale & Gate di Qualità
 
 Prima di restituire il documento compilato:
 1. Esegui sempre `python scripts/itinfra.py validate <percorso_file>`
-2. **Completa la checklist di validazione** in fondo al template:
+2. Esegui l'audit di coerenza semantica: `python scripts/itinfra.py audit-consistency <slug>`
+3. **Completa la checklist di validazione** in fondo al template:
    - Tutti i flag `[ ]` devono diventare `[x]` (se la condizione è soddisfatta) o restare `[ ]` con una nota esplicativa.
    - Se la checklist o il linter segnalano errori, il documento NON può passare a `status: in-review`.
 
-### 8. Cosa NON fare
+### 8. Cosa NON fare (Zero-Hallucination & Security Policy)
 
-- ❌ Non inventare requisiti, IP, seriali, MAC, versioni firmware non forniti.
+- ❌ **DIVIETO ASSOLUTO DI ALLUCINAZIONI:** Non inventare mai requisiti, indirizzi IP, subnet, seriali, MAC address, credenziali o versioni firmware non esplicitamente forniti dall'utente o dal manifesto di progetto.
+- ❌ In assenza di un'informazione tecnica, l'UNICO valore ammesso è tassativamente `<DA-RICHIEDERE>`, da registrare nella sezione Open Issues.
 - ❌ Non cambiare la struttura del template (sezioni, tabelle, ordine) senza esplicita richiesta dell'utente.
-- ❌ Non inserire secret in chiaro.
+- ❌ Non inserire secret in chiaro: usare sempre `vault://it/projects/<slug>/...`.
 - ❌ Non mescolare lingue (mantieni l'italiano coerente; termini tecnici inglesi solo se standard).
-- ❌ Non lasciare placeholder `<...>` nelle sezioni critiche (requisiti, IP, configurazioni).
+- ❌ Non lasciare placeholder generici `<...>` nelle sezioni critiche (requisiti, IP, configurazioni).
 - ❌ Non creare documenti "orfani": ogni documento DEVE avere almeno un `related_docs` e idealmente un `depends_on`.
 - ❌ Non promuovere `status` a `approved` senza firma umana.
 - ❌ Non rimuovere il blocco `<!-- AI-INSTRUCTIONS -->`: deve restare nel documento finale come traccia.
