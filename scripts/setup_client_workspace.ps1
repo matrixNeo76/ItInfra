@@ -61,11 +61,44 @@ $ConfigData = @"
 Write-Host "[OK] File di configurazione generato: $ConfigFile" -ForegroundColor Green
 
 Write-Host "Verifica ambiente Python locale..." -ForegroundColor Yellow
+$pyInstalled = $false
 try {
     $pyVer = & python --version 2>&1
-    Write-Host "  -> Python rilevato: $pyVer" -ForegroundColor Green
+    if ($pyVer -match "Python 3") {
+        Write-Host "  -> Python rilevato: $pyVer" -ForegroundColor Green
+        $pyInstalled = $true
+    }
 } catch {
-    Write-Warning "  ! ATTENZIONE: Python non e presente nel PATH. Installare Python 3.10+ da python.org o Microsoft Store."
+    $pyInstalled = $false
+}
+
+if (-not $pyInstalled) {
+    Write-Host "  ! Python non rilevato nel PATH. Tentativo installazione automatica tramite Windows Package Manager (winget)..." -ForegroundColor Yellow
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        Write-Host "  -> Installazione silenziosa di Python 3.12 in corso..." -ForegroundColor Cyan
+        & winget install --id Python.Python.3.12 -e --silent --accept-source-agreements --accept-package-agreements
+        # Aggiornamento variabile PATH della sessione corrente
+        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+        try {
+            $pyVer = & python --version 2>&1
+            Write-Host "  -> [SUCCESSO] Python installato e pronto: $pyVer" -ForegroundColor Green
+            $pyInstalled = $true
+        } catch {
+            Write-Host "  -> [INFO] Installazione completata. Riavviare il terminale per ricaricare il PATH di sistema." -ForegroundColor Cyan
+        }
+    } else {
+        Write-Warning "  ! winget non disponibile. Scaricare e installare Python 3.12 dal Microsoft Store o da https://www.python.org/downloads/ (spuntando 'Add python.exe to PATH')."
+    }
+}
+
+if ($pyInstalled) {
+    Write-Host "Installazione dipendenze minime (pyyaml, cryptography, smbprotocol)..." -ForegroundColor Yellow
+    try {
+        & python -m pip install --quiet --upgrade pyyaml cryptography smbprotocol
+        Write-Host "  -> [OK] Librerie Python installate con successo." -ForegroundColor Green
+    } catch {
+        Write-Warning "  ! Impossibile installare automaticamente le librerie. Eseguire manualmente: pip install pyyaml cryptography smbprotocol"
+    }
 }
 
 Write-Host "=================================================================" -ForegroundColor Cyan
@@ -73,10 +106,12 @@ Write-Host " SETUP COMPLETATO! WORKSPACE PRONTO ALL'USO                       " 
 Write-Host "=================================================================" -ForegroundColor Cyan
 Write-Host "Istruzioni rapide per il Tecnico / Agente AI:" -ForegroundColor Yellow
 Write-Host "1. Spostarsi nella cartella: cd $TargetLocalDir"
-Write-Host "2. Inizializzare un nuovo cliente: python scripts/itinfra.py init <slug> --client '<Nome>' --name '<Titolo>'"
-Write-Host "3. Redigere i documenti OKF v0.2 con Antigravity dentro projects/<slug>/"
-Write-Host "4. Pubblicare il progetto con Quality Gate automatico:"
+Write-Host "2. Verificare i permessi share: python scripts/itinfra.py check-share"
+Write-Host "3. Inizializzare un nuovo cliente: python scripts/itinfra.py init <slug> --client '<Nome>' --name '<Titolo>'"
+Write-Host "4. Redigere i documenti OKF v0.2 con Antigravity dentro projects/<slug>/"
+Write-Host "5. Pubblicare il progetto con Quality Gate automatico:"
 Write-Host "   python scripts/itinfra.py publish <slug>"
-Write-Host "5. Aggiornare i template in futuro:"
+Write-Host "6. Aggiornare i template in futuro:"
 Write-Host "   python scripts/itinfra.py sync-engine"
 Write-Host "=================================================================" -ForegroundColor Cyan
+
