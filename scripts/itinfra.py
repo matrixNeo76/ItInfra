@@ -906,6 +906,30 @@ def cmd_export_html(args) -> int:
 
     pct_complete = int((completed_count / total_docs) * 100)
 
+    tab_mapping = {
+        "01-RSD-URS": ("tab-fase1", "Fase 1: RSD"),
+        "02-HLD": ("tab-fase2-hld", "Fase 2: HLD"),
+        "03-LLD": ("tab-fase2-lld", "Fase 2: LLD"),
+        "04-MOP": ("tab-fase3-mop", "Fase 3: MOP"),
+        "05-Rollback": ("tab-fase3-rollback", "Fase 3: Rollback"),
+        "06-As-Built": ("tab-fase5-asbuilt", "Fase 5: As-Built"),
+        "07-ATP": ("tab-fase6-atp", "Fase 6: ATP"),
+        "08-SOP-Runbook": ("tab-fase7-sop", "Fase 7: SOP"),
+        "09-Handover-Inventory": ("tab-fase7-handover", "Fase 7: Handover"),
+    }
+
+    nav_buttons = ['<button class="tab-btn active" onclick="switchTab(\'tab-dashboard\')">Dashboard & Manifest</button>']
+    for s in doc_sections:
+        prefix = s["prefix"]
+        if prefix in tab_mapping:
+            t_id, t_label = tab_mapping[prefix]
+            if s["is_valid"]:
+                nav_buttons.append(f'<button class="tab-btn" onclick="switchTab(\'{t_id}\')">{t_label} &check;</button>')
+            elif s["path"]:
+                nav_buttons.append(f'<button class="tab-btn" onclick="switchTab(\'{t_id}\')">{t_label} (!)</button>')
+
+    nav_buttons_html = "\n        ".join(nav_buttons)
+
     # HTML Template con CSS Moderno Dark/Light e Mermaid
     html_template = f"""<!DOCTYPE html>
 <html lang="it">
@@ -1258,12 +1282,7 @@ def cmd_export_html(args) -> int:
     </div>
 
     <nav class="nav-tabs">
-        <button class="tab-btn active" onclick="switchTab('tab-dashboard')">Dashboard & Manifest</button>
-        <button class="tab-btn" onclick="switchTab('tab-fase1')">Fase 1: RSD / URS</button>
-        <button class="tab-btn" onclick="switchTab('tab-fase2-hld')">Fase 2: HLD</button>
-        <button class="tab-btn" onclick="switchTab('tab-fase2-lld')">Fase 2: LLD & Cablaggi</button>
-        <button class="tab-btn" onclick="switchTab('tab-fase3-mop')">Fase 3: MOP Operativo</button>
-        <button class="tab-btn" onclick="switchTab('tab-fase3-rollback')">Fase 3: Piano Rollback</button>
+        {nav_buttons_html}
     </nav>
 
     <!-- TAB DASHBOARD -->
@@ -1336,17 +1355,9 @@ def cmd_export_html(args) -> int:
     """
 
     # Genera le singole tab documentali
-    tab_mapping = {
-        "01-RSD-URS": "tab-fase1",
-        "02-HLD": "tab-fase2-hld",
-        "03-LLD": "tab-fase2-lld",
-        "04-MOP": "tab-fase3-mop",
-        "05-Rollback": "tab-fase3-rollback"
-    }
-
     for s in doc_sections:
         if s["prefix"] in tab_mapping:
-            tab_id = tab_mapping[s["prefix"]]
+            tab_id = tab_mapping[s["prefix"]][0]
             fm = s["frontmatter"]
             doc_id = fm.get("id", s["prefix"])
             doc_title = fm.get("title", s["desc"])
