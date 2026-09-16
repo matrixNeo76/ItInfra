@@ -20,11 +20,14 @@ sites:
 
 # Baseline di rete condivisa (ereditata in HLD, LLD, MOP, As-Built)
 network_baseline:
-  supernet_ipv4: "192.168.0.0/23" # Spazio IP per VLAN Uffici, Server, Wi-Fi, Meeting, Management
-  active_directory_domain: "severino.local"
+  supernet_ipv4: "192.168.120.0/24"
+  active_directory_domain: "severino"
+  dc_ip: "192.168.120.239"
   core_switch_model: "MikroTik CRS326-24G-2S+RM"
   wifi_solution: "Ubiquiti UniFi AP"
   sdn_remote_access: "ZeroTier Virtual Network"
+  zerotier_network_id: "65228D8D6D71CA23"
+  zerotier_admin_email: "salviozt01@gmail.com"
   vault_secret_prefix: "vault://it/projects/severino-srl"
   bgp_asn_internal: 65001
 
