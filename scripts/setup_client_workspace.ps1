@@ -1,6 +1,6 @@
 # Setup Workspace Locale Tecnico Windows 11 (Release v0.9)
 param(
-    [string]$TargetLocalDir = "C:\itinfra",
+    [string]$TargetLocalDir = $(if (Test-Path .\.itinfra_config.json) { (Get-Location).Path } else { "C:\itinfra" }),
     [string]$CentralShare = "\\fileserv01\dati01\workaure"
 )
 

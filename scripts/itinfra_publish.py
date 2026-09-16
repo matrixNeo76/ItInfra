@@ -30,7 +30,7 @@ CLEARTEXT_SECRET_PATTERNS = [
 
 class ProjectPublisher:
     def __init__(self, workspace_root: Optional[Path] = None):
-        self.workspace_root = workspace_root or Path.cwd()
+        self.workspace_root = workspace_root or Path(__file__).resolve().parent.parent
         self.config = self._load_config()
 
     def _load_config(self) -> Dict[str, Any]:

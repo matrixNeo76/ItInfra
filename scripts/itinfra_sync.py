@@ -20,7 +20,7 @@ CONFIG_FILE_NAME = ".itinfra_config.json"
 
 class ClientSyncManager:
     def __init__(self, workspace_root: Optional[Path] = None):
-        self.workspace_root = workspace_root or Path.cwd()
+        self.workspace_root = workspace_root or Path(__file__).resolve().parent.parent
         self.config_path = self.workspace_root / CONFIG_FILE_NAME
         self.config = self._load_config()
 
