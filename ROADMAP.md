@@ -369,6 +369,17 @@ timeline
 - [x] **Trigger a 1 Parola per Chat Antigravity:**
   - Aggiornamento della skill `itinfra-assistant` per interpretare comandi rapidi (*"aggiorna"*, *"controlla"*, *"pubblica <slug>"*) e notificare proattivamente la disponibilità di nuovi template.
 
+---
+
+### ✅ Release v0.9.7 — Deterministic Zero-Search Fast-Path & Context Awareness (Completato)
+- [x] **Zero-Search Fast-Path in `AGENTS.md` e `CLAUDE.md`:**
+  - Sezione 0 con divieto categorico di scansione file (`find_by_name`, `grep_search`, `list_dir`) per richieste di orientamento, comandi o saluti.
+  - Risposta istantanea a tempo zero (0s) con Cruscotto Operativo formattato.
+- [x] **Zero-Hesitation Action:**
+  - Esecuzione immediata dei comandi a 1 parola (`aggiorna`, `controlla`, `pubblica <slug>`, `stato <slug>`) senza richieste preventive di conferma.
+- [x] **Espansione Scope Skill `itinfra-assistant`:**
+  - Frontmatter `description` universale per catturare assistenza, orientamento e comandi rapidi su qualsiasi editor (Antigravity, Cursor, Claude Code).
+
 
 ---
 

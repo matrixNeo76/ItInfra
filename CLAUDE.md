@@ -4,6 +4,46 @@
 
 ---
 
+## ⚡ 0. REGOLA FONDAMENTALE: ZERO-SEARCH FAST-PATH & COMANDI DETERMINISTICI
+
+> 🛑 **DIRETTIVA DI SISTEMA CRITICA PER CLAUDE CODE:**
+> Se l'utente ti saluta (`ciao`, `buongiorno`), ti chiede **cosa fa questo applicativo**, **come visualizzare i comandi**, **quali comandi sono disponibili**, o come usare ITInfra:
+> ❌ **È SEVERAMENTE VIETATO usare tool di ricerca file (`Glob`, `Grep`, `LS`, o lettura file casuali).** Tu conosci già perfettamente questo applicativo, non hai bisogno di cercare tra i file.
+> ✅ **Rispondi ALL'ISTANTE (0 secondi) e in modo DETERMINISTICO** presentando la Scheda Operativa ITInfra qui sotto.
+
+### 📋 Scheda Operativa di Risposta Immediata
+
+Restituisci all'istante questo schema chiaro ed esaustivo:
+
+👋 **Benvenuto in ITInfra!**
+Questo è l'ambiente di lavoro per la documentazione tecnica, governance, automazione e collaudo di infrastrutture IT complesse su standard OKF v0.2.
+
+### 🚀 Comandi Rapidi Disponibili (Zero Attrito)
+
+| Azione Desiderata | Da Chat (Scrivi semplicemente) | Da Terminale (Prompt / PowerShell) |
+| :--- | :--- | :--- |
+| **Allineare Template e Motore** | `aggiorna` *(o `update`)* | `it update` *(oppure solo `update`)* |
+| **Verificare Rete e Permessi** | `controlla` *(o `check`)* | `it check` |
+| **Pubblicare Progetto su Server** | `pubblica <slug>` | `it publish <slug>` |
+| **Inizializzare Nuovo Cliente** | `inizializza <slug>` | `it init <slug> --client "Nome" --name "Titolo"` |
+| **Verificare Stato 7 Fasi** | `stato <slug>` | `it status <slug>` |
+| **Validare Documento Attivo** | `valida` *(o tasto `Ctrl+Shift+B`)* | `it validate <percorso_file>` |
+| **Collaudo Completo Sistema** | `test-suite` | `it test-suite` |
+| **Avvio Quotidiano "1-Clic"** | *Doppio clic sull'icona Desktop:*<br>**`ITInfra - Aggiorna e Avvia`** | `it start` |
+
+---
+
+### ⚡ Esecuzione Deterministica dei Comandi a 1 Parola (Zero-Hesitation)
+Se l'utente digita uno di questi trigger rapidi, **NON fare domande, NON chiedere conferme preliminari e NON cercare file**: esegui immediatamente il relativo comando:
+- **`"aggiorna"`** o **`"update"`** $\rightarrow$ Esegui subito: `python scripts/itinfra_sync.py`.
+- **`"controlla"`** o **`"check"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py check-share`.
+- **`"pubblica <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py publish <slug>`.
+- **`"stato <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py status <slug>`.
+- **`"valida <file>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py validate <file>`.
+- **`"test-suite"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py test-suite --no-html`.
+
+---
+
 ## Contesto del progetto
 
 Stai lavorando in un **knowledge vault di template documentali IT** basati sullo standard **OKF v0.2 (Open Knowledge Format)** nella sua forma nativa, compatibile col parser `src/lib/okfParser.ts` del Knowledge Vault di matrixNeo76. I template sono in `/download/templates/` e devono essere compilati a partire dai dati forniti in chat.

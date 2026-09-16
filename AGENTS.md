@@ -1,6 +1,51 @@
 # AGENTS.md — Istruzioni per agenti AI
 
-> Questo file è letto automaticamente da Cursor, Aider, Continue, Cline, Roo Code e altri agenti che seguono la convenzione `AGENTS.md`. Per Claude Code vedere `CLAUDE.md` (contenuto equivalente).
+> Questo file è letto automaticamente da Google Antigravity, Cursor, Aider, Continue, Cline, Roo Code e altri agenti che seguono la convenzione `AGENTS.md`. Per Claude Code vedere `CLAUDE.md` (contenuto equivalente).
+
+---
+
+## ⚡ 0. REGOLA FONDAMENTALE: ZERO-SEARCH FAST-PATH & COMANDI DETERMINISTICI
+
+> 🛑 **DIRETTIVA DI SISTEMA CRITICA PER L'AGENTE AI:**
+> Se l'utente ti saluta (`ciao`, `buongiorno`), ti chiede **cosa fa questo applicativo**, **come visualizzare i comandi**, **quali comandi sono disponibili**, o come usare ITInfra:
+> ❌ **È SEVERAMENTE VIETATO usare tool di ricerca file (`find_by_name`, `grep_search`, `list_dir`, scansioni generiche).** Tu conosci già perfettamente questo applicativo, non hai bisogno di cercare tra i file per orientarti.
+> ✅ **Rispondi ALL'ISTANTE (0 secondi) e in modo DETERMINISTICO** presentando la Scheda Operativa ITInfra qui sotto.
+
+### 📋 Scheda Operativa di Risposta Immediata
+
+Restituisci all'istante questo schema chiaro ed esaustivo:
+
+👋 **Benvenuto in ITInfra!**
+Questo è l'ambiente di lavoro per la documentazione tecnica, governance, automazione e collaudo di infrastrutture IT complesse su standard OKF v0.2.
+
+### 🚀 Comandi Rapidi Disponibili (Zero Attrito)
+
+| Azione Desiderata | Da Chat Antigravity (Scrivi semplicemente) | Da Terminale (Prompt / PowerShell) |
+| :--- | :--- | :--- |
+| **Allineare Template e Motore** | `aggiorna` *(o `update`)* | `it update` *(oppure solo `update`)* |
+| **Verificare Rete e Permessi** | `controlla` *(o `check`)* | `it check` |
+| **Pubblicare Progetto su Server** | `pubblica <slug>` | `it publish <slug>` |
+| **Inizializzare Nuovo Cliente** | `inizializza <slug>` | `it init <slug> --client "Nome" --name "Titolo"` |
+| **Verificare Stato 7 Fasi** | `stato <slug>` | `it status <slug>` |
+| **Validare Documento Attivo** | `valida` *(o tasto `Ctrl+Shift+B`)* | `it validate <percorso_file>` |
+| **Collaudo Completo Sistema** | `test-suite` | `it test-suite` |
+| **Avvio Quotidiano "1-Clic"** | *Doppio clic sull'icona Desktop:*<br>**`ITInfra - Aggiorna e Avvia`** | `it start` |
+
+---
+
+### ⚡ Esecuzione Deterministica dei Comandi a 1 Parola (Zero-Hesitation)
+Se l'utente digita uno di questi trigger rapidi, **NON fare domande, NON chiedere conferme preliminari e NON cercare file**: esegui immediatamente il relativo comando:
+- **`"aggiorna"`** o **`"update"`** $\rightarrow$ Esegui subito: `python scripts/itinfra_sync.py` e mostra il report di sincronizzazione.
+- **`"controlla"`** o **`"check"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py check-share` e mostra la tabella di salute.
+- **`"pubblica <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py publish <slug>` e mostra l'esito del Quality Gate.
+- **`"stato <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py status <slug>` e mostra l'avanzamento delle 7 fasi.
+- **`"valida <file>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py validate <file>` e mostra il report del linter.
+- **`"test-suite"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py test-suite --no-html`.
+
+### 🛡️ Quando le Ricerche Sono Consentite
+Il divieto di ricerca è circoscritto rigorosamente a saluti, comandi e orientamento. Le ricerche e l'uso degli strumenti sono pienamente permesse per:
+- Interrogazione dell'inventario hardware enterprise: usa `python scripts/itinfra.py inventory find "<query>"`.
+- Lavoro documentale ordinario su progetti specifici: consultazione e redazione di file in `projects/<slug>/`.
 
 ---
 

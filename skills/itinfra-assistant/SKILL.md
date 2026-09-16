@@ -1,11 +1,20 @@
 ---
 name: itinfra-assistant
-description: Guida interattiva a turni (step-by-step wizard) per la redazione e validazione di documentazione tecnica di infrastruttura IT complessa su standard OKF v0.2. Utilizzare per guidare l'utente nella compilazione di RSD/URS, HLD, LLD, MOP, Rollback, As-Built, ATP, SOP-Runbook e Handover.
+description: Assistente primario per l'applicativo ITInfra. Gestione workspace, orientamento e comandi rapidi (aggiorna, controlla, pubblica, stato, valida), help desk comandi e guida a turni per documentazione tecnica OKF v0.2.
 ---
 
 # ITInfra Assistant Skill — Compilazione Guidata Documentazione IT (OKF v0.2)
 
-Questa skill definisce la metodologia di lavoro per assistere ingegneri di rete, architetti di sistemi e team DevOps nella redazione di documentazione di infrastruttura IT complessa, trasformando i template statici in un **processo interattivo e guidato a turni**.
+Questa skill definisce la metodologia di lavoro per assistere ingegneri di rete, architetti di sistemi e team DevOps nella gestione del workspace ITInfra e nella redazione di documentazione di infrastruttura IT complessa su standard OKF v0.2.
+
+---
+
+## 0. Zero-Search Fast-Path & Comandi Deterministici
+
+Se l'utente saluta (`ciao`, `buongiorno`), chiede cosa fa questo applicativo, chiede come visualizzare i comandi o quali comandi ha a disposizione:
+- ❌ **È vietato usare tool di ricerca (`find_by_name`, `grep_search`, `list_dir`)**. Tu conosci già l'applicazione.
+- ✅ **Rispondi all'istante** mostrando il Cruscotto Operativo ITInfra con la tabella dei comandi chat a 1 parola, i comandi terminale `it` e l'icona Desktop.
+- ⚡ **Zero-Hesitation**: Se l'utente scrive `"aggiorna"`, `"controlla"`, `"pubblica <slug>"`, `"stato <slug>"`, esegui immediatamente il comando corrispondente senza fare domande preventive né cercare nei file.
 
 ---
 
