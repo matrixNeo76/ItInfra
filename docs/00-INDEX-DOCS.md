@@ -25,6 +25,7 @@ related_docs:
   - "guide-itinfra-agentic-assistant-01"
   - "specification-itinfra-manifest-projects-01"
   - "specification-itinfra-compliance-security-01"
+  - "guide-risoluzione-problematiche-ai-v02"
   - "guide-itinfra-repository-roadmap-v02"
 depends_on: []
 classification: "public"
@@ -73,6 +74,11 @@ relations:
     relationType: "documents"
     weight: 0.95
     description: "Requisiti normativi NIS2, ISO 27001:2022 e DORA"
+  - targetTitle: "Guida Risoluzione Disservizi e Troubleshooting AI"
+    targetId: "guide-risoluzione-problematiche-ai-v02"
+    relationType: "documents"
+    weight: 0.95
+    description: "Guida all'uso della skill itinfra-troubleshooter per incident post-go-live"
   - targetTitle: "Roadmap Strategica e Piano di Evoluzione"
     targetId: "guide-itinfra-repository-roadmap-v02"
     relationType: "references"
@@ -103,8 +109,10 @@ graph TD
     DOCS --> AGENT[04-GUIDA-ASSISTENTE-AGENTICO.md<br/>Guida Agenti AI & Antigravity]
     DOCS --> MANIF[05-MANIFEST-E-PROGETTI.md<br/>Registro Progetti & Manifest]
     DOCS --> COMPL[06-COMPLIANCE-E-SICUREZZA.md<br/>NIS2, ISO 27001, DORA]
+    DOCS --> TROUBLE[07-GUIDA-RISOLUZIONE-PROBLEMATICHE-AI.md<br/>Troubleshooting & RCA]
     
     CLI -.-> CLI_PY[scripts/itinfra.py]
+    TROUBLE -.-> SKILL_TB[.agents/skills/itinfra-troubleshooter/]
     AGENT -.-> SKILL[.agents/skills/itinfra-assistant/]
     MANIF -.-> PROJ_DIR[projects/<slug>/]
     COMPL -.-> TPL_DIR[templates/]
@@ -122,6 +130,7 @@ graph TD
 | [`04-GUIDA-ASSISTENTE-AGENTICO.md`](./04-GUIDA-ASSISTENTE-AGENTICO.md) | `guide` | Come utilizzare Google Antigravity, Claude Code e Cursor per condurre l'intervista guidata per blocchi. |
 | [`05-MANIFEST-E-PROGETTI.md`](./05-MANIFEST-E-PROGETTI.md) | `specification` | Gestione della cartella `projects/`, ereditarietà parametri di rete e schema `project-manifest.yaml`. |
 | [`06-COMPLIANCE-E-SICUREZZA.md`](./06-COMPLIANCE-E-SICUREZZA.md) | `specification` | Approfondimento normativo: integrazione e checklist per NIS2, ISO/IEC 27001:2022 e regolamento DORA. |
+| [`07-GUIDA-RISOLUZIONE-PROBLEMATICHE-AI.md`](./07-GUIDA-RISOLUZIONE-PROBLEMATICHE-AI.md) | `guide` | Metodologia operativa per richiedere a Antigravity, Claude Code o Cursor la risoluzione di disservizi IT (OSI L1-L7, 5 Perché, CAPA e template 10-RCA). |
 
 ---
 

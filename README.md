@@ -39,24 +39,30 @@ ItInfra/
 │   ├── 03-GUIDA-CLI-ITINFRA.md        ← Manuale operativo completo di scripts/itinfra.py
 │   ├── 04-GUIDA-ASSISTENTE-AGENTICO.md← Guida per Antigravity, Claude Code e Cursor
 │   ├── 05-MANIFEST-E-PROGETTI.md      ← Specifica registro progetti e manifest condiviso
-│   └── 06-COMPLIANCE-E-SICUREZZA.md   ← Framework normativi NIS2, ISO 27001 e DORA
+│   ├── 06-COMPLIANCE-E-SICUREZZA.md   ← Framework normativi NIS2, ISO 27001 e DORA
+│   └── 07-GUIDA-RISOLUZIONE-PROBLEMATICHE-AI.md ← Guida troubleshooting, telemetria e RCA per agenti AI
 │
 ├── projects/                          ← Registro progetti e manifest globali
 │   ├── _schema/                       ← Schema JSON formale del manifest
 │   ├── _template/                     ← Template di project-manifest.yaml
 │   ├── demo-acme/                     ← Progetto demo collaudato (Acme Corporation)
-│   └── severino-srl/                  ← Progetto reale pilota (100% delle 7 fasi completate)
-│       └── configs/                   ← Script operativi RouterOS e PowerShell esportati
+│   └── severino-srl/                  ← Progetto reale pilota (100% delle 7 fasi + ticket RCA completati)
+│       ├── configs/                   ← Script operativi RouterOS e PowerShell esportati
+│       ├── 10-RCA-FS01-SMB-Connectivity.md ← Caso pilota reale post-mortem SMB su ZeroTier
+│       ├── report.html                ← Dashboard consolidata HTML offline con tab Incident & RCA
+│       └── graph.html                 ← Mappa interattiva D3.js Knowledge Graph (10 nodi, 52 archi)
 │
 ├── scripts/                           ← Toolchain CLI e automazione
-│   ├── itinfra.py                     ← CLI master: init, validate, status, vault, worktree, audit, export
-│   └── itinfra_vault.py               ← Motore crittografico locale AES-256-GCM con atomic file locking
+│   ├── itinfra.py                     ← CLI master: init, validate, status, vault, worktree, audit, export, troubleshoot, health-check, export-graph
+│   ├── itinfra_vault.py               ← Motore crittografico locale AES-256-GCM con atomic file locking
+│   └── graph_generator.py             ← Generatore di Knowledge Graph D3.js v7 interattivo
 │
 ├── .agents/skills/                    ← Skill universali per Antigravity e moderni agent framework
 │   ├── itinfra-assistant/SKILL.md     ← Procedura guidata a turni (intervista a blocchi)
-│   └── itinfra-vault/SKILL.md         ← Gestione sicura del Secret Vault crittografato
+│   ├── itinfra-vault/SKILL.md         ← Gestione sicura del Secret Vault crittografato
+│   └── itinfra-troubleshooter/SKILL.md← Triage deterministico a 7 strati OSI (L1-L7) e compilazione RCA
 │
-├── templates/                         ← 10 template documentali OKF v0.2 + 3 file orientamento
+├── templates/                         ← 11 template documentali OKF v0.2 + 3 file orientamento
 │   ├── 00-INDEX.md                    ← Indice navigazionale con link graph Mermaid
 │   ├── 01-RSD-URS.md                  ← Fase 1 — Requirements Specification
 │   ├── 02-HLD.md                      ← Fase 2 — High-Level Design
@@ -67,6 +73,8 @@ ItInfra/
 │   ├── 07-ATP.md                      ← Fase 6 — Acceptance Test Plan
 │   ├── 08-SOP-Runbook.md              ← Fase 7 — Standard Operating Procedures
 │   ├── 09-Handover-Inventory.md       ← Fase 7 — Handover & Asset Inventory
+│   ├── 10-RCA-Troubleshooting.md      ← Fase 7 Post-Go-Live — Root Cause Analysis & Incident Resolution
+│   ├── graph.html                     ← Mappa interattiva D3.js del knowledge graph dei template
 │   └── README.md                      ← Documentazione umana dei template
 │
 ├── examples/                          ← 11 prompt di esempio per agenti AI
@@ -83,7 +91,7 @@ ItInfra/
 
 ## 🚀 Quick Start
 
-### 1. Gestione Progetti e Automazione con la CLI ITInfra (Release v0.4)
+### 1. Gestione Progetti e Automazione con la CLI ITInfra (Release v0.5)
 
 Il repository include la CLI standalone `scripts/itinfra.py` per orchestrare l'intero ciclo documentale:
 
@@ -161,6 +169,7 @@ La guida `INTEGRAZIONE-REPO.md` (in formato OKF v0.2 nativo) ti porta passo-pass
 | 5. Configurazione | Commissioning & Implementation | (confluisce in As-Built) | `06-As-Built.md` |
 | 6. Collaudo | Testing & Validation | ATP | `07-ATP.md` |
 | 7. Rilascio | Go-Live / Handover | As-Built, SOP/Runbook, Handover | `06-As-Built.md`, `08-SOP-Runbook.md`, `09-Handover-Inventory.md` |
+| 7. Post-Rilascio | Incident & RCA | Root Cause Analysis, 5 Perché, CAPA | `10-RCA-Troubleshooting.md` |
 
 ---
 
@@ -171,13 +180,13 @@ Tutti i template usano lo standard **OKF v0.2 (Open Knowledge Format)** nativo d
 - **Campi canonici** (riconosciuti dal parser): `okf_version`, `id`, `title`, `type` (6 tipi canonici), `domain`, `tags`, `entities`, `relations`
 - **Metadati estesi IT** (preservati in `rawFrontmatter`): `project_id`, `phase`, `related_docs`, `depends_on`, `status`, `version`, `author`, ecc.
 
-### Mappatura 9 tipi IT → 6 tipi canonici OKF
+### Mappatura 10 tipi IT → 6 tipi canonici OKF
 
 | Tipo IT | Tipo canonico OKF |
 |---------|-------------------|
 | RSD/URS, ATP, Handover & Inventory | `specification` |
 | HLD, LLD, As-Built | `architecture` |
-| MOP, Rollback, SOP/Runbook | `guide` |
+| MOP, Rollback, SOP/Runbook, RCA & Troubleshooting | `guide` |
 
 Vedi [`templates/00-INDEX.md`](./templates/00-INDEX.md) per dettagli completi.
 
@@ -189,7 +198,7 @@ I file `AGENTS.md` e `CLAUDE.md` vengono letti automaticamente da:
 
 | Agente | File letto / Modalità |
 |--------|----------------------|
-| **Google Antigravity** | `.agents/skills/itinfra-assistant/` (Skill nativa per intervista guidata a turni) |
+| **Google Antigravity** | `.agents/skills/` (3 skill native: `itinfra-assistant`, `itinfra-vault`, `itinfra-troubleshooter`) |
 | **Claude Code** (Anthropic CLI) | `CLAUDE.md` + comandi terminale `scripts/itinfra.py` |
 | **Cursor** | `AGENTS.md` |
 | **Aider** | `AGENTS.md` |
@@ -217,6 +226,9 @@ graph TD
     ASBUILT --> SOP
     ASBUILT --> HAND[09-Handover-Inventory]
     SOP --> HAND
+    ASBUILT --> RCA[10-RCA-Troubleshooting]
+    LLD --> RCA
+    RCA -.-> SOP
 ```
 
 ---

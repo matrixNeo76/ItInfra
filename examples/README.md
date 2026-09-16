@@ -40,6 +40,7 @@ Ogni file `NN-prompt-TIPO.md` contiene:
 | [07-prompt-ATP.md](./07-prompt-ATP.md) | Acceptance Test Plan | 6 | Media |
 | [08-prompt-SOP-Runbook.md](./08-prompt-SOP-Runbook.md) | SOP / Runbook | 7 | Alta |
 | [09-prompt-Handover-Inventory.md](./09-prompt-Handover-Inventory.md) | Handover & Inventory | 7 | Media |
+| [10-prompt-RCA-Troubleshooting.md](./10-prompt-RCA-Troubleshooting.md) | RCA & Troubleshooting | 7 | Alta |
 
 ---
 

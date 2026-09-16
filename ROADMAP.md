@@ -195,25 +195,26 @@ timeline
 - [x] **Subagent Specializzato e Skill Standardizzata `itinfra-troubleshooter`:**
   - Standardizzata in `.agents/skills/itinfra-troubleshooter/SKILL.md` (e `skills/itinfra-troubleshooter/`).
   - Metodologia rigorosamente deterministica a 7 strati (Bottom-Up L1-L7) con Strict Grounding.
-- [x] **Suite CLI per Incidenti e Telemetria Live:**
+- [x] **Suite CLI per Incidenti, Telemetria Live & Mappa D3.js Graph:**
   - `python scripts/itinfra.py troubleshoot [init|list] <slug> <ticket_id>`: inizializza ed elenca i ticket collegati al manifesto e all'As-Built.
   - `python scripts/itinfra.py health-check <slug> [--timeout 1.0]`: sonda live non distruttiva (ICMP ping, probe TCP su porte critiche 53/80/443/445/3389/8291).
+  - `python scripts/itinfra.py export-graph <slug|templates>`: genera la mappa interattiva D3.js Knowledge Graph con nodi tipizzati e relazioni orientate.
   - Aggiornamento stato documentale in `itinfra.py status <slug>` con riepilogo ticket RCA post-go-live.
-  - Integrazione completa in `itinfra.py export-html <slug>` con tab interattiva dedicata "Incident & RCA".
+  - Integrazione completa in `itinfra.py export-html <slug>` con tab interattiva dedicata "Incident & RCA" e pulsante diretto al Knowledge Graph.
 - [x] **Caso Pilota Reale Severino Srl Risolto al 100%:**
   - Redatto e validato `projects/severino-srl/10-RCA-FS01-SMB-Connectivity.md` (risoluzione timeout SMB su ZeroTier via TCP MSS Clamping e MTU 1400).
   - Validazione formale OKF v0.2 superata con 0 errori e audit di coerenza semantica superato al 100%.
 
 ---
 
-### ⚡ Release v0.6 — Live Health-Check, Local Semantic Search & Change Management (Prospettiva)
-- [ ] **CLI Infrastructure Health-Check (`scripts/itinfra.py health-check <slug>`):**
-  - Strumento di diagnostica live che esegue test non distruttivi di connettività ICMP, porte TCP e query DNS verso tutti gli host e IP censiti nel `project-manifest.yaml`.
+### ⚡ Release v0.6 — Local Semantic Graph RAG, Change Management RFC & Proactive Alerting (Prospettiva)
 - [ ] **Local Semantic Graph Querying (Offline AI Search su OKF):**
-  - Interfaccia CLI per interrogare in linguaggio naturale il grafo dei documenti del cliente (`python scripts/itinfra.py ask <slug> "chi è il server di backup e dove risiede la share?"`).
-  - Utilizza la rete ontologica (`entities` e `relations`) per restituire risposte certe al 100% senza allucinazioni.
+  - Interfaccia CLI per interrogare in linguaggio naturale il grafo ontologico del cliente (`python scripts/itinfra.py ask <slug> "chi è il server di backup e dove risiede la share?"`).
+  - Utilizza la rete ontologica (`entities` e `relations`) per restituire risposte certe al 100% senza allucinazioni basandosi su cammini esatti.
 - [ ] **Modulo RFC (Request For Change / Change Management Formale):**
-  - Template `11-RFC-Change-Request.md` per governare modifiche post-Go-Live con matrice di rischio, finestra approvata e piano di rollback collegato.
+  - Template `11-RFC-Change-Request.md` per governare modifiche e manutenzioni post-Go-Live con matrice di rischio, finestra approvata e piano di rollback collegato.
+- [ ] **Proactive Monitoring & Telemetry Daemon:**
+  - Esecuzione periodica programmata di `health-check` con allarmi webhook (Teams/Slack) in caso di degradazione dei socket critici.
 
 ---
 

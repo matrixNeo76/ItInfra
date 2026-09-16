@@ -1,6 +1,6 @@
 # Knowledge Vault — Template Documentali Ciclo Lavorativo IT
 
-Questo repository contiene **10 template Markdown** (formato OKF v0.2) per la documentazione di infrastrutture IT complesse, dalla fase di Assessment fino al Go-Live. I template sono progettati per essere **compilati da agenti AI** tramite chat agentiche e salvati in un **knowledge vault** dove vengono relazionati tra loro tramite wiki-links.
+Questo repository contiene **11 template Markdown** (formato OKF v0.2) per la documentazione di infrastrutture IT complesse, dalla fase di Assessment fino al Go-Live. I template sono progettati per essere **compilati da agenti AI** tramite chat agentiche e salvati in un **knowledge vault** dove vengono relazionati tra loro tramite wiki-links.
 
 ---
 
@@ -30,6 +30,8 @@ templates/
 ├── 07-ATP.md                          ← Fase 6 — Acceptance Test Plan
 ├── 08-SOP-Runbook.md                  ← Fase 7 — Standard Operating Procedures
 ├── 09-Handover-Inventory.md           ← Fase 7 — Handover & Asset Inventory
+├── 10-RCA-Troubleshooting.md          ← Fase 7 Post-Go-Live — Root Cause Analysis & Incident Resolution
+├── graph.html                         ← Mappa interattiva D3.js Knowledge Graph dei template
 │
 └── examples/                          ← esempi concreti di prompt per agenti AI
     ├── README.md
@@ -42,7 +44,8 @@ templates/
     ├── 06-prompt-As-Built.md
     ├── 07-prompt-ATP.md
     ├── 08-prompt-SOP-Runbook.md
-    └── 09-prompt-Handover-Inventory.md
+    ├── 09-prompt-Handover-Inventory.md
+    └── 10-prompt-RCA-Troubleshooting.md
 ```
 
 ---
@@ -192,6 +195,7 @@ NN-CODICE.md
 | 07 | ATP |
 | 08 | SOP/Runbook |
 | 09 | Handover & Inventory |
+| 10 | RCA & Troubleshooting |
 
 I documenti compilati nel vault possono mantenere lo stesso naming (`01-RSD-URS.md`) oppure usare l'`id` come nome file (`rsd-urs-acme-milano-01.md`) — scegli una convenzione e mantienila coerente in tutto il vault.
 

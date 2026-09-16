@@ -92,12 +92,20 @@ python scripts/itinfra.py <comando> [opzioni]
 ```
 
 I comandi disponibili sono:
-- **`list-templates`**: Elenca tutti i 9 template documentali e le 7 fasi del ciclo IT.
+- **`list-templates`**: Elenca tutti gli 11 template documentali OKF v0.2 e le relative fasi del ciclo IT.
 - **`init`**: Inizializza un nuovo progetto creando la cartella e il manifesto precompilato.
-- **`status`**: Visualizza la dashboard dell'avanzamento documentale e della qualità OKF per un progetto.
-- **`validate`**: Esegue il linter formale OKF v0.2, verifica i link e controlla la sicurezza.
+- **`status`**: Visualizza la dashboard dell'avanzamento documentale, qualità OKF e stato dei ticket RCA.
+- **`validate`**: Esegue il linter formale OKF v0.2, verifica i link, le dipendenze e controlla la sicurezza.
 - **`export-ipam`**: Estrae le tabelle di indirizzamento da documenti LLD/As-Built in formati CSV/JSON per NetBox.
 - **`generate-diagram`**: Produce diagrammi Mermaid (topologia di rete o elevazione rack) a partire dai file LLD.
+- **`export-html`**: Genera il report consolidato interattivo del progetto con dashboard KPI e tab dedicate.
+- **`vault`**: Gestione del Local Encrypted Secret Vault (AES-256-GCM) per credenziali e audit dei riferimenti `vault://`.
+- **`worktree`**: Orchestrazione multi-agente parallela su Git Worktree isolati.
+- **`audit-consistency`**: Audit semantico incrociato e motore anti-allucinazione (Strict Grounding).
+- **`export-configs`**: Estrae script operativi RouterOS (.rsc) e PowerShell (.ps1) dai documenti tecnici.
+- **`troubleshoot`**: Inizializza ed elenca i ticket di incidente collegati ad As-Built e manifesto per generare la scheda 10-RCA.
+- **`health-check`**: Esegue telemetria passiva non distruttiva (ICMP ping, probe porte TCP critiche) sui nodi del manifest.
+- **`export-graph`**: Genera la mappa interattiva D3.js Knowledge Graph con nodi tipizzati e relazioni ontologiche.
 - **`export-html`**: Genera un report consolidato completo in formato HTML per il progetto con grafici interattivi.
 - **`vault`**: Gestione del Local Encrypted Secret Vault (AES-256-GCM) con file locking atomico.
 - **`worktree`**: Orchestrazione di Git Worktrees isolati per agenti AI concorrenti.
@@ -320,4 +328,55 @@ Scansiona i documenti tecnici del progetto ed estrae blocchi di codice RouterOS 
 
 ```bash
 python scripts/itinfra.py export-configs <project_slug> [--out <cartella>]
+```
+
+---
+
+### 3.12 `troubleshoot` — Gestione Ticket RCA & Incident Troubleshooting
+Gestisce i ticket post-go-live per l'analisi delle cause radice (RCA) secondo il modello a 7 strati OSI (L1-L7) e la metodologia dei 5 Perché:
+
+```bash
+# Inizializza un nuovo ticket RCA precompilato con i dati del manifesto di progetto:
+python scripts/itinfra.py troubleshoot init <slug> <ticket_id> [--title "<Titolo>"] [--severity P1-Critical|P2-High|P3-Medium|P4-Low]
+
+# Elenca i ticket RCA aperti o risolti con relativo stato di conformità OKF v0.2:
+python scripts/itinfra.py troubleshoot list <slug>
+```
+
+**Esempio:**
+```bash
+python scripts/itinfra.py troubleshoot init severino-srl FS01-SMB-Connectivity --title "Degrado SMB su ZeroTier" --severity P2-High
+```
+
+---
+
+### 3.13 `health-check` — Telemetria Live & Socket Probe Non Distruttivo
+Estrae automaticamente gli indirizzi IP e gli apparati dal manifesto di progetto e dall'As-Built, conducendo una scansione non invasiva per verificare connettività L3 (ICMP) e disponibilità dei socket L4 (porte 53, 80, 443, 445, 3389, 8291, 5985):
+
+```bash
+python scripts/itinfra.py health-check <project_slug> [--timeout <secondi>]
+```
+
+**Esempio:**
+```bash
+python scripts/itinfra.py health-check severino-srl --timeout 1.0
+```
+
+---
+
+### 3.14 `export-graph` — Knowledge Graph Interattivo D3.js OKF v0.2
+Genera una mappa navigabile ad alta risoluzione del Knowledge Graph con simulazione fisica force-directed a molla, nodi tipizzati con i colori canonici OKF, frecce orientate per tipo relazione, ricerca in tempo reale e sidebar informativa dettagliata:
+
+```bash
+# Genera il Knowledge Graph per un progetto cliente:
+python scripts/itinfra.py export-graph <project_slug> [--out <percorso_output.html>] [--title "<Titolo>"]
+
+# Genera il Knowledge Graph dei template master:
+python scripts/itinfra.py export-graph templates
+```
+
+**Esempio:**
+```bash
+python scripts/itinfra.py export-graph severino-srl
+# Produce: projects/severino-srl/graph.html
 ```
