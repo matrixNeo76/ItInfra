@@ -95,18 +95,31 @@ timeline
         Automation Suite CLI      : scripts/itinfra.py
         Antigravity Native Skill  : Step-by-Step Wizard
         Project Manifest Schema   : projects/
-    section v0.3 (Q4 2026)
+    section v0.3 (Rilasciato)
         Compliance Frameworks     : NIS2, ISO 27001, DORA
         Generatore Visuale       : Mermaid Rack & Topologie
         IPAM / NetBox Export      : Esportazione CSV & JSON
-    section v0.4 (Q1 2027)
-        GitHub Actions CI/CD      : Validazione automatica PR
-        Server MCP Standalone     : Wrapper per Claude Desktop
-        Scripting Operativo       : Generazione comandi MOP/ATP
+        Progetto Pilota 100%      : Severino Srl (7 Fasi)
+        Report HTML Offline       : Dashboard Interattiva
+    section v0.4 (Rilasciato)
+        Local Encrypted Vault     : AES-256-GCM + File Lock
+        Multi-Agent Worktree      : 4 Ruoli Paralleli
+        Anti-Hallucination Engine : Strict Grounding & Audit
+        Multi-Framework Skills    : .agents/skills/ Universali
+        Configuration Playbooks   : RouterOS .rsc & PowerShell
+    section v0.5 (Q4 2026)
+        Incident & RCA Template   : 10-RCA-Troubleshooting.md
+        Agent & Skill Troubleshooter: Diagnosi Deterministica OSI
+        CLI Diagnostic Assistant  : itinfra.py troubleshoot
+        Knowledge Graph Linking   : Relazioni Incidente-Topologia
+    section v0.6 (Q1 2027)
+        Health-Check & Telemetry  : itinfra.py health-check
+        Graph Semantic Search     : Query locale RAG su OKF
+        Change Management RFC     : Request For Change formale
     section v1.0 (Q2 2027)
         Sincronizzazione Live     : NetBox / Nautobot Sync
         Knowledge Graph 3D        : Viewer interattivo per topologie
-        Lifecycle Automation      : Monitoraggio scadenze licenze
+        Lifecycle Automation      : Monitoraggio scadenze contratti
 ```
 
 ---
@@ -143,28 +156,62 @@ timeline
 
 ---
 
-### 🚀 Release v0.4 — Security Vault, Multi-Agent Git Worktree & Anti-Hallucination (In Corso)
-- [ ] **Local Encrypted Secret Vault (AES-256-GCM) Concurrency-Safe:**
-  - Gestione crittografica locale con CLI `scripts/itinfra.py vault [init|set|get|list|audit]`.
-  - Storage centralizzato del file `.vault.enc` condiviso tra tutti i worktree con meccanismo di **file locking atomico** (`.vault.lock`).
-  - Cifratura sicura con master passphrase o keyfile (PBKDF2-HMAC-SHA256, 100k iterazioni, AES-256-GCM).
-  - Validazione e audit automatico di tutti i riferimenti `vault://...` presenti nei documenti Markdown.
-- [ ] **Orchestrazione Multi-Agente Parallela con Git Worktree:**
-  - CLI `scripts/itinfra.py worktree [add|sync|status|cleanup]` per consentire a più agenti AI di operare simultaneamente su rami dedicati in directory isolate:
-    - `infra-architect`: HLD, LLD, topologie e routing.
-    - `infra-security`: Vault, audit chiavi e compliance (NIS2/ISO 27001/DORA).
-    - `infra-automation`: MOP, configurazioni RouterOS, script PowerShell Hyper-V e Runbook.
-    - `infra-qa`: Casi di test ATP, verifica consistenza e reportistica.
-  - Sincronizzazione automatica tramite workspace sharing e merge assistito privo di conflitti.
-- [ ] **Anti-Hallucination & Cross-Document Consistency Engine:**
-  - Linter semantico avanzato con **Strict Grounding**: blocco immediato se l'AI inventa IP, VLAN, MAC, seriali o requisiti.
-  - In assenza di dati forniti dall'operatore o dal file di config, l'unico valore ammesso è tassativamente `<DA-RICHIEDERE>`.
-  - Verifica automatica di coerenza incrociata tra `project-manifest.yaml` e tutti i 9 documenti tecnici.
-- [ ] **Multi-Framework Agent Skills (.agents/skills, Antigravity, Claude Code, Cursor, Cline, Aider):**
-  - Standardizzazione universale delle skill in `.agents/skills/itinfra-assistant/` e `.agents/skills/itinfra-vault/`.
-  - Istruzioni operative e guardrail vincolanti allineati in `AGENTS.md` e `CLAUDE.md`.
-- [ ] **Generatore di Configuration Playbooks Eseguibili:**
-  - Comando `python scripts/itinfra.py export-configs <slug> --out <dir>` per esportare script RouterOS e PowerShell convalidati.
+### ✅ Release v0.4 — Security Vault, Multi-Agent Git Worktree & Anti-Hallucination (Completato)
+- [x] **Local Encrypted Secret Vault (AES-256-GCM) Concurrency-Safe:**
+  - Modulo crittografico standalone `scripts/itinfra_vault.py` con derivazione PBKDF2-HMAC-SHA256 (100.000 iterazioni).
+  - Storage centralizzato `projects/<slug>/.vault.enc` protetto da **File Locking atomico** (`.vault.lock`) per accessi paralleli concorrenti senza race condition.
+  - Comandi CLI completi: `python scripts/itinfra.py vault [init|set|get|list|audit] <slug>`.
+  - Protezione totale dei secret esclusi da Git via `.gitignore`.
+- [x] **Orchestrazione Multi-Agente Parallela con Git Worktree:**
+  - Comando CLI `scripts/itinfra.py worktree [add|list|sync|cleanup]` per consentire a più subagenti AI di lavorare simultaneamente su branch isolati in `.worktrees/<ruolo>/`:
+    - `infra-architect`: branch `feat/architecture` (HLD, LLD, topologie Mermaid).
+    - `infra-security`: branch `feat/security-vault` (Vault AES-256, compliance NIS2/ISO 27001).
+    - `infra-automation`: branch `feat/ops-mop` (MOP, script RouterOS, PowerShell e Runbook).
+    - `infra-qa`: branch `feat/testing-atp` (Casi di test ATP, Handover, audit consistenza).
+- [x] **Anti-Hallucination & Cross-Document Consistency Engine (Strict Grounding):**
+  - Linter semantico `python scripts/itinfra.py audit-consistency <slug>`:
+    - Verifica che tutti gli IP appartengano alle supernet dichiarate nel manifesto di progetto.
+    - Controllo incrociato delle entità critiche (Domain Controller, Switch Core, Gateway) su tutti i 9 documenti.
+    - Divieto assoluto di inventare parametri tecnici; obbligo tassativo di utilizzare il placeholder standard `<DA-RICHIEDERE>`.
+- [x] **Standardizzazione Skills Universali Multi-Framework (.agents/skills/):**
+  - Standardizzate `.agents/skills/itinfra-assistant/SKILL.md` e `.agents/skills/itinfra-vault/SKILL.md` per Google Antigravity, Claude Code, Cursor, Cline, Roo Code e Aider.
+  - Regole vincolanti allineate in `AGENTS.md` e `CLAUDE.md`.
+- [x] **Generatore di Configuration Playbooks Eseguibili:**
+  - Comando CLI `python scripts/itinfra.py export-configs <slug>` per estrarre script pronti all'uso: `sw-core-01.rsc` (RouterOS) e `setup_ad_hyperv.ps1` (PowerShell).
+
+---
+
+### 🚀 Release v0.5 — Client Incident Management, Deterministic Troubleshooting & AI RCA (Pianificato)
+- [ ] **Template OKF v0.2 `10-RCA-Troubleshooting.md` (Root Cause Analysis & Incident Resolution):**
+  - Struttura formalizzata post-incidente per tracciare disservizi cliente:
+    - Sintomatologia riscontrata e impatto sul business (SLA breach, utenti impattati).
+    - Cronistoria degli eventi e timeline dell'incidente.
+    - Albero diagnostico deterministico a strati (Layer OSI 1-7).
+    - Causa radice accertata (Root Cause Analysis con tecnica dei 5 Perché).
+    - Azione correttiva immediata applicata (Workaround / Quick Fix).
+    - Soluzione strutturale e definitiva (con snippet di configurazione, test e rollback).
+    - Piano di prevenzione per impedire il ripetersi dell'anomalia.
+    - Relazioni ontologiche OKF (`relations`) collegate all'LLD, all'As-Built e al Runbook del cliente.
+- [ ] **Subagent Specializzato `infra-troubleshooter` e Skill `itinfra-troubleshooter`:**
+  - Agente AI dedicato per la diagnosi e risoluzione guidata di problemi operativi del cliente.
+  - **Metodologia rigorosamente deterministica:**
+    - Guidato da una matrice di test a strati (L1 Fisico → L2 ARP/VLAN → L3 Routing/Subnet → L4 Firewall/Porte → L7 Servizi AD/DNS/SMB).
+    - Divieto assoluto di formulare diagnosi ipotetiche o inventare output di log; esige i comandi di verifica reali eseguiti dall'operatore.
+    - Produce automaticamente il documento risolutivo conforme a OKF v0.2.
+- [ ] **CLI Incident & Troubleshooting Assistant (`scripts/itinfra.py troubleshoot`):**
+  - `python scripts/itinfra.py troubleshoot init <slug> --incident "<Titolo Disservizio>"`: inizializza una nuova scheda di troubleshooting collegata al manifesto del cliente.
+  - `python scripts/itinfra.py troubleshoot export <slug>`: consolida i ticket e i post-mortem nella dashboard HTML del cliente.
+
+---
+
+### ⚡ Release v0.6 — Live Health-Check, Local Semantic Search & Change Management (Prospettiva)
+- [ ] **CLI Infrastructure Health-Check (`scripts/itinfra.py health-check <slug>`):**
+  - Strumento di diagnostica live che esegue test non distruttivi di connettività ICMP, porte TCP e query DNS verso tutti gli host e IP censiti nel `project-manifest.yaml`.
+- [ ] **Local Semantic Graph Querying (Offline AI Search su OKF):**
+  - Interfaccia CLI per interrogare in linguaggio naturale il grafo dei documenti del cliente (`python scripts/itinfra.py ask <slug> "chi è il server di backup e dove risiede la share?"`).
+  - Utilizza la rete ontologica (`entities` e `relations`) per restituire risposte certe al 100% senza allucinazioni.
+- [ ] **Modulo RFC (Request For Change / Change Management Formale):**
+  - Template `11-RFC-Change-Request.md` per governare modifiche post-Go-Live con matrice di rischio, finestra approvata e piano di rollback collegato.
 
 ---
 
@@ -175,6 +222,7 @@ timeline
   - Integrazione col visualizzatore D3/Three.js del Knowledge Vault per navigare graficamente rack, switch, server e relative relazioni contrattuali.
 - [ ] **Gestione Ciclo di Vita Contrattuale (Handover):**
   - Generazione di alert calendario (ICS / Webhook) per le date di rinnovo garanzie hardware e licenze software documentate in `09-Handover-Inventory.md`.
+
 
 ---
 

@@ -75,10 +75,14 @@ gantt
     Progetto Pilota Severino (9 docs)  :done, p5, 2026-09-16, 1d
     Export Dashboard HTML Consolidata  :done, p6, 2026-09-16, 1d
     section Fase 4: v0.4 Enterprise
-    Local Encrypted Vault AES-256-GCM  :active, p7, 2026-09-16, 1d
-    Multi-Agent Git Worktree Engine    :active, p8, 2026-09-16, 1d
-    Anti-Hallucination Consistency Linter:active, p9, 2026-09-16, 1d
-    Multi-Framework Skills (.agents/)  :active, p10, 2026-09-16, 1d
+    Local Encrypted Vault AES-256-GCM  :done, p7, 2026-09-16, 1d
+    Multi-Agent Git Worktree Engine    :done, p8, 2026-09-16, 1d
+    Anti-Hallucination Consistency Linter:done, p9, 2026-09-16, 1d
+    Multi-Framework Skills (.agents/)  :done, p10, 2026-09-16, 1d
+    section Fase 5: v0.5 Troubleshooting & RCA
+    Template 10-RCA-Troubleshooting.md :active, p11, 2026-09-17, 1d
+    Agent & Skill itinfra-troubleshooter:active, p12, 2026-09-17, 1d
+    CLI Troubleshooting Command        :active, p13, 2026-09-17, 1d
 ```
 
 ---
@@ -92,10 +96,21 @@ gantt
 - Completamento al 100% di tutte le 7 fasi del progetto reale Severino Srl (9 documenti OKF v0.2 convalidati).
 - Generatore di reportistica HTML offline con diagrammi vettoriali Mermaid.js.
 
-### Release v0.4 — Security, Multi-Agent & Zero-Hallucination (In Corso)
+### Release v0.4 — Security, Multi-Agent & Zero-Hallucination (Completato)
 - **Local Encrypted Vault:** modulo `scripts/itinfra_vault.py` (AES-256-GCM, PBKDF2-HMAC-SHA256, lock atomico `.vault.lock`) e comandi CLI `vault`.
 - **Git Worktree Orchestration:** comando CLI `itinfra.py worktree` per orchestrare agenti paralleli su branch isolati (`feat/architecture`, `feat/security-vault`, `feat/ops-mop`, `feat/testing-atp`).
 - **Motore Anti-Allucinazione:** comando CLI `itinfra.py audit-consistency` e linter con regole di Strict Grounding (fallback obbligatorio a `<DA-RICHIEDERE>`).
 - **Multi-Framework Skills:** cartella standard `.agents/skills/` con `itinfra-assistant` e `itinfra-vault`, allineate a `AGENTS.md` e `CLAUDE.md`.
 - **Esportazione Script Operativi:** comando `export-configs` per estrarre script RouterOS `.rsc` e PowerShell `.ps1`.
+
+### Release v0.5 — Client Incident Management & Deterministic RCA (Pianificato)
+- **Template OKF v0.2 `10-RCA-Troubleshooting.md`:** modello formale post-incidente con sintomatologia, impatto, albero diagnostico Layer OSI 1-7, root cause, risoluzione verificata e piano di prevenzione.
+- **Subagent & Skill `itinfra-troubleshooter`:** agente AI specializzato con albero diagnostico deterministico e zero allucinazioni sui log e test di rete.
+- **CLI Assistant (`scripts/itinfra.py troubleshoot`):** inizializzazione guidata delle schede incidente e consolidamento report.
+
+### Release v0.6 — Live Telemetry & Semantic Search (Prospettiva)
+- **CLI Health-Check (`scripts/itinfra.py health-check`):** test automatici ICMP, TCP e DNS live.
+- **Local Semantic Querying:** motore RAG su nodi e relazioni del knowledge graph OKF.
+- **Modulo RFC:** gestione formale delle Request For Change con approvazioni e rollback plan.
+
 
