@@ -413,6 +413,19 @@ timeline
 
 ---
 
+### ✅ Release v0.9.11 — Unified 1-Click Project Onboarding & Auto-Healing Scaffolding (Completato)
+- [x] **Comando Unificato All-in-One (`it start <slug>`):**
+  - Workflow deterministico a passaggio singolo: inizializza cartella e manifesto `project-manifest.yaml`, propaga i parametri con auto-scaffolding nei 10 documenti OKF v0.2 e apre il Cruscotto Esecutivo UI.
+  - Mantenimento del comportamento desktop standard per invocazioni senza argomenti (`it start` sincronizza e avvia l'IDE).
+- [x] **Auto-Healing & Resilienza Trasparente in Scaffolding (`it scaffold <slug>`):**
+  - Se un progetto non è ancora stato inizializzato, `scaffold` non si blocca più con errore ma inizializza automaticamente il manifesto con i parametri standard e procede immediatamente allo scaffolding.
+- [x] **Zero-Search Fast-Path & Chat Agent Ergonomics:**
+  - Registrazione del trigger rapidissimo `start <slug>` e `avvia <slug>` nelle regole e skill di Antigravity, Gemini e Claude.
+- [x] **Enterprise Test Suite Regression & Validation (MOD-13):**
+  - Estensione del modulo di collaudo MOD-13 per verificare l'auto-inizializzazione trasparente in caso di manifesto assente (13/13 moduli superati, 100% Pass Rate).
+
+---
+
 ### 🔮 Release v0.10 — Advanced Topology Engine, MCP Server & Automated CI/CD (Pianificato Q1 2027)
 - [ ] **Server MCP Nativo (Model Context Protocol):**
   - Implementazione del server standalone `scripts/itinfra_mcp.py` basato sullo standard open-source MCP.

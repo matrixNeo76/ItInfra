@@ -39,10 +39,14 @@ graph TD
 ```
 
 ### Step 1: Inizializzazione o Caricamento Progetto
-- Verifica se esiste la cartella `projects/<slug>/project-manifest.yaml`.
-- Se il progetto non esiste, chiedi il nome del cliente e avvia:
+- Per avviare un nuovo progetto in modalità 1-click end-to-end (inizializzazione manifesto, auto-scaffold dei 10 documenti OKF v0.2 e apertura UI):
+  ```powershell
+  python scripts/itinfra.py start <slug> [--client "<Nome Cliente>"] [--name "<Titolo Progetto>"]
+  ```
+- In alternativa, puoi inizializzare singolarmente o auto-scaffoldare:
   ```powershell
   python scripts/itinfra.py init <slug> --client "<Nome Cliente>" --name "<Titolo Progetto>"
+  python scripts/itinfra.py scaffold <slug>
   ```
 - Leggi i parametri condivisi dal manifest (`network_baseline`, `sites`, `sla_baseline`).
 

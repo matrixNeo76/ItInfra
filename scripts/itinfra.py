@@ -2487,6 +2487,90 @@ def cmd_scaffold(args: argparse.Namespace) -> int:
 
     return run_scaffold(args)
 
+def cmd_start(args: argparse.Namespace) -> int:
+    """Handler unificato per avviare l'onboarding di un progetto o l'ambiente ITInfra (Release v0.9.11)."""
+    repo_root = Path(__file__).resolve().parent.parent
+    projects_dir = repo_root / "projects"
+
+    raw_slug = getattr(args, "slug", None)
+    if not raw_slug:
+        print(colorize("\n" + "=" * 68, COLOR_BOLD + COLOR_CYAN))
+        print("  ITINFRA — AVVIO PROGETTO E ONBOARDING UNIFICATO (Release v0.9.11)")
+        print("=" * 68)
+        print("Uso:")
+        print("  it start <slug>                 Inizializza, crea i 10 template e apre la UI")
+        print("  it start <slug> --client \"Nome\" Inizializza con cliente personalizzato")
+        print("  it start                        Avvia l'ambiente di lavoro quotidiano (IDE)")
+        print("=" * 68 + "\n")
+        return 0
+
+    slug = raw_slug.strip().lower()
+    client = getattr(args, "client", None) or f"Cliente {slug.capitalize()}"
+    project_name = getattr(args, "name", None) or f"Progetto {slug.capitalize()}"
+    target_dir = projects_dir / slug
+    manifest_target = target_dir / "project-manifest.yaml"
+
+    print(colorize("\n" + "=" * 68, COLOR_BOLD + COLOR_CYAN))
+    print(f"  🚀 ITINFRA ONBOARDING UNIFICATO: '{slug}'")
+    print("=" * 68)
+
+    # 1. Inizializzazione automatica del manifesto
+    if not target_dir.exists() or not manifest_target.exists():
+        print(colorize(f"\n[1/3] Inizializzazione cartella e manifesto per '{slug}'...", COLOR_BOLD))
+        target_dir.mkdir(parents=True, exist_ok=True)
+        template_manifest = projects_dir / "_template" / "project-manifest.yaml"
+        if template_manifest.exists():
+            text = template_manifest.read_text(encoding="utf-8")
+            text = re.sub(r'project_id:\s*"[^"]+"', f'project_id: "{slug}"', text)
+            text = re.sub(r'project_name:\s*"[^"]+"', f'project_name: "{project_name}"', text)
+            text = re.sub(r'customer:\s*"[^"]+"', f'customer: "{client}"', text)
+            manifest_target.write_text(text, encoding="utf-8")
+        else:
+            manifest_target.write_text(f"""project_id: "{slug}"
+project_name: "{project_name}"
+customer: "{client}"
+lead_architect: "System Architect"
+status: "in-planning"
+version: "0.1.0"
+""", encoding="utf-8")
+        try:
+            from itinfra_memory import MemoryManager
+            mem_mgr = MemoryManager(repo_root=repo_root)
+            mem_mgr.init_scratchpad(slug)
+        except Exception:
+            pass
+        print(colorize(f"  ✓ Manifesto creato: {manifest_target.name} (Cliente: {client})", COLOR_GREEN))
+    else:
+        print(colorize(f"\n[1/3] Progetto '{slug}' già esistente (manifesto rilevato).", COLOR_YELLOW))
+
+    # 2. Scaffolding automatico
+    print(colorize(f"\n[2/3] Propagazione deterministica dei 10 documenti OKF v0.2...", COLOR_BOLD))
+    try:
+        from itinfra_scaffold import ProjectScaffolder
+    except ImportError:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from itinfra_scaffold import ProjectScaffolder
+
+    scaffolder = ProjectScaffolder(repo_root=repo_root)
+    ok, msg, stats = scaffolder.scaffold(slug, dry_run=False, force=False)
+    if ok:
+        print(colorize(f"  ✓ {stats['files_scaffolded']} documenti OKF v0.2 generati/allineati ({stats['replacements_count']} sostituzioni).", COLOR_GREEN))
+    else:
+        print(colorize(f"  ⚠️ Avviso scaffolding: {msg}", COLOR_YELLOW))
+
+    # 3. Cruscotto UI & Telemetria
+    print(colorize(f"\n[3/3] Apertura Cruscotto Esecutivo Generative UI...", COLOR_BOLD))
+    ui_args = argparse.Namespace(out=None, open=getattr(args, "open", False))
+    cmd_ui(ui_args)
+
+    print("=" * 68)
+    print(colorize(f"  ✨ Onboarding completato con successo per '{slug}'!", COLOR_BOLD + COLOR_GREEN))
+    print(f"  Cartella: projects/{slug}/")
+    print(f"  Per visualizzare lo stato di avanzamento: it status {slug}")
+    print("=" * 68 + "\n")
+    return 0
+
 def cmd_memory(args: argparse.Namespace) -> int:
     """Gestisce la Memoria Locale Ibrida a 3 Livelli e i Trust Signals (Release v0.6 e v0.8)."""
     try:
@@ -2931,6 +3015,13 @@ def main():
     p_scaf.add_argument("--dry-run", action="store_true", help="Simula lo scaffolding senza scrivere su disco")
     p_scaf.add_argument("--force", action="store_true", help="Forza la riscrittura dei template esistenti")
 
+    # Comando start (Release v0.9.11)
+    p_start = subparsers.add_parser("start", help="Avvia l'onboarding completo del progetto (init + scaffold + ui) o mostra le opzioni di avvio (Release v0.9.11)")
+    p_start.add_argument("slug", nargs="?", default=None, help="Slug del progetto da avviare (opzionale)")
+    p_start.add_argument("--client", default=None, help="Nome del cliente (opzionale)")
+    p_start.add_argument("--name", default=None, help="Titolo del progetto (opzionale)")
+    p_start.add_argument("--open", action="store_true", help="Apre la dashboard nel browser predefinito")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -2983,6 +3074,8 @@ def main():
         return cmd_ui(args)
     elif args.command == "scaffold":
         return cmd_scaffold(args)
+    elif args.command == "start":
+        return cmd_start(args)
     else:
         parser.print_help()
         return 1

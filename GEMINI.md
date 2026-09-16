@@ -22,6 +22,7 @@ Questo è l'ambiente di lavoro per la documentazione tecnica, governance, automa
 
 | Azione Desiderata | Da Chat Antigravity (Scrivi semplicemente) | Da Terminale (Prompt / PowerShell) |
 | :--- | :--- | :--- |
+| **All-in-One: Avvia Progetto (Init+Scaffold+UI)** | `start <slug>` *(o `avvia <slug>`)* | `it start <slug>` |
 | **Allineare Template e Motore** | `aggiorna` *(o `update`)* | `it update` *(oppure solo `update`)* |
 | **Verificare Rete e Permessi** | `controlla` *(o `check`)* | `it check` |
 | **Pubblicare Progetto su Server** | `pubblica <slug>` | `it publish <slug>` |
@@ -39,11 +40,12 @@ Questo è l'ambiente di lavoro per la documentazione tecnica, governance, automa
 
 ### ⚡ Esecuzione Deterministica dei Comandi a 1 Parola (Zero-Hesitation)
 Se l'utente digita uno di questi trigger rapidi, **NON fare domande, NON chiedere conferme preliminari e NON cercare file**: esegui immediatamente il relativo comando:
+- **`"start <slug>"`** o **`"avvia <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py start <slug>` ed incorpora nella risposta il tag `<agent-embed src="file:///...">` stampato dall'output del comando.
 - **`"ui"`** o **`"dashboard"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py ui` ed incorpora nella risposta il tag `<agent-embed src="file:///...">` stampato dall'output del comando. *(⚠️ CRITICO: NON inserire MAI codice HTML all'interno del tag `<agent-embed>`. Deve contenere ESCLUSIVAMENTE l'attributo `src="file:///..."`, altrimenti l'interfaccia mostrerà l'errore "Invalid embed:").*
 - **`"aggiorna"`** o **`"update"`** $\rightarrow$ Esegui subito: `python scripts/itinfra_sync.py` e mostra il report di sincronizzazione.
 - **`"controlla"`** o **`"check"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py check-share` e mostra la tabella di salute.
 - **`"pubblica <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py publish <slug>` e mostra l'esito del Quality Gate.
-- **`"scaffold <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py scaffold <slug>` e mostra il report di auto-scaffolding.
+- **`"scaffold <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py scaffold <slug>` (con auto-inizializzazione trasparente se non presente) e mostra il report di auto-scaffolding.
 - **`"stato <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py status <slug>` e mostra l'avanzamento delle 7 fasi.
 - **`"valida <file>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py validate <file>` e mostra il report del linter.
 - **`"test-suite"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py test-suite --no-html`.
@@ -198,6 +200,12 @@ Il KnowledgeGraph del Vault ha 5 livelli di correlazione: il 1° livello usa `re
 Il repository include la suite di automazione `scripts/itinfra.py`:
 
 ```bash
+# All-in-One: Inizializza progetto, auto-scaffold dei 10 documenti OKF v0.2 e apre la UI (Release v0.9.11):
+python scripts/itinfra.py start <slug> [--client "<Nome>"] [--name "<Titolo>"]
+
+# Auto-scaffold con propagazione automatica dal manifesto (auto-inizializza se non presente):
+python scripts/itinfra.py scaffold <slug> [--dry-run] [--force]
+
 # Inizializzare un nuovo progetto con manifesto condiviso:
 python scripts/itinfra.py init <slug> --client "<Nome Cliente>" --name "<Titolo Progetto>"
 

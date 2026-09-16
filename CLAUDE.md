@@ -22,6 +22,7 @@ Questo è l'ambiente di lavoro per la documentazione tecnica, governance, automa
 
 | Azione Desiderata | Da Chat (Scrivi semplicemente) | Da Terminale (Prompt / PowerShell) |
 | :--- | :--- | :--- |
+| **All-in-One: Avvia Progetto (Init+Scaffold+UI)** | `start <slug>` *(o `avvia <slug>`)* | `it start <slug>` |
 | **Allineare Template e Motore** | `aggiorna` *(o `update`)* | `it update` *(oppure solo `update`)* |
 | **Verificare Rete e Permessi** | `controlla` *(o `check`)* | `it check` |
 | **Pubblicare Progetto su Server** | `pubblica <slug>` | `it publish <slug>` |
@@ -39,11 +40,12 @@ Questo è l'ambiente di lavoro per la documentazione tecnica, governance, automa
 
 ### ⚡ Esecuzione Deterministica dei Comandi a 1 Parola (Zero-Hesitation)
 Se l'utente digita uno di questi trigger rapidi, **NON fare domande, NON chiedere conferme preliminari e NON cercare file**: esegui immediatamente il relativo comando:
+- **`"start <slug>"`** o **`"avvia <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py start <slug>` ed incorpora nella risposta il tag `<agent-embed src="file:///...">` stampato dall'output del comando.
 - **`"ui"`** o **`"dashboard"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py ui` ed incorpora nella risposta il tag `<agent-embed src="file:///...">` stampato dall'output del comando. *(⚠️ CRITICO: NON inserire MAI codice HTML all'interno del tag `<agent-embed>`. Deve contenere ESCLUSIVAMENTE l'attributo `src="file:///..."`, altrimenti l'interfaccia mostrerà l'errore "Invalid embed:").*
 - **`"aggiorna"`** o **`"update"`** $\rightarrow$ Esegui subito: `python scripts/itinfra_sync.py`.
 - **`"controlla"`** o **`"check"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py check-share`.
 - **`"pubblica <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py publish <slug>`.
-- **`"scaffold <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py scaffold <slug>`.
+- **`"scaffold <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py scaffold <slug>` (con auto-inizializzazione se non presente).
 - **`"stato <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py status <slug>`.
 - **`"valida <file>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py validate <file>`.
 - **`"test-suite"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py test-suite --no-html`.

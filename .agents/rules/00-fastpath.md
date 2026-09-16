@@ -26,6 +26,7 @@ Questo è l'ambiente di lavoro per la documentazione tecnica, governance, automa
 
 | Azione Desiderata | Da Chat Antigravity (Scrivi semplicemente) | Da Terminale (Prompt / PowerShell) |
 | :--- | :--- | :--- |
+| **All-in-One: Avvia Progetto (Init+Scaffold+UI)** | `start <slug>` *(o `avvia <slug>`)* | `it start <slug>` |
 | **Allineare Template e Motore** | `aggiorna` *(o `update`)* | `it update` *(oppure solo `update`)* |
 | **Verificare Rete e Permessi** | `controlla` *(o `check`)* | `it check` |
 | **Pubblicare Progetto su Server** | `pubblica <slug>` | `it publish <slug>` |
@@ -43,6 +44,7 @@ Questo è l'ambiente di lavoro per la documentazione tecnica, governance, automa
 
 ### ⚡ Esecuzione Deterministica dei Comandi a 1 Parola (Zero-Hesitation)
 Se l'utente digita uno di questi trigger rapidi, esegui immediatamente con `run_command` senza fare domande preventive né cercare file:
+- **`"start <slug>"`** o **`"avvia <slug>"`** $\rightarrow$ `python scripts/itinfra.py start <slug>` ed incorpora nella risposta il tag `<agent-embed src="file:///...">` stampato dall'output del comando.
 - **`"ui"`** o **`"dashboard"`** $\rightarrow$ `python scripts/itinfra.py ui` ed incorpora nella risposta il tag `<agent-embed src="file:///...">` stampato dall'output del comando. *(⚠️ CRITICO: NON inserire MAI codice HTML all'interno del tag `<agent-embed>`. Deve contenere ESCLUSIVAMENTE l'attributo `src="file:///..."`, altrimenti l'interfaccia mostrerà l'errore "Invalid embed:").*
 - **`"aggiorna"`** o **`"update"`** $\rightarrow$ `python scripts/itinfra_sync.py`
 - **`"controlla"`** o **`"check"`** $\rightarrow$ `python scripts/itinfra.py check-share`

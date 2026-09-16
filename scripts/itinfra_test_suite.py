@@ -682,9 +682,20 @@ sla_baseline:
             doc06_txt = doc06.read_text(encoding="utf-8")
             assert "vault://it/projects/mock-client" in doc06_txt, "Vault prefix non iniettato"
 
+            # Test Auto-Initialization fallback (Release v0.9.11)
+            uninit_slug = "auto-init-client"
+            ok_auto, msg_auto, stats_auto = scaffolder.scaffold(uninit_slug, dry_run=False)
+            assert ok_auto, f"Auto-initialization scaffolding fallito: {msg_auto}"
+            assert stats_auto.get("auto_initialized") is True, "Dovrebbe contrassegnare auto_initialized come True"
+            uninit_manifest = tmp_projects / uninit_slug / "project-manifest.yaml"
+            assert uninit_manifest.exists(), "Il manifesto del progetto non è stato auto-inizializzato"
+            uninit_doc01 = tmp_projects / uninit_slug / "01-RSD-URS.md"
+            assert uninit_doc01.exists(), "01-RSD-URS.md non generato nell'auto-inizializzazione"
+
         details = [
             "Ground Truth Extraction: validata estrazione da project-manifest.yaml (Metadati, Rete, Hardware, SLA)",
             f"Template Propagation: generati {stats_run['files_scaffolded']} documenti OKF v0.2 con {stats_run['replacements_count']} sostituzioni atomiche",
+            "Auto-Healing & 1-Click Init: verificata inizializzazione trasparente e auto-scaffolding per progetti nuovi (Release v0.9.11)",
             "Zero-Hallucination Policy: sostituzioni mirate conformi, preservati token <DA-RICHIEDERE> per elementi mancanti",
             "Idempotenza e Dry-Run: simulazione senza scrittura e re-esecuzione in-place convalidate al 100%"
         ]

@@ -45,18 +45,52 @@ class ProjectScaffolder:
         project_dir = self.projects_dir / slug
         manifest_file = project_dir / "project-manifest.yaml"
 
-        if not project_dir.exists():
-            return False, f"La directory del progetto non esiste: {project_dir}", {}
-
-        if not manifest_file.exists():
-            return False, f"Manifesto non trovato: {manifest_file}. Esegui prima 'it init {slug}'.", {}
+        auto_initialized = False
+        if not project_dir.exists() or not manifest_file.exists():
+            auto_initialized = True
+            if not dry_run:
+                project_dir.mkdir(parents=True, exist_ok=True)
+                template_manifest = self.repo_root / "projects" / "_template" / "project-manifest.yaml"
+                client_name = f"Cliente {slug.capitalize()}"
+                proj_name = f"Progetto {slug.capitalize()}"
+                if template_manifest.exists():
+                    text = template_manifest.read_text(encoding="utf-8")
+                    text = re.sub(r'project_id:\s*"[^"]+"', f'project_id: "{slug}"', text)
+                    text = re.sub(r'project_name:\s*"[^"]+"', f'project_name: "{proj_name}"', text)
+                    text = re.sub(r'customer:\s*"[^"]+"', f'customer: "{client_name}"', text)
+                    manifest_file.write_text(text, encoding="utf-8")
+                else:
+                    manifest_file.write_text(f"""project_id: "{slug}"
+project_name: "{proj_name}"
+customer: "{client_name}"
+lead_architect: "System Architect"
+status: "in-planning"
+version: "0.1.0"
+""", encoding="utf-8")
+                try:
+                    from itinfra_memory import MemoryManager
+                    mem_mgr = MemoryManager(repo_root=self.repo_root)
+                    mem_mgr.init_scratchpad(slug)
+                except Exception:
+                    pass
 
         # 1. Carica e valida il manifesto
-        try:
-            with open(manifest_file, "r", encoding="utf-8") as mf:
-                manifest_data = yaml.safe_load(mf) or {}
-        except Exception as e:
-            return False, f"Errore nel parsing YAML del manifesto: {e}", {}
+        if auto_initialized and dry_run:
+            manifest_data = {
+                "project_id": slug,
+                "project_name": f"Progetto {slug.capitalize()}",
+                "customer": f"Cliente {slug.capitalize()}",
+                "lead_architect": "System Architect",
+                "owner_team": "IT Operations & Architecture",
+                "status": "in-planning",
+                "version": "0.1.0"
+            }
+        else:
+            try:
+                with open(manifest_file, "r", encoding="utf-8") as mf:
+                    manifest_data = yaml.safe_load(mf) or {}
+            except Exception as e:
+                return False, f"Errore nel parsing YAML del manifesto: {e}", {}
 
         # 2. Estrai i dati certi (Ground Truth)
         project_id = str(manifest_data.get("project_id") or slug)
@@ -100,6 +134,7 @@ class ProjectScaffolder:
 
         stats = {
             "slug": slug,
+            "auto_initialized": auto_initialized,
             "files_scaffolded": 0,
             "files_skipped": 0,
             "replacements_count": 0,
@@ -282,6 +317,8 @@ def cmd_scaffold(args) -> int:
         print(colorize("\n" + "=" * 65, COLOR_BOLD + COLOR_GREEN))
         print(f"  [OK] AUTO-SCAFFOLDING COMPLETATO PER: '{args.slug}'")
         print("=" * 65)
+        if stats.get("auto_initialized"):
+            print(colorize(f"  [AUTO-INIT] Progetto '{args.slug}' non presente: manifesto inizializzato automaticamente.", COLOR_CYAN + COLOR_BOLD))
         print(f"  Documenti generati/allineati: {stats['files_scaffolded']}")
         print(f"  Sostituzioni totali:          {stats['replacements_count']}")
         if getattr(args, "dry_run", False):
