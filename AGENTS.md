@@ -169,6 +169,9 @@ python scripts/itinfra.py export-configs <slug> --out projects/<slug>/configs
 # Gestione Incidenti, Root Cause Analysis (RCA) e Live Telemetry:
 python scripts/itinfra.py troubleshoot [init|list] <slug> <ticket_id>
 python scripts/itinfra.py health-check <slug> [--timeout 1.0]
+
+# Mappa Interattiva D3.js Knowledge Graph OKF v0.2:
+python scripts/itinfra.py export-graph <slug|templates> [--out graph.html]
 ```
 
 ### 7. Validazione finale & Gate di Qualità

@@ -942,7 +942,10 @@ def cmd_export_html(args) -> int:
         "09-Handover-Inventory": ("tab-fase7-handover", "Fase 7: Handover"),
     }
 
-    nav_buttons = ['<button class="tab-btn active" onclick="switchTab(\'tab-dashboard\')">Dashboard & Manifest</button>']
+    nav_buttons = [
+        '<button class="tab-btn active" onclick="switchTab(\'tab-dashboard\')">Dashboard & Manifest</button>',
+        '<button class="tab-btn" onclick="window.open(\'graph.html\', \'_blank\')">Knowledge Graph 3D/D3 &#128376;</button>'
+    ]
     for s in doc_sections:
         prefix = s["prefix"]
         if prefix in tab_mapping:
@@ -2170,6 +2173,63 @@ def cmd_health_check(args: argparse.Namespace) -> int:
     print(colorize("[*] Telemetria completata con successo. Valori integrabili in Sezione 4 (OSI L1-L4).\n", COLOR_CYAN))
     return 0
 
+def cmd_export_graph(args: argparse.Namespace) -> int:
+    """Genera una visualizzazione interattiva del Knowledge Graph D3.js per un progetto o per i template."""
+    try:
+        from scripts.graph_generator import build_graph_data, generate_graph_html
+    except ImportError:
+        try:
+            from graph_generator import build_graph_data, generate_graph_html
+        except ImportError:
+            import sys
+            sys.path.insert(0, str(repo_root / "scripts"))
+            from graph_generator import build_graph_data, generate_graph_html
+
+    repo_root = Path(__file__).resolve().parent.parent
+    target_arg = args.target.strip()
+
+    # Risolvi target: slug progetto, 'templates' o path
+    if target_arg.lower() in ["templates", "template"]:
+        folder_path = repo_root / "templates"
+        default_title = "ITInfra Knowledge Graph OKF v0.2 — Template Ciclo IT"
+        default_out = folder_path / "graph.html"
+    else:
+        proj_dir = repo_root / "projects" / target_arg
+        if proj_dir.exists():
+            folder_path = proj_dir
+            default_title = f"Knowledge Graph OKF v0.2 — {target_arg.upper()}"
+            default_out = proj_dir / "graph.html"
+        else:
+            folder_path = Path(target_arg)
+            if not folder_path.exists():
+                print(colorize(f"ERRORE: Percorso o progetto '{target_arg}' non trovato.", COLOR_RED))
+                return 1
+            default_title = f"Knowledge Graph OKF v0.2 — {folder_path.name}"
+            default_out = folder_path / "graph.html"
+
+    print(colorize(f"\n=== GENERAZIONE KNOWLEDGE GRAPH D3.JS OKF v0.2 ===", COLOR_BOLD + COLOR_CYAN))
+    print(f"Sorgente:  {folder_path}")
+
+    graph_data = build_graph_data(folder_path)
+    nodes_count = len(graph_data["nodes"])
+    links_count = len(graph_data["links"])
+
+    if nodes_count == 0:
+        print(colorize("AVVISO: Nessun documento Markdown valido con frontmatter OKF rilevato.", COLOR_YELLOW))
+        return 1
+
+    title = args.title or default_title
+    out_file = Path(args.out) if args.out else default_out
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+
+    html_page = generate_graph_html(graph_data, title=title)
+    out_file.write_text(html_page, encoding="utf-8")
+
+    print(colorize(f"[+] Nodi estratti:   {nodes_count}", COLOR_GREEN))
+    print(colorize(f"[+] Archi semantici: {links_count}", COLOR_GREEN))
+    print(colorize(f"[OK] Knowledge Graph interattivo salvato in: {out_file.resolve()}\n", COLOR_GREEN + COLOR_BOLD))
+    return 0
+
 def main():
     if hasattr(sys.stdout, "reconfigure"):
         try:
@@ -2284,6 +2344,12 @@ def main():
     tb_list = sub_tb.add_parser("list", help="Elenca i ticket RCA registrati per il progetto")
     tb_list.add_argument("project_slug", help="Slug del progetto")
 
+    # Comando export-graph
+    p_eg = subparsers.add_parser("export-graph", help="Genera una mappa interattiva D3.js del Knowledge Graph OKF v0.2")
+    p_eg.add_argument("target", help="Slug del progetto (es. severino-srl) oppure 'templates' o percorso cartella")
+    p_eg.add_argument("--out", help="Percorso file HTML di output (default: <target>/graph.html)")
+    p_eg.add_argument("--title", help="Titolo personalizzato della vista grafo")
+
     # Comando health-check
     p_hc = subparsers.add_parser("health-check", help="Esegue telemetria e health check non distruttivo (ICMP/TCP) sugli apparati del manifest")
     p_hc.add_argument("project_slug", help="Slug del progetto")
@@ -2321,6 +2387,8 @@ def main():
         return cmd_troubleshoot(args)
     elif args.command == "health-check":
         return cmd_health_check(args)
+    elif args.command == "export-graph":
+        return cmd_export_graph(args)
     else:
         parser.print_help()
         return 1

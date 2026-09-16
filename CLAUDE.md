@@ -70,6 +70,8 @@ Claude Code dispone dell'esecuzione di comandi da terminale (`Bash`). Usala atti
 - Gestione credenziali e secret vault AES-256-GCM: `python scripts/itinfra.py vault [init|set|get|list|audit] <slug>`
 - Gestione worktree per subagenti paralleli: `python scripts/itinfra.py worktree [add|list|sync|cleanup]`
 - Esportazione script RouterOS e PowerShell: `python scripts/itinfra.py export-configs <slug>`
+- Gestione incidenti e live health-check: `python scripts/itinfra.py troubleshoot init <slug> <ticket_id>` / `python scripts/itinfra.py health-check <slug>`
+- Mappa interattiva D3.js Knowledge Graph OKF v0.2: `python scripts/itinfra.py export-graph <slug|templates>`
 
 ### Anti-pattern da evitare (Zero-Hallucination Policy)
 

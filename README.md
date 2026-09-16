@@ -115,6 +115,13 @@ python scripts/itinfra.py worktree list
 # Esporta playbook esecutivi (RouterOS .rsc e PowerShell .ps1):
 python scripts/itinfra.py export-configs acme-dc
 
+# Gestione incidenti e diagnostica telemetrica live:
+python scripts/itinfra.py troubleshoot init acme-dc INC-001
+python scripts/itinfra.py health-check acme-dc
+
+# Genera la mappa interattiva D3.js Knowledge Graph OKF v0.2:
+python scripts/itinfra.py export-graph acme-dc
+
 # Genera la Dashboard HTML offline completa e interattiva:
 python scripts/itinfra.py export-html acme-dc
 ```
