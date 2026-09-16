@@ -1,6 +1,12 @@
 # Setup Workspace Locale Tecnico Windows 11 (Release v0.9)
 param(
-    [string]$TargetLocalDir = $(if (Test-Path .\.itinfra_config.json) { (Get-Location).Path } else { "C:\itinfra" }),
+    [string]$TargetLocalDir = $(
+        if (Test-Path .\.itinfra_config.json) { (Get-Location).Path }
+        elseif (Test-Path "C:\project\.itinfra_config.json") { "C:\project" }
+        elseif (Test-Path "C:\project") { "C:\project" }
+        elseif (Test-Path "C:\itinfra\.itinfra_config.json") { "C:\itinfra" }
+        else { "C:\itinfra" }
+    ),
     [string]$CentralShare = "\\fileserv01\dati01\workaure"
 )
 
@@ -40,7 +46,7 @@ foreach ($folder in $FoldersToSync) {
     }
 }
 
-$RootFiles = @("README.md", "ROADMAP.md", "AGENTS.md", "CLAUDE.md", "INTEGRAZIONE-REPO.md", "00-INDEX.md", "update.cmd", "it.cmd")
+$RootFiles = @("README.md", "ROADMAP.md", "AGENTS.md", "CLAUDE.md", "GEMINI.md", "INTEGRAZIONE-REPO.md", "00-INDEX.md", "update.cmd", "it.cmd")
 foreach ($f in $RootFiles) {
     $srcFile = Join-Path $CentralShare $f
     $dstFile = Join-Path $TargetLocalDir $f

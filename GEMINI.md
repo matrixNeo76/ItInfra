@@ -1,6 +1,6 @@
-# AGENTS.md — Istruzioni per agenti AI
+# GEMINI.md — Istruzioni per Google Antigravity / Gemini
 
-> Questo file è letto automaticamente da Google Antigravity, Cursor, Aider, Continue, Cline, Roo Code e altri agenti che seguono la convenzione `AGENTS.md`. Per Claude Code vedere `CLAUDE.md` (contenuto equivalente).
+> Questo file è letto automaticamente da **Google Antigravity** e modelli Gemini. Per altri agenti vedere `AGENTS.md` e `CLAUDE.md`.
 
 ---
 

@@ -11,12 +11,23 @@ import os
 import sys
 import json
 import shutil
+import hashlib
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
 
 DEFAULT_CENTRAL_SHARE = r"\\fileserv01\dati01\workaure"
 CONFIG_FILE_NAME = ".itinfra_config.json"
+
+def sha256_file(file_path: Path) -> str:
+    h = hashlib.sha256()
+    try:
+        with open(file_path, "rb") as f:
+            while chunk := f.read(65536):
+                h.update(chunk)
+        return h.hexdigest()
+    except Exception:
+        return ""
 
 class ClientSyncManager:
     def __init__(self, workspace_root: Optional[Path] = None):
@@ -38,7 +49,7 @@ class ClientSyncManager:
         except Exception:
             pass
 
-    def check_updates(self, source_override: Optional[str] = None) -> Tuple[bool, List[str], str]:
+    def check_updates(self, source_override: Optional[str] = None, force: bool = False) -> Tuple[bool, List[str], str]:
         share_str = source_override or self.config.get("central_share", DEFAULT_CENTRAL_SHARE)
         share_path = Path(share_str)
 
@@ -46,9 +57,22 @@ class ClientSyncManager:
             return False, [], f"Share centrale '{share_str}' non raggiungibile (offline o senza VPN)."
 
         dirs_to_check = ["scripts", "templates", "docs", "skills", ".agents", ".vscode"]
-        root_files = ["README.md", "ROADMAP.md", "AGENTS.md", "CLAUDE.md", "INTEGRAZIONE-REPO.md", "00-INDEX.md", "update.cmd", "it.cmd"]
+        root_files = [
+            "README.md", "ROADMAP.md", "AGENTS.md", "CLAUDE.md", "GEMINI.md",
+            "INTEGRAZIONE-REPO.md", "00-INDEX.md", "update.cmd", "it.cmd"
+        ]
 
         files_to_update = []
+
+        def needs_sync(rem: Path, loc: Path) -> bool:
+            if force or not loc.exists():
+                return True
+            try:
+                if rem.stat().st_size != loc.stat().st_size:
+                    return True
+                return sha256_file(rem) != sha256_file(loc)
+            except Exception:
+                return True
 
         for d in dirs_to_check:
             rem_d = share_path / d
@@ -60,21 +84,21 @@ class ClientSyncManager:
                         rem_f = Path(root) / fname
                         rel_f = rem_f.relative_to(share_path)
                         loc_f = self.workspace_root / rel_f
-                        if not loc_f.exists() or rem_f.stat().st_mtime > loc_f.stat().st_mtime:
+                        if needs_sync(rem_f, loc_f):
                             files_to_update.append(str(rel_f))
 
         for rf in root_files:
             rem_f = share_path / rf
             if rem_f.exists():
                 loc_f = self.workspace_root / rf
-                if not loc_f.exists() or rem_f.stat().st_mtime > loc_f.stat().st_mtime:
+                if needs_sync(rem_f, loc_f):
                     files_to_update.append(rf)
 
         msg = f"{len(files_to_update)} file aggiornabili rilevati sulla share master." if files_to_update else "Workspace locale gia' allineato all'ultima versione."
         return True, files_to_update, msg
 
-    def sync(self, source_override: Optional[str] = None) -> Tuple[bool, str, int]:
-        ok, files_to_update, msg = self.check_updates(source_override)
+    def sync(self, source_override: Optional[str] = None, force: bool = False) -> Tuple[bool, str, int]:
+        ok, files_to_update, msg = self.check_updates(source_override, force=force)
         if not ok:
             return False, msg, 0
 
@@ -104,20 +128,21 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Client Startup Auto-Sync & Version Checker")
     parser.add_argument("--check-only", action="store_true", help="Verifica solo se ci sono aggiornamenti senza applicarli")
+    parser.add_argument("--force", action="store_true", help="Forza la riscrittura di tutti i file di sistema")
     parser.add_argument("--source", default=None, help=f"Percorso share master (default: '{DEFAULT_CENTRAL_SHARE}')")
     parser.add_argument("--json", action="store_true", help="Output in formato JSON")
     args = parser.parse_args()
 
     mgr = ClientSyncManager()
     if args.check_only:
-        ok, files, msg = mgr.check_updates(args.source)
+        ok, files, msg = mgr.check_updates(args.source, force=args.force)
         if args.json:
             print(json.dumps({"reachable": ok, "updates_available": len(files) > 0, "count": len(files), "files": files, "message": msg}))
         else:
             print(msg)
         sys.exit(0 if ok else 1)
     else:
-        ok, msg, count = mgr.sync(args.source)
+        ok, msg, count = mgr.sync(args.source, force=args.force)
         if args.json:
             print(json.dumps({"success": ok, "updated_count": count, "message": msg}))
         else:
