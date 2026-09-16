@@ -152,4 +152,27 @@ Per consentire a più agenti AI (Antigravity, Cursor, Claude Code, Cline) di lav
 Struttura standard compatibile con tutti i moderni agenti:
 - `.agents/skills/itinfra-assistant/SKILL.md`: wizard interattivo per la stesura dei 9 documenti tecnici.
 - `.agents/skills/itinfra-vault/SKILL.md`: procedure operative per l'interazione con il vault cifrato e la gestione dei secret.
+- `.agents/skills/itinfra-troubleshooter/SKILL.md`: procedura deterministica di diagnosi guasti a strati (OSI L1-L7) e stesura schede post-mortem.
+
+### 2.7 Modulo Troubleshooting & AI Root Cause Analysis (Release v0.5)
+Estende la suite operativa al supporto post-rilascio e alla gestione dei disservizi cliente:
+- **Template OKF v0.2 `10-RCA-Troubleshooting.md`:**
+  - Tipo canonico OKF: `guide`.
+  - Struttura: Identificativi disservizio, Impatto business, Cronologia, Albero diagnostico a 7 strati OSI, Root Cause (5 Perché), Workaround immediato, Soluzione strutturale definitiva (con snippet comandi convalidati), Piano di prevenzione.
+  - Relazioni: archi `relates_to` verso LLD (`03-LLD`) e `extends` verso As-Built (`06-As-Built`) e Runbook (`08-SOP-Runbook`).
+- **Subagent `infra-troubleshooter`:**
+  - Agente AI con prompt vincolante: divieto di diagnosi ipotetiche o log simulati; richiede comandi di verifica esatti (ping, traceroute, ARP table, test porte TCP, nslookup, log RouterOS/Windows).
+- **CLI Assistant `scripts/itinfra.py troubleshoot`:**
+  - `python scripts/itinfra.py troubleshoot init <slug> --incident "<Titolo>"`: crea la scheda precompilata con riferimenti al manifesto del cliente.
+
+### 2.8 Live Infrastructure Health-Check & Telemetry Engine (Release v0.6)
+- Script di diagnostica live non distruttiva `python scripts/itinfra.py health-check <slug>`:
+  - Estrae automaticamente tutti gli host, IP e server dal `project-manifest.yaml` e dai documenti di progetto.
+  - Esegue verifiche di connettività ICMP, probe TCP su porte standard (53, 80, 443, 445, 3389, 8291) e test di risoluzione DNS locale.
+  - Segnala disallineamenti tra lo stato reale dell'infrastruttura e quanto documentato nell'As-Built.
+
+### 2.9 Knowledge Graph Navigation & Semantic Graph RAG
+- Ogni documento del repository costituisce un **nodo tipizzato** collegato da archi semantici pesati (`relations`).
+- L'agente AI naviga il grafo seguendo percorsi logici formalizzati anziché affidarsi alla mera somiglianza lessicale vettoriale, eliminando il rischio di allucinazioni incrociate tra apparati o clienti diversi.
+
 
