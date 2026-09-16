@@ -26,6 +26,15 @@ if /I "%~1"=="publish" (
     exit /b %ERRORLEVEL%
 )
 
+if /I "%~1"=="scaffold" (
+    if "%~2"=="" (
+        echo [ERRORE] Specificare lo slug del progetto da scaffoldare: it scaffold ^<slug^>
+        exit /b 1
+    )
+    python "%BASEDIR%scripts\itinfra.py" scaffold %2 %3 %4 %5
+    exit /b %ERRORLEVEL%
+)
+
 if /I "%~1"=="ui" goto open_ui
 if /I "%~1"=="dashboard" goto open_ui
 

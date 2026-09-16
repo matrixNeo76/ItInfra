@@ -17,6 +17,15 @@
     .action-card:active {
       transform: scale(0.98);
     }
+    .proj-pill-active {
+      background: #0ea5e9 !important;
+      color: #ffffff !important;
+      border-color: #38bdf8 !important;
+    }
+    .status-badge-approved { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-badge-review { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .status-badge-draft { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .status-badge-missing { background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.2); }
   </style>
 </head>
 <body class="bg-transparent text-[var(--foreground)] antialiased p-2 font-sans select-none">
@@ -31,7 +40,7 @@
         <div>
           <div class="flex items-center gap-2">
             <h2 class="text-sm font-bold tracking-tight text-sky-400">ITInfra Enterprise Suite</h2>
-            <span class="text-[9px] uppercase font-semibold px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">v0.9.9</span>
+            <span class="text-[9px] uppercase font-semibold px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">v0.9.10</span>
           </div>
           <p class="text-[10px] text-[var(--muted-foreground)]">Governance OKF v0.2 • Ciclo Lavorativo 7 Fasi</p>
         </div>
@@ -50,11 +59,11 @@
       <button id="btn-tab-actions" onclick="switchTab('tab-actions')" class="tab-active flex-1 py-1 px-2 rounded-lg text-xs font-semibold border transition-all text-center flex items-center justify-center gap-1.5">
         <span>⚡</span> Azioni Rapide
       </button>
+      <button id="btn-tab-phases" onclick="switchTab('tab-phases')" class="flex-1 py-1 px-2 rounded-lg text-xs font-semibold border border-transparent text-[var(--muted-foreground)] transition-all text-center flex items-center justify-center gap-1.5">
+        <span>🔄</span> Progetti & 10 Doc
+      </button>
       <button id="btn-tab-kpi" onclick="switchTab('tab-kpi')" class="flex-1 py-1 px-2 rounded-lg text-xs font-semibold border border-transparent text-[var(--muted-foreground)] transition-all text-center flex items-center justify-center gap-1.5">
         <span>📊</span> Telemetria & KPI
-      </button>
-      <button id="btn-tab-phases" onclick="switchTab('tab-phases')" class="flex-1 py-1 px-2 rounded-lg text-xs font-semibold border border-transparent text-[var(--muted-foreground)] transition-all text-center flex items-center justify-center gap-1.5">
-        <span>🔄</span> Workflow 7 Fasi
       </button>
     </div>
 
@@ -64,10 +73,34 @@
     <div id="tab-actions" class="space-y-2">
       <div class="text-[10px] text-[var(--muted-foreground)] flex items-center justify-between px-0.5">
         <span>💡 <em>Clicca su un'azione per copiare il comando negli appunti e incollarlo in chat:</em></span>
-        <span class="text-sky-400 font-mono text-[9px]">Click-to-Copy</span>
+        <span class="text-sky-400 font-mono text-[9px]">Progetto attivo: <strong id="lbl-active-slug" class="text-sky-300 font-bold">demo-acme</strong></span>
       </div>
 
       <div class="grid grid-cols-2 gap-2">
+        <div onclick="copyActiveCmd('scaffold')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-sky-400/60 bg-[var(--background)] cursor-pointer transition-all">
+          <div>
+            <div class="text-xs font-semibold flex items-center gap-1"><span>✨</span> Auto-Scaffold</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Propaga dati da manifest</div>
+          </div>
+          <span id="btn-copy-scaffold" class="copy-badge text-[10px] bg-slate-800 text-sky-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">it scaffold</span>
+        </div>
+
+        <div onclick="copyActiveCmd('pubblica')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-emerald-400/60 bg-[var(--background)] cursor-pointer transition-all">
+          <div>
+            <div class="text-xs font-semibold flex items-center gap-1"><span>🚀</span> Pubblica Progetto</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Quality Gate & copia server</div>
+          </div>
+          <span id="btn-copy-pubblica" class="copy-badge text-[10px] bg-slate-800 text-emerald-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">pubblica demo-acme</span>
+        </div>
+
+        <div onclick="copyActiveCmd('stato')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-amber-400/60 bg-[var(--background)] cursor-pointer transition-all">
+          <div>
+            <div class="text-xs font-semibold flex items-center gap-1"><span>📈</span> Stato 7 Fasi</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Avanzamento cliente</div>
+          </div>
+          <span id="btn-copy-stato" class="copy-badge text-[10px] bg-slate-800 text-amber-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">stato demo-acme</span>
+        </div>
+
         <div onclick="copyCmd('aggiorna')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-sky-400/60 bg-[var(--background)] cursor-pointer transition-all">
           <div>
             <div class="text-xs font-semibold flex items-center gap-1"><span>🔄</span> Allinea Motore</div>
@@ -84,47 +117,48 @@
           <span class="copy-badge text-[10px] bg-slate-800 text-emerald-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">controlla</span>
         </div>
 
-        <div onclick="copyCmd('pubblica severino-srl')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-emerald-400/60 bg-[var(--background)] cursor-pointer transition-all">
-          <div>
-            <div class="text-xs font-semibold flex items-center gap-1"><span>🚀</span> Pubblica Progetto</div>
-            <div class="text-[9px] text-[var(--muted-foreground)]">Quality Gate & rilascio</div>
-          </div>
-          <span class="copy-badge text-[10px] bg-slate-800 text-emerald-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">pubblica severino-srl</span>
-        </div>
-
-        <div onclick="copyCmd('stato severino-srl')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-amber-400/60 bg-[var(--background)] cursor-pointer transition-all">
-          <div>
-            <div class="text-xs font-semibold flex items-center gap-1"><span>📈</span> Stato Progetto</div>
-            <div class="text-[9px] text-[var(--muted-foreground)]">Avanzamento 7 fasi</div>
-          </div>
-          <span class="copy-badge text-[10px] bg-slate-800 text-amber-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">stato severino-srl</span>
-        </div>
-
         <div onclick="copyCmd('test-suite')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-purple-400/60 bg-[var(--background)] cursor-pointer transition-all">
           <div>
             <div class="text-xs font-semibold flex items-center gap-1"><span>🧪</span> Collaudo Totale</div>
-            <div class="text-[9px] text-[var(--muted-foreground)]">12 moduli di test</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Suite 13 moduli di test</div>
           </div>
           <span class="copy-badge text-[10px] bg-slate-800 text-purple-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">test-suite</span>
-        </div>
-
-        <div onclick="copyCmd('it init nuovo-cliente --client &quot;Nome&quot; --name &quot;Titolo&quot;')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-sky-400/60 bg-[var(--background)] cursor-pointer transition-all">
-          <div>
-            <div class="text-xs font-semibold flex items-center gap-1"><span>📁</span> Nuovo Cliente</div>
-            <div class="text-[9px] text-[var(--muted-foreground)]">Manifesto & struttura</div>
-          </div>
-          <span class="copy-badge text-[10px] bg-slate-800 text-sky-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">inizializza</span>
         </div>
       </div>
     </div>
 
-    <!-- TAB 2: TELEMETRIA & KPI (HIDDEN INIZIALMENTE) -->
+    <!-- TAB 2: PROGETTI & MATRICE 10 DOCUMENTI -->
+    <div id="tab-phases" class="hidden space-y-2.5">
+      <!-- Project Switcher Pills -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
+        <span class="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase mr-1">Progetto:</span>
+        <div id="project-pills-container" class="flex items-center gap-1.5">
+          <!-- Injected dynamically by JS -->
+        </div>
+      </div>
+
+      <!-- Project Info Banner -->
+      <div class="bg-[var(--background)] p-2 rounded-xl border border-[var(--border)] flex items-center justify-between text-xs">
+        <div>
+          <span id="mat-proj-customer" class="font-bold text-sky-300">Caricamento...</span>
+          <span id="mat-proj-desc" class="text-[10px] text-[var(--muted-foreground)] ml-2"></span>
+        </div>
+        <div id="mat-proj-stats" class="text-[10px] font-mono font-semibold"></div>
+      </div>
+
+      <!-- 10 Document Matrix (2x5 Grid) -->
+      <div id="matrix-container" class="grid grid-cols-5 gap-1.5 text-center text-[9px]">
+        <!-- Injected dynamically by JS -->
+      </div>
+    </div>
+
+    <!-- TAB 3: TELEMETRIA & KPI -->
     <div id="tab-kpi" class="hidden space-y-2.5">
       <div class="grid grid-cols-4 gap-2">
         <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
           <div class="text-[10px] font-medium text-[var(--muted-foreground)]">Template OKF</div>
           <div class="text-base font-bold text-emerald-400 mt-0.5">10 / 10</div>
-          <div class="text-[9px] text-emerald-400 mt-0.5">✓ Allineati</div>
+          <div class="text-[9px] text-emerald-400 mt-0.5">✓ Standard v0.2</div>
         </div>
         <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
           <div class="text-[10px] font-medium text-[var(--muted-foreground)]">Secret Vault</div>
@@ -134,7 +168,7 @@
         <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
           <div class="text-[10px] font-medium text-[var(--muted-foreground)]">Test Suite</div>
           <div class="text-base font-bold text-indigo-400 mt-0.5">100% Pass</div>
-          <div class="text-[9px] text-indigo-400 mt-0.5">12/12 Moduli</div>
+          <div class="text-[9px] text-indigo-400 mt-0.5">13 Moduli Core</div>
         </div>
         <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
           <div class="text-[10px] font-medium text-[var(--muted-foreground)]">Storage Master</div>
@@ -154,57 +188,6 @@
       </div>
     </div>
 
-    <!-- TAB 3: WORKFLOW 7 FASI (HIDDEN INIZIALMENTE) -->
-    <div id="tab-phases" class="hidden space-y-2.5">
-      <div class="grid grid-cols-7 gap-1 text-center text-[9px]">
-        <div class="bg-[var(--background)] border border-sky-500/30 rounded-lg p-1.5">
-          <span class="text-sky-400 font-bold block">1. Assess</span>
-          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">RSD/URS</span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1"></span>
-        </div>
-        <div class="bg-[var(--background)] border border-sky-500/30 rounded-lg p-1.5">
-          <span class="text-sky-400 font-bold block">2. Design</span>
-          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">HLD/LLD</span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1"></span>
-        </div>
-        <div class="bg-[var(--background)] border border-sky-500/30 rounded-lg p-1.5">
-          <span class="text-sky-400 font-bold block">3. Staging</span>
-          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">MOP/Roll</span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1"></span>
-        </div>
-        <div class="bg-[var(--background)] border border-slate-700/60 rounded-lg p-1.5">
-          <span class="text-slate-400 font-bold block">4. Cabling</span>
-          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">Racking</span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-500 mt-1"></span>
-        </div>
-        <div class="bg-[var(--background)] border border-slate-700/60 rounded-lg p-1.5">
-          <span class="text-slate-400 font-bold block">5. Comm</span>
-          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">Config</span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-500 mt-1"></span>
-        </div>
-        <div class="bg-[var(--background)] border border-amber-500/30 rounded-lg p-1.5">
-          <span class="text-amber-400 font-bold block">6. Test</span>
-          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">ATP</span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 mt-1"></span>
-        </div>
-        <div class="bg-[var(--background)] border border-emerald-500/30 rounded-lg p-1.5">
-          <span class="text-emerald-400 font-bold block">7. Live</span>
-          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">Handover</span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1"></span>
-        </div>
-      </div>
-
-      <div class="bg-[var(--background)] p-2 rounded-xl border border-[var(--border)] text-xs flex items-center justify-between">
-        <div>
-          <span class="font-semibold text-sky-300">severino-srl</span>
-          <span class="text-[10px] text-[var(--muted-foreground)] ml-2">Fasi completate: 10 doc censiti</span>
-        </div>
-        <button onclick="copyCmd('stato severino-srl')" class="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/30 px-2 py-0.5 rounded hover:bg-sky-500/20">
-          Vedi Stato
-        </button>
-      </div>
-    </div>
-
     <!-- 4. Floating Toast Notification (Click-to-Copy Feedback) -->
     <div id="toast" class="hidden absolute bottom-2 left-1/2 -translate-x-1/2 bg-emerald-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl shadow-2xl border border-emerald-300 flex items-center gap-1.5 z-50 animate-bounce">
       <span>✓</span> <span id="toast-msg">Copiato negli appunti!</span>
@@ -213,6 +196,88 @@
   </div>
 
   <script>
+    const PROJECTS = [{"slug": "demo-acme", "name": "Modernizzazione Rete Datacenter", "customer": "Acme Corporation", "status": "in-planning", "docs": [{"code": "01-RSD-URS", "title": "RSD/URS", "type": "specification", "status": "in-review", "exists": true, "filename": "01-RSD-URS.md"}, {"code": "02-HLD", "title": "HLD", "type": "architecture", "status": "missing", "exists": false, "filename": "02-HLD.md"}, {"code": "03-LLD", "title": "LLD", "type": "architecture", "status": "missing", "exists": false, "filename": "03-LLD.md"}, {"code": "04-MOP", "title": "MOP", "type": "guide", "status": "missing", "exists": false, "filename": "04-MOP.md"}, {"code": "05-Rollback", "title": "Rollback", "type": "guide", "status": "missing", "exists": false, "filename": "05-Rollback.md"}, {"code": "06-As-Built", "title": "As-Built", "type": "architecture", "status": "missing", "exists": false, "filename": "06-As-Built.md"}, {"code": "07-ATP", "title": "ATP", "type": "specification", "status": "missing", "exists": false, "filename": "07-ATP.md"}, {"code": "08-SOP-Runbook", "title": "Runbook", "type": "guide", "status": "missing", "exists": false, "filename": "08-SOP-Runbook.md"}, {"code": "09-Handover-Inventory", "title": "Handover", "type": "specification", "status": "missing", "exists": false, "filename": "09-Handover-Inventory.md"}, {"code": "10-RCA", "title": "RCA", "type": "guide", "status": "missing", "exists": false, "filename": "10-RCA.md"}], "stats": {"total": 10, "approved": 0, "in_review": 1, "missing": 9}}, {"slug": "severino-srl", "name": "Infrastruttura LAN, Virtualizzazione Hyper-V e Collaboration Severino Srl", "customer": "Severino Srl", "status": "completed", "docs": [{"code": "01-RSD-URS", "title": "RSD/URS", "type": "specification", "status": "in-review", "exists": true, "filename": "01-RSD-URS.md"}, {"code": "02-HLD", "title": "HLD", "type": "architecture", "status": "in-review", "exists": true, "filename": "02-HLD.md"}, {"code": "03-LLD", "title": "LLD", "type": "architecture", "status": "in-review", "exists": true, "filename": "03-LLD.md"}, {"code": "04-MOP", "title": "MOP", "type": "guide", "status": "in-review", "exists": true, "filename": "04-MOP.md"}, {"code": "05-Rollback", "title": "Rollback", "type": "guide", "status": "in-review", "exists": true, "filename": "05-Rollback.md"}, {"code": "06-As-Built", "title": "As-Built", "type": "architecture", "status": "in-review", "exists": true, "filename": "06-As-Built.md"}, {"code": "07-ATP", "title": "ATP", "type": "specification", "status": "in-review", "exists": true, "filename": "07-ATP.md"}, {"code": "08-SOP-Runbook", "title": "Runbook", "type": "guide", "status": "in-review", "exists": true, "filename": "08-SOP-Runbook.md"}, {"code": "09-Handover-Inventory", "title": "Handover", "type": "specification", "status": "in-review", "exists": true, "filename": "09-Handover-Inventory.md"}, {"code": "10-RCA", "title": "RCA", "type": "guide", "status": "approved", "exists": true, "filename": "10-RCA-FS01-SMB-Connectivity.md"}], "stats": {"total": 10, "approved": 1, "in_review": 9, "missing": 0}}];
+    let currentSlug = "demo-acme";
+
+    function initUI() {
+      renderProjectPills();
+      selectProject(currentSlug);
+    }
+
+    function renderProjectPills() {
+      const container = document.getElementById("project-pills-container");
+      container.innerHTML = "";
+      PROJECTS.forEach(p => {
+        const btn = document.createElement("button");
+        btn.id = "pill-" + p.slug;
+        btn.className = "px-2.5 py-0.5 rounded-lg text-[10px] font-bold border transition-all " + (p.slug === currentSlug ? "proj-pill-active" : "border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:border-sky-400");
+        btn.textContent = p.slug;
+        btn.onclick = () => selectProject(p.slug);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectProject(slug) {
+      currentSlug = slug;
+      const proj = PROJECTS.find(p => p.slug === slug) || PROJECTS[0];
+
+      // Update pills
+      PROJECTS.forEach(p => {
+        const el = document.getElementById("pill-" + p.slug);
+        if (el) {
+          if (p.slug === slug) {
+            el.className = "px-2.5 py-0.5 rounded-lg text-[10px] font-bold border transition-all proj-pill-active";
+          } else {
+            el.className = "px-2.5 py-0.5 rounded-lg text-[10px] font-bold border transition-all border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:border-sky-400";
+          }
+        }
+      });
+
+      // Update Tab 1 buttons & labels
+      document.getElementById("lbl-active-slug").textContent = slug;
+      document.getElementById("btn-copy-pubblica").textContent = "pubblica " + slug;
+      document.getElementById("btn-copy-stato").textContent = "stato " + slug;
+      document.getElementById("btn-copy-scaffold").textContent = "it scaffold " + slug;
+
+      // Update Tab 2 info
+      document.getElementById("mat-proj-customer").textContent = proj.customer;
+      document.getElementById("mat-proj-desc").textContent = proj.name;
+      document.getElementById("mat-proj-stats").innerHTML = '<span class="text-emerald-400 font-bold">' + proj.stats.approved + ' Approvati</span> • <span class="text-amber-400">' + proj.stats.in_review + ' In Corso</span> • <span class="text-slate-400">' + proj.stats.missing + ' Mancanti</span>';
+
+      // Render 10-doc matrix
+      const mat = document.getElementById("matrix-container");
+      mat.innerHTML = "";
+      proj.docs.forEach(d => {
+        const card = document.createElement("div");
+        let statusCls = "status-badge-draft";
+        let statusLabel = "Draft";
+        let actionCmd = "valida projects/" + slug + "/" + d.filename;
+
+        if (d.status === "approved") {
+          statusCls = "status-badge-approved";
+          statusLabel = "Appr";
+        } else if (d.status === "in-review") {
+          statusCls = "status-badge-review";
+          statusLabel = "Review";
+        } else if (d.status === "missing") {
+          statusCls = "status-badge-missing";
+          statusLabel = "Manca";
+          actionCmd = "it scaffold " + slug;
+        }
+
+        card.className = "p-1.5 rounded-lg border flex flex-col justify-between cursor-pointer transition-all hover:scale-105 " + statusCls;
+        card.onclick = () => copyCmd(actionCmd);
+        card.innerHTML = '<span class="font-bold block truncate">' + d.code.split("-")[0] + ' ' + d.title + '</span><span class="text-[8px] uppercase font-mono font-bold block mt-1">' + statusLabel + '</span>';
+        mat.appendChild(card);
+      });
+    }
+
+    function copyActiveCmd(type) {
+      if (type === "pubblica") copyCmd("pubblica " + currentSlug);
+      else if (type === "stato") copyCmd("stato " + currentSlug);
+      else if (type === "scaffold") copyCmd("it scaffold " + currentSlug);
+    }
+
     function switchTab(tabId) {
       ['tab-actions', 'tab-kpi', 'tab-phases'].forEach(id => {
         document.getElementById(id).classList.add('hidden');
@@ -257,6 +322,8 @@
         window.tTimer = setTimeout(() => { toast.classList.add('hidden'); }, 2500);
       }
     }
+
+    window.addEventListener("DOMContentLoaded", initUI);
   </script>
 </body>
 </html>

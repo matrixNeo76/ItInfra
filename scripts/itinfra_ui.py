@@ -2,17 +2,107 @@
 """
 scripts/itinfra_ui.py
 ---------------------
-Modulo Enterprise Generative UI per Google Antigravity (Release v0.9.9).
-Genera il Cockpit Esecutivo Sistemistico interattivo e le Pre-Flight Quality Gate Cards
+Modulo Enterprise Generative UI per Google Antigravity (Release v0.9.10).
+Genera il Cockpit Esecutivo Sistemistico interattivo, Dynamic Project Switcher,
+Matrice di Stato a 10 Documenti e Pre-Flight Quality Gate Cards
 conforme ai design tokens di Google Antigravity e standard OKF v0.2.
 """
 
 import os
+import re
 import sys
+import json
+import yaml
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
 DEFAULT_CENTRAL_SHARE = r"\\fileserv01\dati01\workaure"
+
+def discover_projects_state(repo_root: Optional[Path] = None) -> List[Dict[str, Any]]:
+    """Analizza tutti i progetti in projects/ e mappa lo stato dei 10 documenti OKF v0.2."""
+    if repo_root is None:
+        repo_root = Path(__file__).resolve().parent.parent
+    projects_dir = repo_root / "projects"
+    if not projects_dir.exists():
+        return []
+
+    standard_docs = [
+        ("01-RSD-URS", "RSD/URS", "specification"),
+        ("02-HLD", "HLD", "architecture"),
+        ("03-LLD", "LLD", "architecture"),
+        ("04-MOP", "MOP", "guide"),
+        ("05-Rollback", "Rollback", "guide"),
+        ("06-As-Built", "As-Built", "architecture"),
+        ("07-ATP", "ATP", "specification"),
+        ("08-SOP-Runbook", "Runbook", "guide"),
+        ("09-Handover-Inventory", "Handover", "specification"),
+        ("10-RCA", "RCA", "guide"),
+    ]
+
+    results = []
+    for d in sorted(projects_dir.iterdir()):
+        if not d.is_dir() or d.name.startswith("_") or d.name.startswith("."):
+            continue
+
+        manifest_path = d / "project-manifest.yaml"
+        manifest_data = {}
+        if manifest_path.exists():
+            try:
+                manifest_data = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+            except Exception:
+                pass
+
+        proj_name = manifest_data.get("project_name", d.name.capitalize())
+        customer = manifest_data.get("customer", d.name)
+        status = manifest_data.get("status", "draft")
+
+        docs_state = []
+        for code, short_title, doc_type in standard_docs:
+            matching = list(d.glob(f"{code}*.md"))
+            if matching:
+                doc_file = matching[0]
+                content = doc_file.read_text(encoding="utf-8")
+                doc_status = "draft"
+                m = re.search(r'^status:\s*["\']?([^"\'\n]+)["\']?', content, re.MULTILINE)
+                if m:
+                    doc_status = m.group(1).strip().lower()
+                docs_state.append({
+                    "code": code,
+                    "title": short_title,
+                    "type": doc_type,
+                    "status": doc_status,
+                    "exists": True,
+                    "filename": doc_file.name
+                })
+            else:
+                docs_state.append({
+                    "code": code,
+                    "title": short_title,
+                    "type": doc_type,
+                    "status": "missing",
+                    "exists": False,
+                    "filename": f"{code}.md"
+                })
+
+        approved_count = sum(1 for doc in docs_state if doc["status"] == "approved")
+        in_review_count = sum(1 for doc in docs_state if doc["status"] in ("in-review", "draft"))
+        missing_count = sum(1 for doc in docs_state if doc["status"] == "missing")
+
+        results.append({
+            "slug": d.name,
+            "name": proj_name,
+            "customer": customer,
+            "status": status,
+            "docs": docs_state,
+            "stats": {
+                "total": len(docs_state),
+                "approved": approved_count,
+                "in_review": in_review_count,
+                "missing": missing_count
+            }
+        })
+
+    return results
 
 def render_enterprise_dashboard(
     workspace_path: str = "C:\\project",
@@ -23,11 +113,23 @@ def render_enterprise_dashboard(
     vault_status: str = "AES-256-GCM (Zero Leak)",
     test_suite_status: str = "12/12 Pass (100%)"
 ) -> str:
-    """Genera l'Enterprise Cockpit Dashboard compatto (<450px, zero scroll) con Tab e Click-to-Copy."""
-    share_color = "#10b981" if share_reachable else "#ef4444"
+    """Genera l'Enterprise Cockpit Dashboard compatto (<460px, zero scroll) con Project Switcher e 10-Doc Matrix."""
     share_label = "Share Online" if share_reachable else "Share Offline"
     pulse_class = "animate-pulse" if share_reachable else ""
-    slug_ref = active_project if active_project else "severino-srl"
+
+    projects_list = discover_projects_state()
+    if not projects_list:
+        projects_list = [{
+            "slug": "severino-srl",
+            "name": "Severino Srl",
+            "customer": "Severino Srl",
+            "status": "completed",
+            "docs": [],
+            "stats": {"total": 10, "approved": 0, "in_review": 10, "missing": 0}
+        }]
+
+    default_slug = active_project if (active_project and any(p["slug"] == active_project for p in projects_list)) else projects_list[0]["slug"]
+    projects_json = json.dumps(projects_list, ensure_ascii=False)
 
     html = f"""<!DOCTYPE html>
 <html lang="it">
@@ -48,6 +150,15 @@ def render_enterprise_dashboard(
     .action-card:active {{
       transform: scale(0.98);
     }}
+    .proj-pill-active {{
+      background: #0ea5e9 !important;
+      color: #ffffff !important;
+      border-color: #38bdf8 !important;
+    }}
+    .status-badge-approved {{ background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }}
+    .status-badge-review {{ background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }}
+    .status-badge-draft {{ background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }}
+    .status-badge-missing {{ background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.2); }}
   </style>
 </head>
 <body class="bg-transparent text-[var(--foreground)] antialiased p-2 font-sans select-none">
@@ -62,7 +173,7 @@ def render_enterprise_dashboard(
         <div>
           <div class="flex items-center gap-2">
             <h2 class="text-sm font-bold tracking-tight text-sky-400">ITInfra Enterprise Suite</h2>
-            <span class="text-[9px] uppercase font-semibold px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">v0.9.9</span>
+            <span class="text-[9px] uppercase font-semibold px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">v0.9.10</span>
           </div>
           <p class="text-[10px] text-[var(--muted-foreground)]">Governance OKF v0.2 • Ciclo Lavorativo 7 Fasi</p>
         </div>
@@ -81,11 +192,11 @@ def render_enterprise_dashboard(
       <button id="btn-tab-actions" onclick="switchTab('tab-actions')" class="tab-active flex-1 py-1 px-2 rounded-lg text-xs font-semibold border transition-all text-center flex items-center justify-center gap-1.5">
         <span>⚡</span> Azioni Rapide
       </button>
+      <button id="btn-tab-phases" onclick="switchTab('tab-phases')" class="flex-1 py-1 px-2 rounded-lg text-xs font-semibold border border-transparent text-[var(--muted-foreground)] transition-all text-center flex items-center justify-center gap-1.5">
+        <span>🔄</span> Progetti & 10 Doc
+      </button>
       <button id="btn-tab-kpi" onclick="switchTab('tab-kpi')" class="flex-1 py-1 px-2 rounded-lg text-xs font-semibold border border-transparent text-[var(--muted-foreground)] transition-all text-center flex items-center justify-center gap-1.5">
         <span>📊</span> Telemetria & KPI
-      </button>
-      <button id="btn-tab-phases" onclick="switchTab('tab-phases')" class="flex-1 py-1 px-2 rounded-lg text-xs font-semibold border border-transparent text-[var(--muted-foreground)] transition-all text-center flex items-center justify-center gap-1.5">
-        <span>🔄</span> Workflow 7 Fasi
       </button>
     </div>
 
@@ -95,10 +206,34 @@ def render_enterprise_dashboard(
     <div id="tab-actions" class="space-y-2">
       <div class="text-[10px] text-[var(--muted-foreground)] flex items-center justify-between px-0.5">
         <span>💡 <em>Clicca su un'azione per copiare il comando negli appunti e incollarlo in chat:</em></span>
-        <span class="text-sky-400 font-mono text-[9px]">Click-to-Copy</span>
+        <span class="text-sky-400 font-mono text-[9px]">Progetto attivo: <strong id="lbl-active-slug" class="text-sky-300 font-bold">{default_slug}</strong></span>
       </div>
 
       <div class="grid grid-cols-2 gap-2">
+        <div onclick="copyActiveCmd('scaffold')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-sky-400/60 bg-[var(--background)] cursor-pointer transition-all">
+          <div>
+            <div class="text-xs font-semibold flex items-center gap-1"><span>✨</span> Auto-Scaffold</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Propaga dati da manifest</div>
+          </div>
+          <span id="btn-copy-scaffold" class="copy-badge text-[10px] bg-slate-800 text-sky-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">it scaffold</span>
+        </div>
+
+        <div onclick="copyActiveCmd('pubblica')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-emerald-400/60 bg-[var(--background)] cursor-pointer transition-all">
+          <div>
+            <div class="text-xs font-semibold flex items-center gap-1"><span>🚀</span> Pubblica Progetto</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Quality Gate & copia server</div>
+          </div>
+          <span id="btn-copy-pubblica" class="copy-badge text-[10px] bg-slate-800 text-emerald-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">pubblica {default_slug}</span>
+        </div>
+
+        <div onclick="copyActiveCmd('stato')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-amber-400/60 bg-[var(--background)] cursor-pointer transition-all">
+          <div>
+            <div class="text-xs font-semibold flex items-center gap-1"><span>📈</span> Stato 7 Fasi</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Avanzamento cliente</div>
+          </div>
+          <span id="btn-copy-stato" class="copy-badge text-[10px] bg-slate-800 text-amber-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">stato {default_slug}</span>
+        </div>
+
         <div onclick="copyCmd('aggiorna')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-sky-400/60 bg-[var(--background)] cursor-pointer transition-all">
           <div>
             <div class="text-xs font-semibold flex items-center gap-1"><span>🔄</span> Allinea Motore</div>
@@ -115,47 +250,48 @@ def render_enterprise_dashboard(
           <span class="copy-badge text-[10px] bg-slate-800 text-emerald-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">controlla</span>
         </div>
 
-        <div onclick="copyCmd('pubblica {slug_ref}')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-emerald-400/60 bg-[var(--background)] cursor-pointer transition-all">
-          <div>
-            <div class="text-xs font-semibold flex items-center gap-1"><span>🚀</span> Pubblica Progetto</div>
-            <div class="text-[9px] text-[var(--muted-foreground)]">Quality Gate & rilascio</div>
-          </div>
-          <span class="copy-badge text-[10px] bg-slate-800 text-emerald-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">pubblica {slug_ref}</span>
-        </div>
-
-        <div onclick="copyCmd('stato {slug_ref}')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-amber-400/60 bg-[var(--background)] cursor-pointer transition-all">
-          <div>
-            <div class="text-xs font-semibold flex items-center gap-1"><span>📈</span> Stato Progetto</div>
-            <div class="text-[9px] text-[var(--muted-foreground)]">Avanzamento 7 fasi</div>
-          </div>
-          <span class="copy-badge text-[10px] bg-slate-800 text-amber-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">stato {slug_ref}</span>
-        </div>
-
         <div onclick="copyCmd('test-suite')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-purple-400/60 bg-[var(--background)] cursor-pointer transition-all">
           <div>
             <div class="text-xs font-semibold flex items-center gap-1"><span>🧪</span> Collaudo Totale</div>
-            <div class="text-[9px] text-[var(--muted-foreground)]">12 moduli di test</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Suite 13 moduli di test</div>
           </div>
           <span class="copy-badge text-[10px] bg-slate-800 text-purple-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">test-suite</span>
-        </div>
-
-        <div onclick="copyCmd('it init nuovo-cliente --client &quot;Nome&quot; --name &quot;Titolo&quot;')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-sky-400/60 bg-[var(--background)] cursor-pointer transition-all">
-          <div>
-            <div class="text-xs font-semibold flex items-center gap-1"><span>📁</span> Nuovo Cliente</div>
-            <div class="text-[9px] text-[var(--muted-foreground)]">Manifesto & struttura</div>
-          </div>
-          <span class="copy-badge text-[10px] bg-slate-800 text-sky-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">inizializza</span>
         </div>
       </div>
     </div>
 
-    <!-- TAB 2: TELEMETRIA & KPI (HIDDEN INIZIALMENTE) -->
+    <!-- TAB 2: PROGETTI & MATRICE 10 DOCUMENTI -->
+    <div id="tab-phases" class="hidden space-y-2.5">
+      <!-- Project Switcher Pills -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
+        <span class="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase mr-1">Progetto:</span>
+        <div id="project-pills-container" class="flex items-center gap-1.5">
+          <!-- Injected dynamically by JS -->
+        </div>
+      </div>
+
+      <!-- Project Info Banner -->
+      <div class="bg-[var(--background)] p-2 rounded-xl border border-[var(--border)] flex items-center justify-between text-xs">
+        <div>
+          <span id="mat-proj-customer" class="font-bold text-sky-300">Caricamento...</span>
+          <span id="mat-proj-desc" class="text-[10px] text-[var(--muted-foreground)] ml-2"></span>
+        </div>
+        <div id="mat-proj-stats" class="text-[10px] font-mono font-semibold"></div>
+      </div>
+
+      <!-- 10 Document Matrix (2x5 Grid) -->
+      <div id="matrix-container" class="grid grid-cols-5 gap-1.5 text-center text-[9px]">
+        <!-- Injected dynamically by JS -->
+      </div>
+    </div>
+
+    <!-- TAB 3: TELEMETRIA & KPI -->
     <div id="tab-kpi" class="hidden space-y-2.5">
       <div class="grid grid-cols-4 gap-2">
         <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
           <div class="text-[10px] font-medium text-[var(--muted-foreground)]">Template OKF</div>
           <div class="text-base font-bold text-emerald-400 mt-0.5">{templates_count} / 10</div>
-          <div class="text-[9px] text-emerald-400 mt-0.5">✓ Allineati</div>
+          <div class="text-[9px] text-emerald-400 mt-0.5">✓ Standard v0.2</div>
         </div>
         <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
           <div class="text-[10px] font-medium text-[var(--muted-foreground)]">Secret Vault</div>
@@ -165,7 +301,7 @@ def render_enterprise_dashboard(
         <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
           <div class="text-[10px] font-medium text-[var(--muted-foreground)]">Test Suite</div>
           <div class="text-base font-bold text-indigo-400 mt-0.5">100% Pass</div>
-          <div class="text-[9px] text-indigo-400 mt-0.5">12/12 Moduli</div>
+          <div class="text-[9px] text-indigo-400 mt-0.5">13 Moduli Core</div>
         </div>
         <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
           <div class="text-[10px] font-medium text-[var(--muted-foreground)]">Storage Master</div>
@@ -185,57 +321,6 @@ def render_enterprise_dashboard(
       </div>
     </div>
 
-    <!-- TAB 3: WORKFLOW 7 FASI (HIDDEN INIZIALMENTE) -->
-    <div id="tab-phases" class="hidden space-y-2.5">
-      <div class="grid grid-cols-7 gap-1 text-center text-[9px]">
-        <div class="bg-[var(--background)] border border-sky-500/30 rounded-lg p-1.5">
-          <span class="text-sky-400 font-bold block">1. Assess</span>
-          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">RSD/URS</span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1"></span>
-        </div>
-        <div class="bg-[var(--background)] border border-sky-500/30 rounded-lg p-1.5">
-          <span class="text-sky-400 font-bold block">2. Design</span>
-          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">HLD/LLD</span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1"></span>
-        </div>
-        <div class="bg-[var(--background)] border border-sky-500/30 rounded-lg p-1.5">
-          <span class="text-sky-400 font-bold block">3. Staging</span>
-          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">MOP/Roll</span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1"></span>
-        </div>
-        <div class="bg-[var(--background)] border border-slate-700/60 rounded-lg p-1.5">
-          <span class="text-slate-400 font-bold block">4. Cabling</span>
-          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">Racking</span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-500 mt-1"></span>
-        </div>
-        <div class="bg-[var(--background)] border border-slate-700/60 rounded-lg p-1.5">
-          <span class="text-slate-400 font-bold block">5. Comm</span>
-          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">Config</span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-500 mt-1"></span>
-        </div>
-        <div class="bg-[var(--background)] border border-amber-500/30 rounded-lg p-1.5">
-          <span class="text-amber-400 font-bold block">6. Test</span>
-          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">ATP</span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 mt-1"></span>
-        </div>
-        <div class="bg-[var(--background)] border border-emerald-500/30 rounded-lg p-1.5">
-          <span class="text-emerald-400 font-bold block">7. Live</span>
-          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">Handover</span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1"></span>
-        </div>
-      </div>
-
-      <div class="bg-[var(--background)] p-2 rounded-xl border border-[var(--border)] text-xs flex items-center justify-between">
-        <div>
-          <span class="font-semibold text-sky-300">severino-srl</span>
-          <span class="text-[10px] text-[var(--muted-foreground)] ml-2">Fasi completate: 10 doc censiti</span>
-        </div>
-        <button onclick="copyCmd('stato severino-srl')" class="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/30 px-2 py-0.5 rounded hover:bg-sky-500/20">
-          Vedi Stato
-        </button>
-      </div>
-    </div>
-
     <!-- 4. Floating Toast Notification (Click-to-Copy Feedback) -->
     <div id="toast" class="hidden absolute bottom-2 left-1/2 -translate-x-1/2 bg-emerald-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl shadow-2xl border border-emerald-300 flex items-center gap-1.5 z-50 animate-bounce">
       <span>✓</span> <span id="toast-msg">Copiato negli appunti!</span>
@@ -244,6 +329,88 @@ def render_enterprise_dashboard(
   </div>
 
   <script>
+    const PROJECTS = {projects_json};
+    let currentSlug = "{default_slug}";
+
+    function initUI() {{
+      renderProjectPills();
+      selectProject(currentSlug);
+    }}
+
+    function renderProjectPills() {{
+      const container = document.getElementById("project-pills-container");
+      container.innerHTML = "";
+      PROJECTS.forEach(p => {{
+        const btn = document.createElement("button");
+        btn.id = "pill-" + p.slug;
+        btn.className = "px-2.5 py-0.5 rounded-lg text-[10px] font-bold border transition-all " + (p.slug === currentSlug ? "proj-pill-active" : "border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:border-sky-400");
+        btn.textContent = p.slug;
+        btn.onclick = () => selectProject(p.slug);
+        container.appendChild(btn);
+      }});
+    }}
+
+    function selectProject(slug) {{
+      currentSlug = slug;
+      const proj = PROJECTS.find(p => p.slug === slug) || PROJECTS[0];
+
+      // Update pills
+      PROJECTS.forEach(p => {{
+        const el = document.getElementById("pill-" + p.slug);
+        if (el) {{
+          if (p.slug === slug) {{
+            el.className = "px-2.5 py-0.5 rounded-lg text-[10px] font-bold border transition-all proj-pill-active";
+          }} else {{
+            el.className = "px-2.5 py-0.5 rounded-lg text-[10px] font-bold border transition-all border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:border-sky-400";
+          }}
+        }}
+      }});
+
+      // Update Tab 1 buttons & labels
+      document.getElementById("lbl-active-slug").textContent = slug;
+      document.getElementById("btn-copy-pubblica").textContent = "pubblica " + slug;
+      document.getElementById("btn-copy-stato").textContent = "stato " + slug;
+      document.getElementById("btn-copy-scaffold").textContent = "it scaffold " + slug;
+
+      // Update Tab 2 info
+      document.getElementById("mat-proj-customer").textContent = proj.customer;
+      document.getElementById("mat-proj-desc").textContent = proj.name;
+      document.getElementById("mat-proj-stats").innerHTML = '<span class="text-emerald-400 font-bold">' + proj.stats.approved + ' Approvati</span> • <span class="text-amber-400">' + proj.stats.in_review + ' In Corso</span> • <span class="text-slate-400">' + proj.stats.missing + ' Mancanti</span>';
+
+      // Render 10-doc matrix
+      const mat = document.getElementById("matrix-container");
+      mat.innerHTML = "";
+      proj.docs.forEach(d => {{
+        const card = document.createElement("div");
+        let statusCls = "status-badge-draft";
+        let statusLabel = "Draft";
+        let actionCmd = "valida projects/" + slug + "/" + d.filename;
+
+        if (d.status === "approved") {{
+          statusCls = "status-badge-approved";
+          statusLabel = "Appr";
+        }} else if (d.status === "in-review") {{
+          statusCls = "status-badge-review";
+          statusLabel = "Review";
+        }} else if (d.status === "missing") {{
+          statusCls = "status-badge-missing";
+          statusLabel = "Manca";
+          actionCmd = "it scaffold " + slug;
+        }}
+
+        card.className = "p-1.5 rounded-lg border flex flex-col justify-between cursor-pointer transition-all hover:scale-105 " + statusCls;
+        card.onclick = () => copyCmd(actionCmd);
+        card.innerHTML = '<span class="font-bold block truncate">' + d.code.split("-")[0] + ' ' + d.title + '</span><span class="text-[8px] uppercase font-mono font-bold block mt-1">' + statusLabel + '</span>';
+        mat.appendChild(card);
+      }});
+    }}
+
+    function copyActiveCmd(type) {{
+      if (type === "pubblica") copyCmd("pubblica " + currentSlug);
+      else if (type === "stato") copyCmd("stato " + currentSlug);
+      else if (type === "scaffold") copyCmd("it scaffold " + currentSlug);
+    }}
+
     function switchTab(tabId) {{
       ['tab-actions', 'tab-kpi', 'tab-phases'].forEach(id => {{
         document.getElementById(id).classList.add('hidden');
@@ -288,10 +455,15 @@ def render_enterprise_dashboard(
         window.tTimer = setTimeout(() => {{ toast.classList.add('hidden'); }}, 2500);
       }}
     }}
+
+    window.addEventListener("DOMContentLoaded", initUI);
   </script>
 </body>
 </html>"""
     return html.strip()
+
+# Alias per retrocompatibilità
+render_welcome_card = render_enterprise_dashboard
 
 def render_quality_gate_card(
     slug: str,
@@ -349,9 +521,6 @@ def render_quality_gate_card(
 </body>
 </html>"""
     return html.strip()
-
-# Alias per retrocompatibilità
-render_welcome_card = render_enterprise_dashboard
 
 if __name__ == "__main__":
     if hasattr(sys.stdout, "reconfigure"):

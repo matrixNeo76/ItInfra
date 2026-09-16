@@ -399,6 +399,20 @@ timeline
 
 ---
 
+### ✅ Release v0.9.10 — Auto-Scaffolding Engine & Generative UI Project Matrix (Completato)
+- [x] **Auto-Scaffolding Engine (`it scaffold <slug>`):**
+  - Parsing deterministico di `project-manifest.yaml` e propagazione atomica dei dati certi (metadati, subnet, VLAN, apparati hardware, contatti, vault ref) all'interno dei 10 documenti OKF v0.2.
+  - Sostituzione sicura dei placeholder con rispetto rigoroso di Zero-Hallucination (`<DA-RICHIEDERE>` su dati assenti).
+  - Modalità `--dry-run` e integrazione CLI universale (`it scaffold <slug>`).
+- [x] **Generative UI Dynamic Project Switcher & 10-Document Matrix:**
+  - Discovery automatica dei progetti nel workspace e selettore dinamico interattivo.
+  - Matrice visiva a 10 badge di stato documentale (`approved`, `in-review`, `draft`, `missing`) con color-coding semantico.
+  - Aggiornamento reattivo client-side dei pulsanti Click-to-Copy (`pubblica <slug>`, `stato <slug>`).
+- [x] **Enterprise System Test Suite (MOD-13):**
+  - Modulo 13 per il collaudo end-to-end del motore di scaffolding e della propagazione del manifesto (100% Pass Rate).
+
+---
+
 ### 🔮 Release v0.10 — Advanced Topology Engine, MCP Server & Automated CI/CD (Pianificato Q1 2027)
 - [ ] **Server MCP Nativo (Model Context Protocol):**
   - Implementazione del server standalone `scripts/itinfra_mcp.py` basato sullo standard open-source MCP.

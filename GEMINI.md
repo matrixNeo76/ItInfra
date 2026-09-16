@@ -26,6 +26,7 @@ Questo è l'ambiente di lavoro per la documentazione tecnica, governance, automa
 | **Verificare Rete e Permessi** | `controlla` *(o `check`)* | `it check` |
 | **Pubblicare Progetto su Server** | `pubblica <slug>` | `it publish <slug>` |
 | **Inizializzare Nuovo Cliente** | `inizializza <slug>` | `it init <slug> --client "Nome" --name "Titolo"` |
+| **Auto-Scaffold Template da Manifest** | `scaffold <slug>` | `it scaffold <slug>` |
 | **Verificare Stato 7 Fasi** | `stato <slug>` | `it status <slug>` |
 | **Valida Documento Attivo** | `valida` *(o tasto `Ctrl+Shift+B`)* | `it validate <percorso_file>` |
 | **Cruscotto Grafico Esecutivo** | `ui` *(o `dashboard`)* | `it ui` |
@@ -42,6 +43,7 @@ Se l'utente digita uno di questi trigger rapidi, **NON fare domande, NON chieder
 - **`"aggiorna"`** o **`"update"`** $\rightarrow$ Esegui subito: `python scripts/itinfra_sync.py` e mostra il report di sincronizzazione.
 - **`"controlla"`** o **`"check"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py check-share` e mostra la tabella di salute.
 - **`"pubblica <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py publish <slug>` e mostra l'esito del Quality Gate.
+- **`"scaffold <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py scaffold <slug>` e mostra il report di auto-scaffolding.
 - **`"stato <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py status <slug>` e mostra l'avanzamento delle 7 fasi.
 - **`"valida <file>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py validate <file>` e mostra il report del linter.
 - **`"test-suite"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py test-suite --no-html`.

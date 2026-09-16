@@ -2476,6 +2476,17 @@ def cmd_ui(args: argparse.Namespace) -> int:
 
     return 0
 
+def cmd_scaffold(args: argparse.Namespace) -> int:
+    """Propaga determinismo dal manifesto ai 10 documenti OKF v0.2 del progetto (Release v0.9.10)."""
+    try:
+        from itinfra_scaffold import cmd_scaffold as run_scaffold
+    except ImportError:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from itinfra_scaffold import cmd_scaffold as run_scaffold
+
+    return run_scaffold(args)
+
 def cmd_memory(args: argparse.Namespace) -> int:
     """Gestisce la Memoria Locale Ibrida a 3 Livelli e i Trust Signals (Release v0.6 e v0.8)."""
     try:
@@ -2914,6 +2925,12 @@ def main():
     p_ui.add_argument("--out", default=None, help="Percorso del file HTML di output (opzionale)")
     p_ui.add_argument("--open", action="store_true", help="Apre la dashboard nel browser predefinito")
 
+    # Comando scaffold (Release v0.9.10)
+    p_scaf = subparsers.add_parser("scaffold", help="Propaga automaticamente i dati del manifesto nei 10 documenti OKF v0.2 (Release v0.9.10)")
+    p_scaf.add_argument("slug", help="Slug del progetto da scaffoldare")
+    p_scaf.add_argument("--dry-run", action="store_true", help="Simula lo scaffolding senza scrivere su disco")
+    p_scaf.add_argument("--force", action="store_true", help="Forza la riscrittura dei template esistenti")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -2964,6 +2981,8 @@ def main():
         return cmd_deploy_share(args)
     elif args.command in ("ui", "dashboard"):
         return cmd_ui(args)
+    elif args.command == "scaffold":
+        return cmd_scaffold(args)
     else:
         parser.print_help()
         return 1

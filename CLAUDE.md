@@ -26,6 +26,7 @@ Questo è l'ambiente di lavoro per la documentazione tecnica, governance, automa
 | **Verificare Rete e Permessi** | `controlla` *(o `check`)* | `it check` |
 | **Pubblicare Progetto su Server** | `pubblica <slug>` | `it publish <slug>` |
 | **Inizializzare Nuovo Cliente** | `inizializza <slug>` | `it init <slug> --client "Nome" --name "Titolo"` |
+| **Auto-Scaffold Template da Manifest** | `scaffold <slug>` | `it scaffold <slug>` |
 | **Verificare Stato 7 Fasi** | `stato <slug>` | `it status <slug>` |
 | **Validare Documento Attivo** | `valida` *(o tasto `Ctrl+Shift+B`)* | `it validate <percorso_file>` |
 | **Cruscotto Grafico Esecutivo** | `ui` *(o `dashboard`)* | `it ui` |
@@ -42,6 +43,7 @@ Se l'utente digita uno di questi trigger rapidi, **NON fare domande, NON chieder
 - **`"aggiorna"`** o **`"update"`** $\rightarrow$ Esegui subito: `python scripts/itinfra_sync.py`.
 - **`"controlla"`** o **`"check"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py check-share`.
 - **`"pubblica <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py publish <slug>`.
+- **`"scaffold <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py scaffold <slug>`.
 - **`"stato <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py status <slug>`.
 - **`"valida <file>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py validate <file>`.
 - **`"test-suite"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py test-suite --no-html`.
