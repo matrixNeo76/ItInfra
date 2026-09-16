@@ -125,18 +125,13 @@ Nella mattinata del 24 marzo 2026, 4 utenti remoti del reparto tecnico/progettaz
 ## 3. Timeline Cronologica dell'Incidente
 
 ```mermaid
-timeline
-    title Timeline Eventi Incidente INC-2026-001
-    section Origine
-        09:15 : Chiamata helpdesk da progettisti remoti (blocco apertura tavole CAD)
-        09:25 : NOC apre ticket INC-2026-001 (P2-High) e verifica LAN nominale
-    section Diagnostica
-        09:40 : Escalation a L3: eseguita telemetria health-check e albero OSI
-        10:15 : Isolato scarto pacchetti TCP DF su WAN (PMTU Black Hole su overlay)
-    section Risoluzione
-        10:45 : Applicato clamping MSS su MikroTik e MTU 1400 su FS01
-        11:20 : Esecuzione test TR-01..TR-04 con trasferimento file CAD da 150 MB (OK)
-        11:45 : Chiusura formale incidente, aggiornamento documentale OKF e piano CAPA
+flowchart TD
+    T1["⏰ 09:15 — Origine<br/>Chiamata helpdesk remota (blocco apertura tavole CAD)"] --> T2["📋 09:25 — Triage L1/L2<br/>NOC apre ticket INC-2026-001 (P2-High) e verifica LAN"]
+    T2 --> T3["🔬 09:40 — Diagnostica L3<br/>Eseguita telemetria health-check e albero OSI L1-L7"]
+    T3 --> T4["🔍 10:15 — Causa Isolata<br/>Rilevato Black Hole PMTU (drop frame DF > 1400 byte)"]
+    T4 --> T5["⚙️ 10:45 — Risoluzione<br/>Applicato TCP MSS Clamping su RB5009 e MTU 1400 su FS01"]
+    T5 --> T6["🧪 11:20 — Collaudo<br/>Test TR-01..TR-04 con file CAD 150 MB (27.8 MB/s — PASS)"]
+    T6 --> T7["✅ 11:45 — Chiusura<br/>Ripristino nominale, sign-off e avvio piano CAPA"]
 ```
 
 | Timestamp (CET) | Fase Operativa | Attore | Azione Eseguita / Rilevamento Strumentale | Esito |

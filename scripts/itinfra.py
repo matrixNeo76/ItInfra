@@ -1464,11 +1464,18 @@ def cmd_export_html(args) -> int:
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         
-        event.target.classList.add('active');
+        if (event && event.target) {
+            event.target.classList.add('active');
+        }
         const activeTab = document.getElementById(tabId);
         if (activeTab) {
             activeTab.classList.add('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (window.mermaid && typeof window.mermaid.run === 'function') {
+                try {
+                    window.mermaid.run({ nodes: activeTab.querySelectorAll('.mermaid') });
+                } catch(e) {}
+            }
         }
     }
 </script>

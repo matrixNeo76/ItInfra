@@ -124,18 +124,13 @@ Questo documento traccia l'analisi delle cause radice (RCA) e la risoluzione for
 ## 3. Timeline Cronologica dell'Incidente
 
 ```mermaid
-timeline
-    title Timeline Eventi Incidente <INCIDENT_ID>
-    section Origine
-        <HH:MM> : Evento scatenante o prima anomalia
-        <HH:MM> : Generazione allarme / Segnalazione utente
-    section Diagnostica
-        <HH:MM> : Presa in carico team L2/L3
-        <HH:MM> : Isolamento guasto tramite albero OSI
-    section Risoluzione
-        <HH:MM> : Applicazione workaround o fix definitivo
-        <HH:MM> : Test di validazione e ripristino nominale
-        <HH:MM> : Chiusura incidente e monitoraggio
+flowchart TD
+    T1["⏰ HH:MM — Rilevamento<br/>Allarme sistema di monitoraggio o apertura ticket"] --> T2["📋 HH:MM — Triage L1/L2<br/>Verifica preliminare e prima presa in carico"]
+    T2 --> T3["🔬 HH:MM — Diagnostica L3<br/>Esecuzione comandi a strati OSI L1-L7 e telemetria"]
+    T3 --> T4["🔍 HH:MM — Isolamento Causa<br/>Individuazione anomalia con tecnica 5 Perché"]
+    T4 --> T5["⚙️ HH:MM — Mitigazione / Fix<br/>Applicazione procedura correttiva o configurazione"]
+    T5 --> T6["🧪 HH:MM — Collaudo Post-Fix<br/>Test di non-regressione TR-01..TR-04 con esito PASS"]
+    T6 --> T7["✅ HH:MM — Chiusura Incidente<br/>Ripristino nominale, sign-off formale e piano CAPA"]
 ```
 
 | Timestamp (Data/Ora) | Fase Operativa | Attore | Azione Eseguita / Rilevamento Strumentale | Esito |

@@ -2201,18 +2201,13 @@ pie title Distribuzione Valore e Consistenza Asset Severino Srl
 <hr/>
 <h2>3. Timeline Cronologica dell'Incidente</h2>
 <div class="mermaid">
-timeline
-    title Timeline Eventi Incidente INC-2026-001
-    section Origine
-        09:15 : Chiamata helpdesk da progettisti remoti (blocco apertura tavole CAD)
-        09:25 : NOC apre ticket INC-2026-001 (P2-High) e verifica LAN nominale
-    section Diagnostica
-        09:40 : Escalation a L3: eseguita telemetria health-check e albero OSI
-        10:15 : Isolato scarto pacchetti TCP DF su WAN (PMTU Black Hole su overlay)
-    section Risoluzione
-        10:45 : Applicato clamping MSS su MikroTik e MTU 1400 su FS01
-        11:20 : Esecuzione test TR-01..TR-04 con trasferimento file CAD da 150 MB (OK)
-        11:45 : Chiusura formale incidente, aggiornamento documentale OKF e piano CAPA
+flowchart TD
+    T1["⏰ 09:15 — Origine<br/>Chiamata helpdesk remota (blocco apertura tavole CAD)"] --> T2["📋 09:25 — Triage L1/L2<br/>NOC apre ticket INC-2026-001 (P2-High) e verifica LAN"]
+    T2 --> T3["🔬 09:40 — Diagnostica L3<br/>Eseguita telemetria health-check e albero OSI L1-L7"]
+    T3 --> T4["🔍 10:15 — Causa Isolata<br/>Rilevato Black Hole PMTU (drop frame DF > 1400 byte)"]
+    T4 --> T5["⚙️ 10:45 — Risoluzione<br/>Applicato TCP MSS Clamping su RB5009 e MTU 1400 su FS01"]
+    T5 --> T6["🧪 11:20 — Collaudo<br/>Test TR-01..TR-04 con file CAD 150 MB (27.8 MB/s — PASS)"]
+    T6 --> T7["✅ 11:45 — Chiusura<br/>Ripristino nominale, sign-off e avvio piano CAPA"]
 </div>
 <div class="table-container"><table><thead><tr><th>Timestamp (CET)</th><th>Fase Operativa</th><th>Attore</th><th>Azione Eseguita / Rilevamento Strumentale</th><th>Esito</th></tr></thead><tbody><tr><td>2026-03-24 09:15</td><td><strong>Rilevamento</strong></td><td>Utenti Smart Working</td><td>Segnalazione blocco caricamento file da share di rete</td><td>Aperto</td></tr><tr><td>2026-03-24 09:25</td><td><strong>Triage L1/L2</strong></td><td>Operatore Helpdesk</td><td>Verifica connettività internet utenti e stato LAN in sede</td><td>Escalato a L3</td></tr><tr><td>2026-03-24 09:40</td><td><strong>Diagnosi L3</strong></td><td>Lead Architect</td><td>Esecuzione suite telemetria <code>health-check</code> e test ICMP con DF flag</td><td>Individuato Black Hole PMTU</td></tr><tr><td>2026-03-24 10:45</td><td><strong>Mitigazione</strong></td><td>Senior Network Eng</td><td>Configurazione MSS Clamping su RB5009 e MTU 1400 su scheda ZeroTier FS01</td><td>Fix applicato</td></tr><tr><td>2026-03-24 11:20</td><td><strong>Collaudo</strong></td><td>Lead Architect & Utenti</td><td>Test trasferimento file CAD 150 MB e benchmarking throughput (32 MB/s)</td><td>Esito PASS</td></tr><tr><td>2026-03-24 11:45</td><td><strong>Chiusura</strong></td><td>Service Delivery Manager</td><td>Validazione documentale, firma chiusura e pianificazione CAPA</td><td>Risolto</td></tr></tbody></table></div>
 <hr/>
@@ -2336,11 +2331,18 @@ add chain=forward action=change-mss new-mss=clamp-to-pmtu passthrough=yes \
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         
-        event.target.classList.add('active');
+        if (event && event.target) {
+            event.target.classList.add('active');
+        }
         const activeTab = document.getElementById(tabId);
         if (activeTab) {
             activeTab.classList.add('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (window.mermaid && typeof window.mermaid.run === 'function') {
+                try {
+                    window.mermaid.run({ nodes: activeTab.querySelectorAll('.mermaid') });
+                } catch(e) {}
+            }
         }
     }
 </script>
