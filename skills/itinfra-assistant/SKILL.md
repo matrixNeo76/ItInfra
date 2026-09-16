@@ -217,3 +217,22 @@ Quando operi su un client LAN secondario in architettura distribuita:
      python scripts/itinfra.py sync-engine
      ```
 
+---
+
+## 9. Interazione Vocale/Testuale a Zero Attrito & Comandi a 1 Parola (Release v0.9.6)
+
+Per evitare ai tecnici client di dover ricordare comandi complessi o flag CLI, l'agente riconosce trigger diretti e sintetici di 1 sola parola digitati in chat:
+
+### Tabella Trigger a 1 Parola in Chat
+| Comando Chat | Azione Eseguita Automaticamente dall'Agente | Output / Riscontro Utente |
+| :--- | :--- | :--- |
+| **`aggiorna`** / **`update`** | Esegue `python scripts/itinfra_sync.py` allineando template, script e guide | Mostra il report sintetico con i file aggiornati e conferma l'allineamento. |
+| **`controlla`** / **`check`** | Esegue `python scripts/itinfra.py check-share` | Visualizza la matrice tabellare di salute (connessione SMB e permessi di scrittura). |
+| **`pubblica <slug>`** / **`publish <slug>`** | Esegue `python scripts/itinfra.py publish <slug>` | Riporta l'esito del Quality Gate e conferma l'avvenuta pubblicazione sulla share centrale. |
+| **`avvia`** / **`start`** | Esegue verifica rapida e allineamento | Mostra la conferma di prontezza operativa del workspace locale. |
+
+### Controllo Proattivo Versione al Saluto
+Quando un utente saluta l'agente o avvia una nuova sessione, l'agente verifica in background la presenza del file `.itinfra_config.json`: se configurato, esegue un controllo di versione silenzioso. Se sono disponibili nuovi aggiornamenti sulla share centrale, avvisa con gentilezza:
+> 💡 *Nota: Sono disponibili nuovi template o aggiornamenti sulla share master. Vuoi che li allinei subito? Rispondi semplicemente con **"aggiorna"**.*
+
+

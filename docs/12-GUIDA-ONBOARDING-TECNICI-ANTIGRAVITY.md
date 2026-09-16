@@ -98,6 +98,8 @@ Questa guida è destinata ai **tecnici di rete, sistemisti e architetti IT** che
 3. In circa 5 secondi l'automazione:
    - Crea la cartella locale `C:\itinfra\`.
    - Sincronizza il motore, tutti i 10 template OKF v0.2, le guide e le skill per Antigravity.
+   - Crea sul tuo Desktop l'icona di avvio 1-Clic: **`ITInfra - Aggiorna e Avvia.cmd`**.
+   - Registra la cartella nel `PATH` utente (rendendo disponibile il comando globale `it` da qualsiasi prompt).
    - Genera il file `.itinfra_config.json` con puntamento predefinito alla share master.
    - Verifica che Python sia pronto.
 
@@ -114,26 +116,32 @@ Se lavori da remoto o preferisci usare Git:
    ```
 2. Installa le librerie minime:
    ```powershell
-   pip install pyyaml cryptography
+   pip install pyyaml cryptography smbprotocol
    ```
 
 ---
 
-## 4. Apertura del Workspace in Google Antigravity
+## 4. Modalità di Utilizzo a Zero Attrito (Desktop, Terminale o Chat)
 
-Una volta allestita la cartella `C:\itinfra`:
+### Opzione A — Avvio Quotidiano "1-Clic" dal Desktop (Zero Terminale)
+Fai doppio clic sull'icona **`ITInfra - Aggiorna e Avvia`** presente sul tuo Desktop:
+1. Esegue un probe non-bloccante sulla share master (1.5s).
+2. Se connesso alla rete aziendale, sincronizza automaticamente template e script aggiornati.
+3. Se offline, ti avvisa ed entra in modalità locale protetta senza attendere timeout di rete.
+4. Apre direttamente Google Antigravity su `C:\itinfra`.
 
-1. Avvia l'applicazione **Antigravity**.
-2. Dal menu principale seleziona **File → Open Folder** (oppure premi `Ctrl + K, Ctrl + O`).
-3. Seleziona la cartella locale **`C:\itinfra`**.
+### Opzione B — Comandi Rapidi a 1 Parola da Terminale (`it`)
+Da qualsiasi finestra PowerShell o Prompt comandi, puoi digitare:
+- `it start` $\rightarrow$ Sincronizza il workspace e avvia Antigravity/l'editor.
+- `it update` $\rightarrow$ Sincronizza template e script con la share centrale.
+- `it check` $\rightarrow$ Esegue la diagnostica di connessione e permessi (`check-share`).
+- `it publish <slug>` $\rightarrow$ Valida il progetto e lo pubblica sul server master.
 
-### Come Antigravity riconosce automaticamente l'ambiente:
-Appena aperta la cartella, Antigravity attiva in modo del tutto trasparente:
-- **`AGENTS.md`**: Regola di sistema primaria con divieto assoluto di allucinazioni e standard OKF v0.2.
-- **Skill `itinfra-setup`**: Diagnostica e verifica integrità del workspace.
-- **Skill `itinfra-assistant`**: Motore di intervista guidata per blocchi logici (Scope, Rete, Compute, Sicurezza, ATP).
-- **Skill `itinfra-vault`**: Gestore crittografico locale AES-256 per credenziali e secret.
-- **Skill `itinfra-troubleshooter`**: Diagnostica deterministica disservizi e schede post-mortem 10-RCA.
+### Opzione C — Comandi Diretti a 1 Parola nella Chat di Antigravity
+Dentro la finestra di chat con l'agente Antigravity, non devi digitare prompt lunghi. Scrivi semplicemente:
+- **`aggiorna`**: l'agente esegue la sincronizzazione e conferma l'allineamento.
+- **`controlla`**: l'agente verifica la salute della share master e dei permessi.
+- **`pubblica <slug>`**: l'agente valida con Quality Gate e copia il progetto sul server.
 
 ---
 

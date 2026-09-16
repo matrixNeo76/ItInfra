@@ -40,13 +40,81 @@ foreach ($folder in $FoldersToSync) {
     }
 }
 
-$RootFiles = @("README.md", "ROADMAP.md", "AGENTS.md", "CLAUDE.md", "INTEGRAZIONE-REPO.md", "00-INDEX.md")
+$RootFiles = @("README.md", "ROADMAP.md", "AGENTS.md", "CLAUDE.md", "INTEGRAZIONE-REPO.md", "00-INDEX.md", "update.cmd", "it.cmd")
 foreach ($f in $RootFiles) {
     $srcFile = Join-Path $CentralShare $f
     $dstFile = Join-Path $TargetLocalDir $f
     if (Test-Path $srcFile) {
         Copy-Item -Path $srcFile -Destination $dstFile -Force
     }
+}
+
+# Registrazione di TargetLocalDir nel PATH utente (comando 'it' ovunque)
+try {
+    $UserPath = [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::User)
+    if ($UserPath -notlike "*$TargetLocalDir*") {
+        $NewUserPath = "$UserPath;$TargetLocalDir"
+        [System.Environment]::SetEnvironmentVariable("Path", $NewUserPath, [System.EnvironmentVariableTarget]::User)
+        $env:Path = "$env:Path;$TargetLocalDir"
+        Write-Host "[OK] Cartella '$TargetLocalDir' registrata nel PATH utente (comando 'it' disponibile ovunque)." -ForegroundColor Green
+    }
+} catch {
+    Write-Warning "  ! Impossibile aggiornare automaticamente il PATH utente. Aggiungere manualmente $TargetLocalDir."
+}
+
+# Creazione del Launcher 1-Clic sul Desktop Utente
+$ServerHost = "fileserv01"
+if ($CentralShare -match '^\\\\([^\\]+)\\') {
+    $ServerHost = $matches[1]
+}
+
+$DesktopPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
+if (Test-Path $DesktopPath) {
+    $LauncherPath = Join-Path $DesktopPath "ITInfra - Aggiorna e Avvia.cmd"
+    $LauncherContent = @"
+@echo off
+setlocal
+title ITInfra - Avvio Workspace
+echo ===============================================================================
+echo   ITINFRA -- VERIFICA AGGIORNAMENTI E AVVIO WORKSPACE
+echo ===============================================================================
+cd /d "$TargetLocalDir"
+
+:: Test rapido connettivita porta 445 (SMB) con timeout 1.5s
+powershell -NoProfile -ExecutionPolicy Bypass -Command "`$tcp = New-Object System.Net.Sockets.TcpClient; `$ar = `$tcp.BeginConnect('$ServerHost', 445, `$null, `$null); `$wh = `$ar.AsyncWaitHandle; if (`$wh.WaitOne(1500, `$false)) { `$tcp.EndConnect(`$ar); `$tcp.Close(); exit 0 } else { `$tcp.Close(); exit 1 }" >nul 2>nul
+
+if %ERRORLEVEL% EQU 0 (
+    echo [RETE] Server master raggiungibile. Sincronizzazione in corso...
+    if exist "scripts\itinfra_sync.py" (
+        python scripts\itinfra_sync.py
+    )
+) else (
+    echo [RETE] Server centrale non raggiungibile (Modalita Offline).
+    echo        I progetti locali rimangono completamente operativi.
+)
+
+echo.
+echo [AVVIO] Apertura ambiente di sviluppo...
+where agy >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    start "" agy "$TargetLocalDir"
+    exit /b 0
+)
+where cursor >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    start "" cursor "$TargetLocalDir"
+    exit /b 0
+)
+where code >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    start "" code "$TargetLocalDir"
+    exit /b 0
+)
+echo [OK] Workspace pronto in: $TargetLocalDir
+pause
+"@
+    [System.IO.File]::WriteAllText($LauncherPath, $LauncherContent, [System.Text.Encoding]::ASCII)
+    Write-Host "[OK] Collegamento Desktop generato: $LauncherPath" -ForegroundColor Green
 }
 
 $ConfigFile = Join-Path $TargetLocalDir ".itinfra_config.json"
@@ -102,16 +170,17 @@ if ($pyInstalled) {
 }
 
 Write-Host "=================================================================" -ForegroundColor Cyan
-Write-Host " SETUP COMPLETATO! WORKSPACE PRONTO ALL'USO                       " -ForegroundColor Cyan
+Write-Host " SETUP COMPLETATO! WORKSPACE PRONTO ALL'USO (ZERO ATTRITO)        " -ForegroundColor Cyan
 Write-Host "=================================================================" -ForegroundColor Cyan
-Write-Host "Istruzioni rapide per il Tecnico / Agente AI:" -ForegroundColor Yellow
-Write-Host "1. Spostarsi nella cartella: cd $TargetLocalDir"
-Write-Host "2. Verificare i permessi share: python scripts/itinfra.py check-share"
-Write-Host "3. Inizializzare un nuovo cliente: python scripts/itinfra.py init <slug> --client '<Nome>' --name '<Titolo>'"
-Write-Host "4. Redigere i documenti OKF v0.2 con Antigravity dentro projects/<slug>/"
-Write-Host "5. Pubblicare il progetto con Quality Gate automatico:"
-Write-Host "   python scripts/itinfra.py publish <slug>"
-Write-Host "6. Aggiornare i template in futuro:"
-Write-Host "   python scripts/itinfra.py sync-engine"
+Write-Host "Modalita di avvio e comandi per il Tecnico:" -ForegroundColor Yellow
+Write-Host "1. MODALITA DESKTOP (1-Clic):"
+Write-Host "   Fai doppio clic sull'icona 'ITInfra - Aggiorna e Avvia' sul tuo Desktop."
+Write-Host "2. MODALITA TERMINALE (Comandi Brevi a 1 parola):"
+Write-Host "   it start           -> Aggiorna e apre l'editor"
+Write-Host "   it update          -> Sincronizza template e script"
+Write-Host "   it check           -> Verifica connessione e permessi share"
+Write-Host "   it publish <slug>  -> Esegue Quality Gate e pubblica su server"
+Write-Host "3. MODALITA CHAT (In Antigravity):"
+Write-Host "   Digita semplicemente 'aggiorna', 'controlla' o 'pubblica <slug>'."
 Write-Host "=================================================================" -ForegroundColor Cyan
 

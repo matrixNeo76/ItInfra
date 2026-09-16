@@ -157,6 +157,14 @@ Generatore di markup HTML/CSS moderno conforme allo standard Generative UI per G
   - Semaforo a 3 vie: Validazione OKF v0.2 (0 errori), Strict Grounding (IP conformi), Scansione Anti-Leak (0 secret in chiaro).
   - Pulsante di pubblicazione atomica con conferma visiva.
 
+### 3.6 Zero-Friction CLI & Desktop Launcher (`it.cmd`, `update.cmd`, Desktop Shortcut)
+Per eliminare la necessità di memorizzare comandi complessi:
+- **`update.cmd`**: Eseguibile batch immediato nella radice del workspace che lancia `itinfra_sync.py`.
+- **`it.cmd`**: Wrapper CLI a 1 parola (`it start`, `it update`, `it check`, `it publish <slug>`), registrato automaticamente nel `PATH` utente.
+- **Desktop Launcher 1-Clic (`ITInfra - Aggiorna e Avvia.cmd`)**: Creato sul Desktop utente da `setup_client_workspace.ps1`. Implementa un probe TCP non-bloccante sulla porta 445 (timeout 1.5s):
+  - Se online: esegue la sincronizzazione e lancia Antigravity.
+  - Se offline: notifica lo stato disconnesso e avvia comunque l'IDE locale senza bloccare l'operatività del tecnico.
+
 ---
 
 ## 4. Matrice di Sicurezza & Zero-Leakage Policy

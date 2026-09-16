@@ -336,24 +336,38 @@ timeline
 
 ---
 
-### 🚀 Release v0.9.5 — Client Interactive Experience & Automated Distribution Workflow (In Pianificazione / Prossimo Step)
-- [ ] **Automated Continuous Delivery su Share Master (Git Post-Commit Hook / Auto-Deploy):**
-  - Hook automatico che, al momento del commit/push dal repository di sviluppo, sincronizza in background e in modo differenziale la share centrale `\\fileserv01\dati01\workaure` senza interventi manuali.
-- [ ] **Client Startup Auto-Sync Hook (Controllo di Versione Trasparente):**
-  - Controllo automatico della versione/timestamp del motore all'apertura del workspace in Antigravity con notifica o allineamento silenzioso dei template.
-- [ ] **Suite di Attività GUI One-Click (`.vscode/tasks.json`):**
+### ✅ Release v0.9.5 — Client Interactive Experience & Automated Distribution Workflow (Completato)
+- [x] **Automated Continuous Delivery su Share Master (Git Post-Commit Hook / Auto-Deploy):**
+  - Hook `.git/hooks/post-commit` e motore differenziale atomico SHA-256 (`scripts/itinfra_deploy.py`) che aggiorna automaticamente la share centrale `\\fileserv01\dati01\workaure` a ogni commit senza interventi manuali.
+- [x] **Client Startup Auto-Sync Hook (Controllo di Versione Trasparente):**
+  - Script `scripts/itinfra_sync.py` che all'apertura del workspace o su richiesta rileva discrepanze di hash/timestamp e allinea template, script e guide in locale.
+- [x] **Suite di Attività GUI One-Click (`.vscode/tasks.json`):**
   - Task preconfigurati visuali richiamabili con `Ctrl+Shift+B` o dalla Status Bar di Antigravity:
     - `[ITInfra] Diagnostica Share (check-share)`
-    - `[ITInfra] Aggiorna Template (sync-engine)`
+    - `[ITInfra] Sincronizza Motore e Template da Server (sync-engine)`
+    - `[ITInfra] Inizializza Nuovo Progetto Cliente (init)`
     - `[ITInfra] Valida Documento OKF v0.2`
+    - `[ITInfra] Audit Coerenza e Zero-Hallucination`
     - `[ITInfra] Pubblica Progetto su Server`
-    - `[ITInfra] Genera Diagramma D3 / Topologia`
-- [ ] **Cruscotto Interattivo Generative UI (Card Cliccabili in Chat):**
-  - Card grafiche con pulsanti di azione all'avvio della chat e schede visuali per il Pre-Flight Quality Gate prima del publish.
-- [ ] **Slash Commands Dedicati per i Tecnici:**
-  - Scorciatoie rapide `/check`, `/publish`, `/sync`, `/new-project` per velocizzare le operazioni ricorrenti.
-- [ ] **Automated Anti-Tamper & Pre-Commit Audit Hook:**
-  - Controllo preventivo anti-leak sul client prima del salvataggio dei file di progetto.
+    - `[ITInfra] Esegui Enterprise System Test Suite`
+    - `[ITInfra] Genera e Apri Knowledge Graph D3.js`
+- [x] **Cruscotto Interattivo Generative UI (Card Cliccabili in Chat):**
+  - Modulo `scripts/itinfra_ui.py` con rendering di card HTML/CSS per Welcome Action Card e Pre-Flight Quality Gate Card.
+- [x] **Specifica Tecnica e Modulo di Test MOD-12:**
+  - Documento formale `docs/13-SPECIFICA-CLIENT-INTERACTIVE-AUTO-DISTRIBUTION.md` (conforme OKF v0.2).
+  - Estensione dell'Enterprise Test Suite al Modulo 12 con 100% Pass Rate.
+
+---
+
+### ✅ Release v0.9.6 — Zero-Friction Client Architecture (Completato)
+- [x] **Launcher 1-Clic sul Desktop Tecnico (`ITInfra - Aggiorna e Avvia.cmd`):**
+  - Icona generata sul Desktop utente (`$env:USERPROFILE\Desktop`) da `setup_client_workspace.ps1`.
+  - Probe TCP non-bloccante sulla porta 445 (timeout 1.5s): sincronizza se online, avvia subito in modalità offline senza ritardi.
+- [x] **CLI Breve a 1 Parola (`it.cmd` e `update.cmd`):**
+  - Registrazione automatica della cartella workspace nel `PATH` utente di Windows.
+  - Comandi diretti: `it start`, `it update`, `it check`, `it publish <slug>`, o semplicemente `update`.
+- [x] **Trigger a 1 Parola per Chat Antigravity:**
+  - Aggiornamento della skill `itinfra-assistant` per interpretare comandi rapidi (*"aggiorna"*, *"controlla"*, *"pubblica <slug>"*) e notificare proattivamente la disponibilità di nuovi template.
 
 
 ---

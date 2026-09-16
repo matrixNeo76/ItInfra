@@ -56,7 +56,7 @@ class CentralDeployer:
         dirs_to_sync = ["scripts", "templates", "docs", "skills", ".agents", ".vscode"]
         root_files_to_sync = [
             "README.md", "ROADMAP.md", "AGENTS.md", "CLAUDE.md",
-            "INTEGRAZIONE-REPO.md", "00-INDEX.md"
+            "INTEGRAZIONE-REPO.md", "00-INDEX.md", "update.cmd", "it.cmd"
         ]
 
         files_to_check: List[Tuple[Path, Path]] = []
