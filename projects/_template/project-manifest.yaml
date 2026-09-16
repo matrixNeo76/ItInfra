@@ -31,6 +31,10 @@ sites:
 network_baseline:
   supernet_ipv4: "10.100.0.0/16"
   supernet_ipv6: "2001:db8:100::/48"
+  # Subnet secondarie opzionali (es. ZeroTier SDN o WAN link):
+  # zerotier_subnet_ipv4: "10.147.0.0/16"
+  # wan_modem_subnet_ipv4: "192.168.1.0/24"
+  # dc_ip: "10.100.10.10"
   bgp_asn_internal: 65100
   bgp_asn_external_primary: 65200
   dns_servers:
