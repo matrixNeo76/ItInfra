@@ -57,8 +57,8 @@ python "%BASEDIR%scripts\itinfra.py" %*
 exit /b %ERRORLEVEL%
 
 :open_ui
-python -c "from pathlib import Path; import sys; sys.path.insert(0, r'%BASEDIR%scripts'); from itinfra_ui import render_enterprise_dashboard; out = Path(r'%BASEDIR%projects\enterprise_dashboard.html'); out.parent.mkdir(parents=True, exist_ok=True); out.write_text(render_enterprise_dashboard(), encoding='utf-8'); print('[OK] Enterprise Dashboard generata in:', str(out)); import webbrowser; webbrowser.open(out.as_uri())"
-exit /b 0
+python "%BASEDIR%scripts\itinfra.py" ui --open
+exit /b %ERRORLEVEL%
 
 :help
 echo ===============================================================================

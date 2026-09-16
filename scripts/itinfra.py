@@ -2415,6 +2415,67 @@ def cmd_deploy_share(args: argparse.Namespace) -> int:
         print(colorize(msg, COLOR_RED))
         return 1
 
+def cmd_ui(args: argparse.Namespace) -> int:
+    """Genera l'Enterprise Cockpit Generative UI conforme ai design tokens di Antigravity (Release v0.9.9)."""
+    try:
+        from itinfra_ui import render_enterprise_dashboard
+    except ImportError:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from itinfra_ui import render_enterprise_dashboard
+
+    html = render_enterprise_dashboard()
+
+    # 1. Salva in projects/enterprise_dashboard.html
+    repo_root = Path(__file__).resolve().parent.parent
+    proj_out = repo_root / "projects" / "enterprise_dashboard.html"
+    proj_out.parent.mkdir(parents=True, exist_ok=True)
+    proj_out.write_text(html, encoding="utf-8")
+
+    # 2. Cerca l'active Antigravity brain artifact dir
+    brain_dir = Path.home() / ".gemini" / "antigravity" / "brain"
+    target_artifact = None
+
+    if getattr(args, "out", None):
+        out_p = Path(args.out)
+        out_p.parent.mkdir(parents=True, exist_ok=True)
+        out_p.write_text(html, encoding="utf-8")
+        target_artifact = out_p
+    elif brain_dir.exists():
+        try:
+            dirs = [d for d in brain_dir.iterdir() if d.is_dir() and d.name != "tempmediaStorage"]
+            if dirs:
+                latest_brain = max(
+                    dirs,
+                    key=lambda d: (d / ".system_generated" / "logs" / "transcript.jsonl").stat().st_mtime
+                    if (d / ".system_generated" / "logs" / "transcript.jsonl").exists()
+                    else d.stat().st_mtime,
+                )
+                brain_file = latest_brain / "enterprise_dashboard.html"
+                brain_file.write_text(html, encoding="utf-8")
+                target_artifact = brain_file
+        except Exception:
+            pass
+
+    embed_path = target_artifact if target_artifact else proj_out
+    embed_uri = f"file:///{embed_path.resolve().as_posix()}"
+
+    print(colorize("\n=== ENTERPRISE GENERATIVE UI DASHBOARD GENERATA ===", COLOR_BOLD + COLOR_CYAN))
+    print(f"File salvato:       {proj_out}")
+    if target_artifact:
+        print(f"Artifact sessione:  {target_artifact}")
+    print("\nTag per la chat Antigravity:")
+    print(colorize(f'<agent-embed src="{embed_uri}"></agent-embed>\n', COLOR_BOLD + COLOR_GREEN))
+
+    if getattr(args, "open", False):
+        try:
+            import webbrowser
+            webbrowser.open(proj_out.resolve().as_uri())
+        except Exception:
+            pass
+
+    return 0
+
 def cmd_memory(args: argparse.Namespace) -> int:
     """Gestisce la Memoria Locale Ibrida a 3 Livelli e i Trust Signals (Release v0.6 e v0.8)."""
     try:
@@ -2848,6 +2909,11 @@ def main():
     p_dep.add_argument("--dest", default=None, help=f"Percorso della share centrale (default: '{DEFAULT_CENTRAL_SHARE}')")
     p_dep.add_argument("--dry-run", action="store_true", help="Simula il deploy differenziale senza copiare file")
 
+    # Comando ui / dashboard (Release v0.9.9)
+    p_ui = subparsers.add_parser("ui", aliases=["dashboard"], help="Genera il cruscotto esecutivo Enterprise Generative UI per chat Antigravity e browser (Release v0.9.9)")
+    p_ui.add_argument("--out", default=None, help="Percorso del file HTML di output (opzionale)")
+    p_ui.add_argument("--open", action="store_true", help="Apre la dashboard nel browser predefinito")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -2896,6 +2962,8 @@ def main():
         return cmd_check_share(args)
     elif args.command == "deploy-share":
         return cmd_deploy_share(args)
+    elif args.command in ("ui", "dashboard"):
+        return cmd_ui(args)
     else:
         parser.print_help()
         return 1

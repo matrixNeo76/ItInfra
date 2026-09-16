@@ -42,7 +42,7 @@ Questo è l'ambiente di lavoro per la documentazione tecnica, governance, automa
 
 ### ⚡ Esecuzione Deterministica dei Comandi a 1 Parola (Zero-Hesitation)
 Se l'utente digita uno di questi trigger rapidi, esegui immediatamente con `run_command` senza fare domande preventive né cercare file:
-- **`"ui"`** o **`"dashboard"`** $\rightarrow$ Genera ed incorpora all'istante l'Enterprise Dashboard HTML nella chat.
+- **`"ui"`** o **`"dashboard"`** $\rightarrow$ `python scripts/itinfra.py ui` ed incorpora nella risposta il tag `<agent-embed src="file:///...">` stampato dall'output del comando. *(⚠️ CRITICO: NON inserire MAI codice HTML all'interno del tag `<agent-embed>`. Deve contenere ESCLUSIVAMENTE l'attributo `src="file:///..."`, altrimenti l'interfaccia mostrerà l'errore "Invalid embed:").*
 - **`"aggiorna"`** o **`"update"`** $\rightarrow$ `python scripts/itinfra_sync.py`
 - **`"controlla"`** o **`"check"`** $\rightarrow$ `python scripts/itinfra.py check-share`
 - **`"pubblica <slug>"`** $\rightarrow$ `python scripts/itinfra.py publish <slug>`
