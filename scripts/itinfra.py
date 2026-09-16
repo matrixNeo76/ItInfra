@@ -422,6 +422,13 @@ def cmd_status(args: argparse.Namespace) -> int:
             qual = "-"
             note = f"Richiesto per Fase {phase}"
 
+        print(f"{code:<24} | Fase {phase:<2} | {presence:<21} | {qual:<24} | {note}")
+
+    print("-" * 80)
+    pct = int((completed_count / len(IT_DOCUMENT_TYPES)) * 100)
+    print(f"Avanzamento documentale: {completed_count}/{len(IT_DOCUMENT_TYPES)} ({pct}%)\n")
+    return 0
+
 def extract_markdown_table_rows(section_text: str) -> List[Dict[str, str]]:
     """Estrae le righe di una tabella Markdown restituendo una lista di dizionari {header: value}."""
     lines = [l.strip() for l in section_text.strip().splitlines() if l.strip()]

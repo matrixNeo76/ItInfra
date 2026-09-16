@@ -1,0 +1,56 @@
+# ITInfra Project Manifest — Severino Srl
+# Parametri globali condivisi per il ciclo lavorativo IT di Severino Srl
+
+project_id: "severino-srl"
+project_name: "Infrastruttura LAN, Virtualizzazione Hyper-V e Collaboration Severino Srl"
+customer: "Severino Srl"
+lead_architect: "Marco Severino"
+owner_team: "IT Operations & Systems"
+status: "in-planning" # draft | in-planning | in-execution | completed | archived
+version: "0.1.0"
+created_at: "2026-09-16"
+updated_at: "2026-09-16"
+
+# Siti e sedi coinvolti
+sites:
+  - code: "HQ-SEV"
+    name: "Sede Operativa Severino Srl"
+    role: "Primary DC"
+    location: "Sede Principale"
+
+# Baseline di rete condivisa (ereditata in HLD, LLD, MOP, As-Built)
+network_baseline:
+  supernet_ipv4: "192.168.0.0/23" # Spazio IP per VLAN Uffici, Server, Wi-Fi, Meeting, Management
+  active_directory_domain: "severino.local"
+  core_switch_model: "MikroTik CRS326-24G-2S+RM"
+  wifi_solution: "Ubiquiti UniFi AP"
+  sdn_remote_access: "ZeroTier Virtual Network"
+  vault_secret_prefix: "vault://it/projects/severino-srl"
+  bgp_asn_internal: 65001
+
+# Compute, Storage & Collaboration Baseline
+hardware_baseline:
+  hypervisor_host: "HP Z4 Workstation"
+  hypervisor_os: "Windows Server 2022 Datacenter Edition"
+  vm_dc01: "Domain Controller Active Directory, DNS, DHCP (Windows Server 2022)"
+  vm_fs01: "File Server Principale Severino Srl (2 TB VHDX, SMB, ZeroTier)"
+  vm_fs02: "File Server Aziende Esterne Partner (512 GB SSK Storage Esterno, SMB, ZeroTier)"
+  meeting_room: "Microsoft Teams Rooms con TV 65\", Logitech Rally Bar avanzata e Controller Tablet"
+
+# Requisiti di SLA e Operativi
+sla_baseline:
+  tier1_rto: "2 ore"
+  tier1_rpo: "1 ora"
+  change_window: "Venerdì 19:00 - Sabato 13:00 CET"
+
+# Matrice di avanzamento del ciclo lavorativo a 7 fasi
+documents:
+  01-RSD-URS: "missing"          # missing | draft | in-review | approved
+  02-HLD: "missing"
+  03-LLD: "missing"
+  04-MOP: "missing"
+  05-Rollback: "missing"
+  06-As-Built: "missing"
+  07-ATP: "missing"
+  08-SOP-Runbook: "missing"
+  09-Handover-Inventory: "missing"
