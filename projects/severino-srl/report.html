@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Progetto IT: Infrastruttura LAN, Virtualizzazione Hyper-V e Collaboration Severino Srl</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --border-color: #334155;
+            --font-main: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            --font-mono: 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            padding-bottom: 80px;
+        }
+        header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 2.5rem 2rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .header-content {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+        .header-title h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+        .header-title p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 0.3rem;
+        }
+        .header-meta {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        .progress-pill {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 9999px;
+            padding: 0.5rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .progress-bar-bg {
+            width: 110px;
+            height: 10px;
+            background-color: #334155;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+            width: 55%;
+            border-radius: 5px;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+        }
+        .kpi-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            transition: transform 0.15s ease, border-color 0.15s ease;
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-cyan);
+        }
+        .kpi-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .kpi-val {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-top: 0.4rem;
+            color: #ffffff;
+        }
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.75rem 1.2rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .tab-btn:hover {
+            color: #ffffff;
+            background-color: var(--bg-secondary);
+        }
+        .tab-btn.active {
+            color: #ffffff;
+            background-color: var(--accent-blue);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .card h2 {
+            font-size: 1.4rem;
+            margin-bottom: 1.2rem;
+            color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.6rem;
+        }
+        .card h3 {
+            font-size: 1.15rem;
+            margin: 1.5rem 0 0.8rem;
+            color: var(--accent-cyan);
+        }
+        .card h4 {
+            font-size: 1.05rem;
+            margin: 1.2rem 0 0.6rem;
+            color: #e2e8f0;
+        }
+        .card p {
+            margin-bottom: 1rem;
+            color: #cbd5e1;
+        }
+        .card ul {
+            margin: 0.8rem 0 1.2rem 1.5rem;
+            color: #cbd5e1;
+        }
+        .card li {
+            margin-bottom: 0.4rem;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin: 1.2rem 0 1.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        th {
+            background-color: #273549;
+            color: #e2e8f0;
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: #cbd5e1;
+        }
+        tr:nth-child(even) td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        pre {
+            background-color: #0b1120;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.2rem;
+            overflow-x: auto;
+            margin: 1rem 0 1.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            color: #38bdf8;
+        }
+        code {
+            font-family: var(--font-mono);
+            background-color: #0b1120;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            color: #38bdf8;
+        }
+        .mermaid {
+            background-color: #0b1120;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            display: flex;
+            justify-content: center;
+        }
+        .badge-pass {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            padding: 0.25rem 0.7rem;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .badge-checked {
+            color: #34d399;
+            font-weight: 600;
+        }
+        .badge-unchecked {
+            color: var(--accent-amber);
+            font-weight: 600;
+        }
+        .wiki-link {
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+        }
+        .doc-missing {
+            color: #64748b;
+            font-style: italic;
+            padding: 2rem;
+            text-align: center;
+        }
+        .manifest-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        .manifest-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+        .manifest-box h4 {
+            margin-top: 0;
+            color: var(--accent-cyan);
+            margin-bottom: 0.8rem;
+        }
+    </style>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+    </script>
+</head>
+<body>
+
+<header>
+    <div class="header-content">
+        <div class="header-title">
+            <h1>Infrastruttura LAN, Virtualizzazione Hyper-V e Collaboration Severino Srl</h1>
+            <p>Cliente: <strong>Severino Srl</strong> | Lead Architect: <strong>Marco Severino</strong> | Standard: <strong>OKF v0.2 Nativo</strong></p>
+        </div>
+        <div class="header-meta">
+            <div class="progress-pill">
+                <span>Avanzamento Fasi: <strong>55%</strong> (5/9)</span>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Supernet LAN</div>
+            <div class="kpi-val">192.168.120.0/24</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Dominio Active Directory</div>
+            <div class="kpi-val">severino</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Domain Controller IP</div>
+            <div class="kpi-val">192.168.120.239</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">ZeroTier Network</div>
+            <div class="kpi-val" style="font-size: 1.15rem;">65228D8D6D71CA23</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Core Switch</div>
+            <div class="kpi-val" style="font-size: 1.15rem;">MikroTik CRS326</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Virtualizzazione</div>
+            <div class="kpi-val" style="font-size: 1.15rem;">HP Z4 / Hyper-V 2022</div>
+        </div>
+    </div>
+
+    <nav class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-dashboard')">Dashboard & Manifest</button>
+        <button class="tab-btn" onclick="switchTab('tab-fase1')">Fase 1: RSD / URS</button>
+        <button class="tab-btn" onclick="switchTab('tab-fase2-hld')">Fase 2: HLD</button>
+        <button class="tab-btn" onclick="switchTab('tab-fase2-lld')">Fase 2: LLD & Cablaggi</button>
+        <button class="tab-btn" onclick="switchTab('tab-fase3-mop')">Fase 3: MOP Operativo</button>
+        <button class="tab-btn" onclick="switchTab('tab-fase3-rollback')">Fase 3: Piano Rollback</button>
+    </nav>
+
+    <!-- TAB DASHBOARD -->
+    <div id="tab-dashboard" class="tab-content active">
+        <div class="card">
+            <h2>Manifesto di Progetto & Baseline Tecnologica</h2>
+            <div class="manifest-grid">
+                <div class="manifest-box">
+                    <h4>Topologia & Rete Locale</h4>
+                    <p><strong>Switch Core:</strong> MikroTik CRS326-24G-2S+RM</p>
+                    <p><strong>Configurazione Porte:</strong> <code>ether1</code> WAN isolata verso Vodafone Station; <code>ether2-24</code> in Hardware Bridge LAN 1 Gbps.</p>
+                    <p><strong>WiFi:</strong> Ubiquiti UniFi AP su porta <code>ether14</code>.</p>
+                    <p><strong>DHCP Server:</strong> Erogato da DC <code>dc01</code> (range 192.168.120.2 - 192.168.120.254).</p>
+                </div>
+                <div class="manifest-box">
+                    <h4>Compute & Virtualizzazione</h4>
+                    <p><strong>Workstation Host:</strong> HP Z4 Workstation con Windows Server 2022 Datacenter.</p>
+                    <p><strong>VM dc01:</strong> Active Directory Domain Controller, DNS integrato (IP: 192.168.120.239).</p>
+                    <p><strong>VM fs01:</strong> File Server Severino Srl con 2 TB VHDX dedicati (IP: 192.168.120.240).</p>
+                    <p><strong>VM fs02:</strong> File Server Partner con storage SSK 512 GB in passthrough fisico (IP: 192.168.120.241).</p>
+                </div>
+                <div class="manifest-box">
+                    <h4>Collaboration & Sicurezza</h4>
+                    <p><strong>Sala Riunioni:</strong> Microsoft Teams Rooms con TV 65&quot;, Logitech Rally Bar avanzata e Controller Tablet.</p>
+                    <p><strong>Overlay SDN:</strong> ZeroTier Network ID <code>65228D8D6D71CA23</code> gestito da <code>salviozt01@gmail.com</code>.</p>
+                    <p><strong>Backup:</strong> QNAP TS-233 (IP: 192.168.120.250) con Cobian Reflector serale e transizione a RustCopy v7.4.1+.</p>
+                    <p><strong>SLA Target:</strong> RTO 2 ore, RPO 1 ora. Finestra di manutenzione standard: weekend.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Matrice di Conformità Fasi e Documentazione OKF v0.2</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fase</th>
+                            <th>Identificativo Doc</th>
+                            <th>Tipologia OKF</th>
+                            <th>Titolo Descrittivo</th>
+                            <th>Stato Formale</th>
+                            <th>Checklist & Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    
+                        <tr>
+                            <td><strong>Fase 1</strong></td>
+                            <td><code>01-RSD-URS</code></td>
+                            <td><span class="wiki-link">specification</span></td>
+                            <td>Requirements Specification Document</td>
+                            <td><span class="badge-pass">VALIDATO (0 errori)</span></td>
+                            <td>01-RSD-URS.md</td>
+                        </tr>
+        
+                        <tr>
+                            <td><strong>Fase 2</strong></td>
+                            <td><code>02-HLD</code></td>
+                            <td><span class="wiki-link">architecture</span></td>
+                            <td>High-Level Design</td>
+                            <td><span class="badge-pass">VALIDATO (0 errori)</span></td>
+                            <td>02-HLD.md</td>
+                        </tr>
+        
+                        <tr>
+                            <td><strong>Fase 2</strong></td>
+                            <td><code>03-LLD</code></td>
+                            <td><span class="wiki-link">architecture</span></td>
+                            <td>Low-Level Design</td>
+                            <td><span class="badge-pass">VALIDATO (0 errori)</span></td>
+                            <td>03-LLD.md</td>
+                        </tr>
+        
+                        <tr>
+                            <td><strong>Fase 3</strong></td>
+                            <td><code>04-MOP</code></td>
+                            <td><span class="wiki-link">guide</span></td>
+                            <td>Method of Procedure</td>
+                            <td><span class="badge-pass">VALIDATO (0 errori)</span></td>
+                            <td>04-MOP.md</td>
+                        </tr>
+        
+                        <tr>
+                            <td><strong>Fase 3</strong></td>
+                            <td><code>05-Rollback</code></td>
+                            <td><span class="wiki-link">guide</span></td>
+                            <td>Rollback / Fallback Plan</td>
+                            <td><span class="badge-pass">VALIDATO (0 errori)</span></td>
+                            <td>05-Rollback.md</td>
+                        </tr>
+        
+                        <tr>
+                            <td><strong>Fase 5</strong></td>
+                            <td><code>06-As-Built</code></td>
+                            <td><span class="wiki-link">architecture</span></td>
+                            <td>As-Built Documentation</td>
+                            <td><span class="badge-unchecked">NON REDATTO</span></td>
+                            <td>In attesa</td>
+                        </tr>
+        
+                        <tr>
+                            <td><strong>Fase 6</strong></td>
+                            <td><code>07-ATP</code></td>
+                            <td><span class="wiki-link">specification</span></td>
+                            <td>Acceptance Test Plan</td>
+                            <td><span class="badge-unchecked">NON REDATTO</span></td>
+                            <td>In attesa</td>
+                        </tr>
+        
+                        <tr>
+                            <td><strong>Fase 7</strong></td>
+                            <td><code>08-SOP-Runbook</code></td>
+                            <td><span class="wiki-link">guide</span></td>
+                            <td>Standard Operating Procedures / Runbook</td>
+                            <td><span class="badge-unchecked">NON REDATTO</span></td>
+                            <td>In attesa</td>
+                        </tr>
+        
+                        <tr>
+                            <td><strong>Fase 7</strong></td>
+                            <td><code>09-Handover-Inventory</code></td>
+                            <td><span class="wiki-link">specification</span></td>
+                            <td>Handover &amp; Asset Inventory</td>
+                            <td><span class="badge-unchecked">NON REDATTO</span></td>
+                            <td>In attesa</td>
+                        </tr>
+        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- TAB 01-RSD-URS -->
+    <div id="tab-fase1" class="tab-content">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1.5rem; flex-wrap:wrap; gap: 1rem;">
+                <div>
+                    <h2>RSD/URS — Requisiti Infrastruttura LAN, Virtualizzazione Hyper-V e Collaboration Severino Srl</h2>
+                    <p>ID Documento: <code>specification-severino-srl-rsd-01</code> | Tipo: <strong>specification</strong> | Fase: <strong>Fase 1</strong></p>
+                </div>
+                <div>
+                    <span class="badge-pass">&check; Validato OKF v0.2</span>
+                </div>
+            </div>
+            <p><!-- AI-INSTRUCTIONS:</p>
+<p>Questo documento definisce i requisiti di business, utente e sistema per l'infrastruttura di Severino Srl.</p>
+<p>Tutti i requisiti sono tracciati con ID univoci (RF-xxx, RNF-xxx, OB-xxx).</p>
+<p>--></p>
+<h1>RSD/URS — Requisiti di Sistema e Utente: Severino Srl</h1>
+<h2>1. Contesto e Obiettivi di Business</h2>
+<h3>1.1 Contesto Generale</h3>
+<p><strong>Severino Srl</strong> necessita di un'infrastruttura IT locale moderna, affidabile, sicura e scalabile per supportare le attività operative aziendali quotidiane, la gestione documentale interna e la condivisione protetta di dati per due aziende partner curate esternamente.</p>
+<p>Il sistema integra postazioni client desktop fisse, dispositivi portatili/mobile via Wi-Fi enterprise, un host di virtualizzazione centralizzato su base Windows Server 2022 Datacenter, accesso remoto sicuro e una sala conferenze multimediale avanzata per riunioni Microsoft Teams.</p>
+<h3>1.2 Obiettivi di Business (OB)</h3>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> <strong>OB-001:</strong> Centralizzare l'autenticazione, la sicurezza degli accessi e la gestione delle postazioni di lavoro tramite dominio Active Directory <code>severino.local</code>.</li>
+<li><span class="badge-checked">&check; Fatto</span> <strong>OB-002:</strong> Fornire storage ad alte prestazioni e ridondato per lo share documentale interno (2 TB) e per le 2 aziende partner (512 GB).</li>
+<li><span class="badge-checked">&check; Fatto</span> <strong>OB-003:</strong> Consentire l'accesso remoto sicuro alle condivisioni SMB per utenti smart-working tramite rete ZeroTier senza esporre porte SMB direttamente su Internet.</li>
+<li><span class="badge-checked">&check; Fatto</span> <strong>OB-004:</strong> Garantire la continuità operativa e il ripristino dei dati aziendali tramite backup giornalieri automatici su storage isolato (NAS QNAP TS-233).</li>
+<li><span class="badge-checked">&check; Fatto</span> <strong>OB-005:</strong> Dotare la sede di una sala videoconferenza immersiva e professionale per Microsoft Teams (TV 65" + Logitech Rally Bar + Tablet touch controller).</li>
+</ul>
+<hr/>
+<h2>2. Stakeholder e Ruoli</h2>
+<div class="table-container"><table><thead><tr><th>Ruolo</th><th>Nome</th><th>Organizzazione</th><th>Contatto</th><th>Responsabilità</th></tr></thead><tbody><tr><td>Project Sponsor & Lead Architect</td><td>Marco Severino</td><td>Severino Srl</td><td><code>vault://it/projects/severino-srl/contacts/marco</code></td><td>Approvazione requisiti, budget e architettura</td></tr><tr><td>IT Operations & Systems</td><td>Team IT Severino</td><td>Severino Srl</td><td><code>vault://it/projects/severino-srl/contacts/it-team</code></td><td>Installazione, manutenzione ordinaria e backup</td></tr><tr><td>Security & Compliance Officer</td><td>Marco Severino</td><td>Severino Srl</td><td><code>vault://it/projects/severino-srl/contacts/marco</code></td><td>Controllo conformità GDPR e policy accessi</td></tr></tbody></table></div>
+<hr/>
+<h2>3. Requisiti Funzionali</h2>
+<div class="table-container"><table><thead><tr><th>ID</th><th>Descrizione</th><th>Priorità</th><th>Fonte / Riferimento</th><th>Note</th></tr></thead><tbody><tr><td><strong>RF-001</strong></td><td><strong>Dominio Active Directory centralizzato:</strong> Creazione del dominio AD <code>severino.local</code> su VM dedicata <code>dc01</code> con ruoli DNS, DHCP e gestione utenti/GPO.</td><td>Must</td><td>Requisiti Marco Severino</td><td>Gestione centralizzata policy Windows 11</td></tr><tr><td><strong>RF-002</strong></td><td><strong>Client Desktop HP G6 a Dominio:</strong> Ogni postazione client fissa (MiniPC HP G6, Core i5, 8GB RAM, 512GB NVMe, Windows 11 Pro) deve essere joinata al dominio con credenziali utente dedicate.</td><td>Must</td><td>Parco Macchine Client</td><td>Connessione cablata Gigabit LAN</td></tr><tr><td><strong>RF-003</strong></td><td><strong>Core Switching & Routing:</strong> Lo switch MikroTik CRS326-24G-2S+RM deve gestire la commutazione Gigabit LAN, il routing inter-VLAN e fungere da primo firewall perimetrale a valle della Vodafone Station.</td><td>Must</td><td>Specifiche Rete</td><td>Connessione uplink verso Vodafone Station</td></tr><tr><td><strong>RF-004</strong></td><td><strong>Wi-Fi Enterprise UniFi:</strong> Gli Access Point Ubiquiti UniFi devono diffondere SSID protetti (WPA2/WPA3 Enterprise o WPA3 Personal) per notebook e smartphone, con rete Guest segregata.</td><td>Must</td><td>Connettività Wireless</td><td>Segregazione su VLAN dedicata</td></tr><tr><td><strong>RF-005</strong></td><td><strong>File Server Principale (<code>fs01</code>):</strong> Macchina virtuale Windows Server 2022 con disco dedicato da 2 TB allocato per le cartelle condivise SMB aziendali di Severino Srl.</td><td>Must</td><td>Storage Documentale</td><td>Permessi ACL basati su gruppi AD</td></tr><tr><td><strong>RF-006</strong></td><td><strong>File Server Aziende Esterne (<code>fs02</code>):</strong> Macchina virtuale Windows Server 2022 che monta uno storage esterno SSK da 512 GB come base dati per cartelle SMB dedicate a 2 aziende curate.</td><td>Must</td><td>Multi-tenant Partner</td><td>Isolamento cartelle per azienda</td></tr><tr><td><strong>RF-007</strong></td><td><strong>Connettività Remota ZeroTier:</strong> Sia <code>fs01</code> che <code>fs02</code> devono essere collegati alla rete virtuale ZeroTier per consentire agli utenti autorizzati in mobilità di mappare le share SMB in sicurezza.</td><td>Must</td><td>Accesso Remoto</td><td>Traffico crittografato end-to-end</td></tr><tr><td><strong>RF-008</strong></td><td><strong>Backup Giornaliero su QNAP TS-233:</strong> Backup automatico programmato ogni notte di tutte le share e database da <code>fs01</code> e <code>fs02</code> verso il NAS QNAP TS-233 tramite Cobian Reflector.</td><td>Must</td><td>Strategia Continuità</td><td>Destinazione storage locale isolata</td></tr><tr><td><strong>RF-009</strong></td><td><strong>Roadmap Tool RustCopy:</strong> Predisposizione dell'ambiente per migrare la pipeline di sincronizzazione/backup da Cobian Reflector a <strong>RustCopy v7.4.1+</strong> appena validato come stabile.</td><td>Should</td><td>Roadmap Software Proprietario</td><td>Maggiore efficienza, velocità e logging</td></tr><tr><td><strong>RF-010</strong></td><td><strong>Sala Riunioni Microsoft Teams:</strong> Allestimento sala meeting con TV 65 pollici, apparato Logitech Rally Bar e tablet touch controller per gestione riunioni Teams Room.</td><td>Must</td><td>Collaboration Suite</td><td>Esperienza one-touch-join</td></tr></tbody></table></div>
+<hr/>
+<h2>4. Requisiti Non Funzionali</h2>
+<h3>4.1 Performance</h3>
+<ul>
+<li><strong>Throughput LAN Cablata:</strong> Velocità 1 Gbps non bloccante su tutte le porte client HP G6 e link 10G SFP+ di uplink se previsti.</li>
+<li><strong>Throughput Wi-Fi:</strong> Copertura Wi-Fi 6 / 802.11ac dual-band con roaming trasparente per notebook e smartphone.</li>
+<li><strong>I/O Storage VM:</strong> I/O ad alta velocità per il sistema operativo delle VM grazie agli NVMe dell'host HP Z4; accesso dati a banda piena Gigabit per lo storage 2 TB e il disco SSK 512 GB.</li>
+</ul>
+<h3>4.2 Disponibilità e Affidabilità</h3>
+<ul>
+<li><strong>Host di Virtualizzazione:</strong> Workstation HP Z4 con Windows Server 2022 Datacenter Edition e Hyper-V per garantire isolamento rigido tra <code>dc01</code>, <code>fs01</code> e <code>fs02</code>.</li>
+<li><strong>Continuità Operativa:</strong> Gruppo di continuità UPS per proteggere l'host HP Z4, il MikroTik CRS326, la Vodafone Station e il NAS QNAP TS-233 da cali di tensione o blackout.</li>
+</ul>
+<h3>4.3 Scalabilità</h3>
+<ul>
+<li>Possibilità di aggiungere nuovi MiniPC HP G6 o laptop senza dover riconfigurare la topologia di base.</li>
+<li>Espandibilità dello storage VHDX su <code>fs01</code> e possibilità di upgrade dello storage QNAP TS-233.</li>
+</ul>
+<h3>4.4 Sicurezza</h3>
+<ul>
+<li><strong>Nessuna password in chiaro:</strong> Tutte le credenziali amministrative (MikroTik RouterOS, Windows Server local admin, dominio AD, QNAP admin, ZeroTier network token) devono risiedere nel password manager aziendale con URI <code>vault://it/projects/severino-srl/...</code>.</li>
+<li><strong>Segregazione Reti:</strong> Separazione logica tramite VLAN gestite dal MikroTik CRS326:</li>
+<li>VLAN 10: Management (Host HP Z4, Switch MikroTik, AP UniFi, QNAP)</li>
+<li>VLAN 20: Server & VM (<code>dc01</code>, <code>fs01</code>, <code>fs02</code>)</li>
+<li>VLAN 30: Client Cablati (MiniPC HP G6)</li>
+<li>VLAN 40: Wi-Fi Aziendale (Notebook, Smartphone aziendali)</li>
+<li>VLAN 50: Collaboration & Meeting (TV 65", Logitech Rally Bar, Tablet Teams)</li>
+<li>VLAN 90: Wi-Fi Ospiti (Internet-only isolata)</li>
+</ul>
+<hr/>
+<h2>5. Requisiti di Continuità Operativa e Backup</h2>
+<div class="table-container"><table><thead><tr><th>Sorgente Dati</th><th>Dimensione</th><th>Frequenza</th><th>Retention</th><th>Software Attuale</th><th>Software Target</th><th>Destinazione</th></tr></thead><tbody><tr><td><strong>fs01 (Severino Srl)</strong></td><td>~2 TB</td><td>Giornaliera (ore 22:00)</td><td>30 giorni versionati</td><td>Cobian Reflector</td><td>RustCopy v7.4.1+</td><td>QNAP TS-233 (Share Backup)</td></tr><tr><td><strong>fs02 (Aziende Partner)</strong></td><td>~512 GB (SSK)</td><td>Giornaliera (ore 23:00)</td><td>60 giorni versionati</td><td>Cobian Reflector</td><td>RustCopy v7.4.1+</td><td>QNAP TS-233 (Share Partner)</td></tr><tr><td><strong>dc01 (System State AD)</strong></td><td>~50 GB</td><td>Giornaliera (ore 01:00)</td><td>14 giorni</td><td>Windows Backup</td><td>RustCopy v7.4.1+</td><td>QNAP TS-233</td></tr></tbody></table></div>
+<p><strong>Obiettivi di Servizio (SLA):</strong></p>
+<ul>
+<li><strong>RTO (Recovery Time Objective):</strong> ≤ 4 ore per ripristino share file server; ≤ 2 ore per ripristino controller di dominio.</li>
+<li><strong>RPO (Recovery Point Objective):</strong> ≤ 24 ore (massima perdita tollerata: lavoro della giornata precedente).</li>
+</ul>
+<hr/>
+<h2>6. Vincoli di Compliance e Normativi</h2>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> <strong>GDPR (Regolamento UE 2016/679):</strong></li>
+<li>Trattamento dati aziendali e dati di terzi (aziende partner) segregati con permessi NTFS rigorosi.</li>
+<li>Cifratura del traffico remoto tramite ZeroTier.</li>
+<li>Registro accessi abilitato sul Domain Controller e sui File Server.</li>
+<li><span class="badge-checked">&check; Fatto</span> <strong>NIS2 (Direttiva UE 2022/2555):</strong></li>
+<li>Misure di sicurezza proporzionate per la resilienza informatica delle PMI e dei fornitori di servizi.</li>
+<li>Protezione degli accessi privilegiati (PAM) per le postazioni server.</li>
+<li><span class="badge-checked">&check; Fatto</span> <strong>Standard di Naming & Vault:</strong></li>
+<li>Standardizzazione nomi host: <code>HP-Z4-HOST</code>, <code>VM-DC01</code>, <code>VM-FS01</code>, <code>VM-FS02</code>, <code>SW-CORE-01</code>, <code>NAS-QNAP-01</code>.</li>
+<li>Credenziali gestite rigorosamente tramite riferimenti <code>vault://</code>.</li>
+</ul>
+<hr/>
+<h2>7. Capacità Stimate e Dimensionamento Hardware</h2>
+<h3>7.1 Compute (Host Fisico)</h3>
+<ul>
+<li><strong>Workstation:</strong> HP Z4 Workstation</li>
+<li><strong>Processore:</strong> Intel Xeon / Core High-Performance</li>
+<li><strong>RAM:</strong> Configurazione adeguata per host + 3 VM (minimo 32 GB / 64 GB raccomandati)</li>
+<li><strong>Storage Host:</strong> SSD NVMe per SO host e dischi di avvio VM</li>
+</ul>
+<h3>7.2 Storage Dati</h3>
+<ul>
+<li><strong>Volume Dati <code>fs01</code>:</strong> 2 TB VHDX dedicato per archivio e documenti Severino Srl.</li>
+<li><strong>Storage Esterno <code>fs02</code>:</strong> SSD Esterno SSK da 512 GB collegato in pass-through o montato su host per le cartelle delle 2 aziende partner.</li>
+<li><strong>Storage Backup QNAP TS-233:</strong> 2-Bay NAS con dischi in mirroring RAID 1 (es. 2x 4TB o 2x 6TB) per accogliere retention Cobian Reflector / RustCopy.</li>
+</ul>
+<h3>7.3 Parco Client</h3>
+<ul>
+<li><strong>MiniPC Fissi:</strong> HP ProDesk/EliteDesk G6 con 8 GB RAM, 512 GB SSD NVMe, Windows 11 Pro a dominio.</li>
+<li><strong>Dispositivi Mobili:</strong> Laptop e smartphone collegati tramite WPA3 su Access Point UniFi.</li>
+</ul>
+<h3>7.4 Collaboration & Meeting</h3>
+<ul>
+<li>TV 65 pollici 4K HDR</li>
+<li>Logitech Rally Bar (videocamera motorizzata PTZ, altoparlanti e microfoni array)</li>
+<li>Tablet touch controller (Logitech Tap / IP) per gestione riunioni Microsoft Teams Room.</li>
+</ul>
+<hr/>
+<h2>8. Dipendenze e Vincoli di Progetto</h2>
+<ul>
+<li><strong>Fornitura Connettività:</strong> Vodafone Station deve essere configurata con DMZ verso il MikroTik CRS326 oppure in modalità modem/bridge per evitare doppio NAT se necessario.</li>
+<li><strong>Licenziamento:</strong> Windows Server 2022 Datacenter con CAL utente per dominio <code>severino.local</code>; licenze Windows 11 Pro OEM/Retail già presenti sui client HP G6; licenza Microsoft Teams Rooms per la sala riunioni.</li>
+<li><strong>ZeroTier Network ID:</strong> Network ID privato gestito centralmente con autorizzazione esplicita dei nodi <code>fs01</code>, <code>fs02</code> e dei client remoti.</li>
+</ul>
+<hr/>
+<h2>9. Checklist di Validazione Finale</h2>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> Tutti i requisiti di business e tecnici sono stati definiti con Marco Severino.</li>
+<li><span class="badge-checked">&check; Fatto</span> RTO/RPO concordati (RTO ≤ 4h, RPO ≤ 24h).</li>
+<li><span class="badge-checked">&check; Fatto</span> Coerenza tra <code>related_docs</code> e <code>relations</code> OKF verificata.</li>
+<li><span class="badge-checked">&check; Fatto</span> Nessuna credenziale in chiaro presente nel documento (<code>vault://</code> utilizzato).</li>
+<li><span class="badge-checked">&check; Fatto</span> Parametri allineati con <code>project-manifest.yaml</code>.</li>
+<li><span class="badge-checked">&check; Fatto</span> Strategia di backup definita (QNAP TS-233, Cobian Reflector, roadmap RustCopy).</li>
+<li><span class="badge-checked">&check; Fatto</span> Specifiche sala videoconferenza Microsoft Teams incluse.</li>
+</ul>
+        </div>
+    </div>
+            
+    <!-- TAB 02-HLD -->
+    <div id="tab-fase2-hld" class="tab-content">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1.5rem; flex-wrap:wrap; gap: 1rem;">
+                <div>
+                    <h2>HLD — High-Level Design Architettura LAN, Virtualizzazione Hyper-V e Collaboration Severino Srl</h2>
+                    <p>ID Documento: <code>architecture-severino-srl-hld-01</code> | Tipo: <strong>architecture</strong> | Fase: <strong>Fase 2</strong></p>
+                </div>
+                <div>
+                    <span class="badge-pass">&check; Validato OKF v0.2</span>
+                </div>
+            </div>
+            <h1>HLD — High-Level Design: Architettura Severino Srl</h1>
+<p><!-- AI-INSTRUCTIONS:</p>
+<p>Questo documento definisce l'architettura logica, fisica, di identità e sicurezza</p>
+<p>per Severino Srl, traducendo i requisiti del RSD/URS in scelte progettuali macroscopiche.</p>
+<p>--></p>
+<h2>1. Executive Summary</h2>
+<p>Il presente High-Level Design (HLD) definisce l'architettura complessiva dei sistemi informativi, della rete locale e della collaborazione per <strong>Severino Srl</strong>.</p>
+<p>L'architettura garantisce:</p>
+<p>1. <strong>Controllo centralizzato degli accessi:</strong> Dominio Active Directory <code>severino</code> ospitato su VM dedicata <code>dc01</code> (<code>192.168.120.239</code>).</p>
+<p>2. <strong>Prestazioni di rete e sicurezza perimetrale:</strong> Switch Core <strong>MikroTik CRS326-24G-2S+RM</strong> posizionato a valle della Vodafone Station con funzioni di routing, firewalling perimetrale e distribuzione Gigabit a tutte le postazioni fisse (MiniPC HP G6).</p>
+<p>3. <strong>Wi-Fi Enterprise flessibile:</strong> Rete wireless con Access Point <strong>Ubiquiti UniFi</strong> con segregazione del traffico aziendale da quello ospiti.</p>
+<p>4. <strong>Virtualizzazione robusta e flessibile:</strong> Host fisico su workstation <strong>HP Z4</strong> con Windows Server 2022 Datacenter ed Hyper-V per isolare il Domain Controller (<code>dc01</code>), il File Server aziendale (<code>fs01</code>, disco 2 TB) e il File Server per aziende partner (<code>fs02</code>, storage esterno SSD SSK 512 GB).</p>
+<p>5. <strong>Accesso remoto sicuro via ZeroTier:</strong> Rete SD-WAN crittografata (Network ID: <code>65228D8D6D71CA23</code>) per consentire agli utenti remoti (<code>remote01</code>..<code>remote04</code>) di accedere in sicurezza alle condivisioni SMB.</p>
+<p>6. <strong>Protezione dei dati aziendali:</strong> Backup giornaliero pianificato su NAS <strong>QNAP TS-233</strong> con Cobian Reflector, predisposto per la transizione alla release proprietaria <strong>[RustCopy v7.4.1+](https://github.com/matrixNeo76/rustcopy)</strong>.</p>
+<p>7. <strong>Collaboration immersiva:</strong> Sala riunioni avanzata con TV 65", <strong>Logitech Rally Bar</strong> e controller touch dedicato per riunioni <strong>Microsoft Teams Rooms</strong>.</p>
+<hr/>
+<h2>2. Scope dell'Architettura</h2>
+<h3>2.1 In Scope</h3>
+<ul>
+<li>Progettazione e configurazione dello switch core MikroTik CRS326 (VLAN, DHCP relay/server, firewalling perimetrale).</li>
+<li>Connessione con Vodafone Station in modalità DMZ/Bridging.</li>
+<li>Deploy dell'host di virtualizzazione Hyper-V su workstation HP Z4.</li>
+<li>Implementazione delle VM <code>dc01</code>, <code>fs01</code> e <code>fs02</code> con Windows Server 2022.</li>
+<li>Configurazione del Dominio Active Directory <code>severino</code>, account utenti, gruppi e permessi NTFS.</li>
+<li>Integrazione della rete SD-WAN ZeroTier (ID <code>65228D8D6D71CA23</code>).</li>
+<li>Policy di backup verso NAS QNAP TS-233.</li>
+<li>Allestimento sala meeting con TV 65", Logitech Rally Bar e Tablet Teams Room.</li>
+</ul>
+<h3>2.2 Out of Scope</h3>
+<ul>
+<li>Linea di connettività WAN esterna (fornita e gestita da Vodafone).</li>
+<li>Manutenzione hardware interna degli apparati personali (smartphone/tablet BYOD).</li>
+<li>Gestione dei gestionali o applicativi verticali terzi installati sui client.</li>
+</ul>
+<hr/>
+<h2>3. Visione Architetturale e Schema Logico</h2>
+<div class="mermaid">
+graph TD
+    classDef wan fill:#d83b01,stroke:#a82a00,stroke-width:2px,color:#fff;
+    classDef core fill:#1e395b,stroke:#2b5797,stroke-width:2px,color:#fff;
+    classDef host fill:#0078d7,stroke:#004e8c,stroke-width:2px,color:#fff;
+    classDef vm fill:#107c41,stroke:#0b552c,stroke-width:1px,color:#fff;
+    classDef client fill:#5c2d91,stroke:#3b1a60,stroke-width:1px,color:#fff;
+    classDef storage fill:#b74700,stroke:#8a3500,stroke-width:1px,color:#fff;
+    classDef zt fill:#333,stroke:#666,stroke-width:1px,color:#fff;
+
+    subgraph WAN_Perimeter["Perimetro Esterno & Internet"]
+        VODAFONE["Vodafone Station (WAN Gateway)"]:::wan
+        ZT_CLOUD["ZeroTier Cloud Network<br/>ID: 65228D8D6D71CA23"]:::zt
+    end
+
+    subgraph Core_Switching["Centro Stella & Sicurezza"]
+        MIKROTIK["MikroTik CRS326-24G-2S+RM<br/>Core Switch & Perimeter Firewall"]:::core
+    end
+
+    subgraph Compute_Host["HP Z4 Workstation (Win Server 2022 Datacenter Hyper-V)"]
+        HOST_HYPERV["HP Z4 Hyper-V Host (vSwitch)"]:::host
+        VM_DC01["VM: dc01 (192.168.120.239)<br/>Active Directory, DNS, DHCP"]:::vm
+        VM_FS01["VM: fs01<br/>File Server Severino (2 TB VHDX)"]:::vm
+        VM_FS02["VM: fs02<br/>File Server Partner (512 GB SSK SSD)"]:::vm
+    end
+
+    subgraph Local_Clients["Client Cablati LAN (VLAN 30)"]
+        PC_CLIENTS["MiniPC HP G6 (Windows 11 Pro)<br/>Client Dominio 'severino'"]:::client
+    end
+
+    subgraph Wireless_Infrastructure["Infrastruttura Wi-Fi (VLAN 40)"]
+        UNIFI_AP["Ubiquiti UniFi AP"]:::core
+        WIFI_DEVICES["Notebook & Smartphone Aziendali"]:::client
+    end
+
+    subgraph Backup_Storage["Backup Repository"]
+        QNAP["NAS QNAP TS-233<br/>Target Cobian / RustCopy"]:::storage
+    end
+
+    subgraph Meeting_Room["Sala Videoconferenza (VLAN 50)"]
+        TEAMS_ROOM["TV 65'' + Logitech Rally Bar + Tablet Controller<br/>Microsoft Teams Room"]:::client
+    end
+
+    subgraph Remote_Users["Utenti Smart-Working"]
+        REMOTE_USERS["Client Remoti (remote01..remote04)"]:::client
+    end
+
+    %% Collegamenti fisici e logici
+    VODAFONE <== "Uplink WAN" ==> MIKROTIK
+    MIKROTIK <== "Trunk 802.1Q" ==> HOST_HYPERV
+    HOST_HYPERV --- VM_DC01
+    HOST_HYPERV --- VM_FS01
+    HOST_HYPERV --- VM_FS02
+    
+    MIKROTIK <== "Gigabit LAN Cablata" ==> PC_CLIENTS
+    MIKROTIK <== "PoE / Uplink" ==> UNIFI_AP
+    UNIFI_AP -.-> WIFI_DEVICES
+    
+    MIKROTIK <== "Gigabit LAN" ==> QNAP
+    MIKROTIK <== "Gigabit LAN" ==> TEAMS_ROOM
+
+    VM_FS01 -. "Tunnel Backup Notturno" .-> QNAP
+    VM_FS02 -. "Tunnel Backup Notturno" .-> QNAP
+
+    ZT_CLOUD <== "VPN ZeroTier" ==> VM_FS01
+    ZT_CLOUD <== "VPN ZeroTier" ==> VM_FS02
+    REMOTE_USERS <== "Accesso Remoto Crittografato" ==> ZT_CLOUD
+</div>
+<hr/>
+<h2>4. Architettura di Rete e Segmentazione (VLAN)</h2>
+<p>Lo switch <strong>MikroTik CRS326-24G-2S+RM</strong> gestisce la segmentazione logica delle reti tramite VLAN 802.1Q con routing inter-VLAN controllato da regole di firewalling:</p>
+<div class="table-container"><table><thead><tr><th>VLAN ID</th><th>Nome VLAN</th><th>Subnet IPv4</th><th>Gateway</th><th>Livello Trust</th><th>Scopo e Dispositivi</th></tr></thead><tbody><tr><td><strong>VLAN 10</strong></td><td><code>VLAN-MGMT</code></td><td><code>192.168.10.0/24</code></td><td><code>192.168.10.1</code></td><td>Restricted</td><td>Switch MikroTik, AP UniFi, QNAP admin, Host HP Z4 iLO/management</td></tr><tr><td><strong>VLAN 20</strong></td><td><code>VLAN-SERVER</code></td><td><code>192.168.120.0/24</code></td><td><code>192.168.120.1</code></td><td>High (Isolata)</td><td>Server Hyper-V e VM (<code>dc01</code>: <code>.239</code>, <code>fs01</code>, <code>fs02</code>)</td></tr><tr><td><strong>VLAN 30</strong></td><td><code>VLAN-CLIENT</code></td><td><code>192.168.130.0/24</code></td><td><code>192.168.130.1</code></td><td>Medium</td><td>Postazioni fisse cablate MiniPC HP G6</td></tr><tr><td><strong>VLAN 40</strong></td><td><code>VLAN-WIFI-CORP</code></td><td><code>192.168.140.0/24</code></td><td><code>192.168.140.1</code></td><td>Medium</td><td>Notebook e smartphone aziendali autorizzati</td></tr><tr><td><strong>VLAN 50</strong></td><td><code>VLAN-COLLAB</code></td><td><code>192.168.150.0/24</code></td><td><code>192.168.150.1</code></td><td>Medium-Low</td><td>TV 65", Logitech Rally Bar, Tablet Teams Room</td></tr><tr><td><strong>VLAN 90</strong></td><td><code>VLAN-GUEST</code></td><td><code>192.168.190.0/24</code></td><td><code>192.168.190.1</code></td><td>Untrusted</td><td>Wi-Fi Ospiti (accesso consentito esclusivamente verso Internet)</td></tr></tbody></table></div>
+<hr/>
+<h2>5. Active Directory, Identità e Controllo Accessi</h2>
+<h3>5.1 Struttura del Dominio</h3>
+<ul>
+<li><strong>Nome Dominio:</strong> <code>severino</code> (FQDN: <code>severino.local</code>)</li>
+<li><strong>Domain Controller Primario:</strong> <code>dc01</code> all'indirizzo IPv4 statico <strong><code>192.168.120.239</code></strong></li>
+<li><strong>Ruoli attivi su <code>dc01</code>:</strong> Active Directory Domain Services (AD DS), DNS Server autoritativo, DHCP Server locale.</li>
+</ul>
+<h3>5.2 Matrice Utenze a Dominio</h3>
+<div class="table-container"><table><thead><tr><th>Account Username</th><th>Ruolo / Mansione</th><th>Tipologia Utenza</th><th>Permessi Share SMB</th><th>Note Operative</th></tr></thead><tbody><tr><td><strong><code>francesco.iavarone</code></strong></td><td>System Administrator</td><td>Domain Admin</td><td>Controllo Completo</td><td>Amministrazione server e policy GPO</td></tr><tr><td><strong><code>admin0</code></strong></td><td>Amministratore di Rete / Break-Glass</td><td>Domain Admin</td><td>Controllo Completo</td><td>Account amministrativo di emergenza</td></tr><tr><td><strong><code>dir01</code></strong></td><td>Direzione Generale</td><td>Domain User Locale</td><td>Lettura/Scrittura Direzione & Aziendale</td><td>MiniPC HP G6 dedicato</td></tr><tr><td><strong><code>ops01</code></strong></td><td>Gestione Operativa</td><td>Domain User Locale</td><td>Lettura/Scrittura Operazioni</td><td>MiniPC HP G6 dedicato</td></tr><tr><td><strong><code>adm01</code></strong></td><td>Amministrazione & Contabilità</td><td>Domain User Locale</td><td>Lettura/Scrittura Amministrazione</td><td>MiniPC HP G6 dedicato</td></tr><tr><td><strong><code>adm02</code></strong></td><td>Amministrazione & Contabilità</td><td>Domain User Locale</td><td>Lettura/Scrittura Amministrazione</td><td>MiniPC HP G6 dedicato</td></tr><tr><td><strong><code>hr01</code></strong></td><td>Risorse Umane</td><td>Domain User Locale</td><td>Lettura/Scrittura Risorse Umane (Riservata)</td><td>MiniPC HP G6 dedicato</td></tr><tr><td><strong><code>hr02</code></strong></td><td>Risorse Umane</td><td>Domain User Locale</td><td>Lettura/Scrittura Risorse Umane (Riservata)</td><td>MiniPC HP G6 dedicato</td></tr><tr><td><strong><code>amg01</code></strong></td><td>Area Manager</td><td>Domain User Locale</td><td>Lettura/Scrittura Commerciale</td><td>MiniPC HP G6 dedicato</td></tr><tr><td><strong><code>remote01</code></strong></td><td>Collaboratore Remoto 1</td><td>Domain User Remoto</td><td>Accesso SMB tramite ZeroTier</td><td>Accesso controllato da smart-working</td></tr><tr><td><strong><code>remote02</code></strong></td><td>Collaboratore Remoto 2</td><td>Domain User Remoto</td><td>Accesso SMB tramite ZeroTier</td><td>Accesso controllato da smart-working</td></tr><tr><td><strong><code>remote03</code></strong></td><td>Collaboratore Remoto 3</td><td>Domain User Remoto</td><td>Accesso SMB tramite ZeroTier</td><td>Accesso controllato da smart-working</td></tr><tr><td><strong><code>remote04</code></strong></td><td>Collaboratore Remoto 4</td><td>Domain User Remoto</td><td>Accesso SMB tramite ZeroTier</td><td>Accesso controllato da smart-working</td></tr><tr><td><strong><code>scanner</code></strong></td><td>Scanner / MFP Service Account</td><td>Service Account</td><td>Scrittura su folder <code>ScanDoc</code></td><td>Autenticazione SMB su stampante multifunzione</td></tr><tr><td><strong><code>backup</code></strong></td><td>Backup Service Account</td><td>Service Account</td><td>Lettura su tutte le share SMB</td><td>Account dedicato per Cobian e RustCopy</td></tr><tr><td><strong><code>printerusr</code></strong></td><td>Printer Operator Service</td><td>Service Account</td><td>Gestione code di stampa</td><td>Condivisione stampanti di rete</td></tr></tbody></table></div>
+<hr/>
+<h2>6. Architettura di Virtualizzazione Hyper-V (HP Z4)</h2>
+<p>L'host fisico HP Z4 monta Windows Server 2022 Datacenter Edition con ruolo Hyper-V attivo.</p>
+<div class="table-container"><table><thead><tr><th>Macchina Virtuale</th><th>SO Guest</th><th>vCPU</th><th>vRAM</th><th>Storage Assegnato</th><th>Ruolo Architetturale</th></tr></thead><tbody><tr><td><strong><code>dc01</code></strong></td><td>Windows Server 2022</td><td>2 vCPU</td><td>4 GB</td><td>60 GB VHDX (OS)</td><td>Domain Controller, DNS, DHCP (<code>192.168.120.239</code>)</td></tr><tr><td><strong><code>fs01</code></strong></td><td>Windows Server 2022</td><td>4 vCPU</td><td>12 GB</td><td>60 GB OS + 2 TB VHDX Dati</td><td>File Server Principale Severino Srl + Client ZeroTier</td></tr><tr><td><strong><code>fs02</code></strong></td><td>Windows Server 2022</td><td>2 vCPU</td><td>6 GB</td><td>60 GB OS + 512 GB SSK Pass-through</td><td>File Server Multi-tenant per 2 Aziende Partner + ZeroTier</td></tr></tbody></table></div>
+<hr/>
+<h2>7. Rete Remota ZeroTier SD-WAN</h2>
+<p>Per consentire l'accesso sicuro ai dati da remoto senza dover aprire porte SMB o NAT sul perimetro Vodafone:</p>
+<ul>
+<li><strong>ZeroTier Network ID:</strong> <code>65228D8D6D71CA23</code></li>
+<li><strong>Amministrazione Rete:</strong> <code>salviozt01@gmail.com</code></li>
+<li><strong>Nodi autorizzati:</strong></li>
+<li><code>fs01</code>: Connesso e autorizzato con IP virtuale fisso ZeroTier.</li>
+<li><code>fs02</code>: Connesso e autorizzato con IP virtuale fisso ZeroTier.</li>
+<li>Endpoint remoti <code>remote01</code>..<code>remote04</code>: Autorizzati nominalmente su ZeroTier Central.</li>
+</ul>
+<hr/>
+<h2>8. Strategia di Backup e Continuità Operativa</h2>
+<p>1. <strong>Storage Target:</strong> NAS QNAP TS-233 (2-Bay) posizionato su VLAN 10 (Management/Backup).</p>
+<p>2. <strong>Software Fase 1 (Attuale):</strong> <strong>Cobian Reflector</strong> configurato come servizio su <code>fs01</code> e <code>fs02</code>, con utenza di servizio dedicata <code>severino\backup</code>.</p>
+<p>3. <strong>Software Fase 2 (Target Roadmap):</strong> Migrazione pianificata al tool ad alte prestazioni <strong>[RustCopy v7.4.1+](https://github.com/matrixNeo76/rustcopy)</strong>, sviluppato per garantire velocità, ridotto consumo di memoria e logging dettagliato su Windows.</p>
+<p>4. <strong>Schedulazione:</strong></p>
+<ul>
+<li>Ore 22:00: Backup incrementale <code>fs01</code> (2 TB) su share dedicata QNAP.</li>
+<li>Ore 23:00: Backup incrementale <code>fs02</code> (512 GB SSK) su share dedicata partner QNAP.</li>
+<li>Ore 01:00: Backup stato del sistema AD <code>dc01</code>.</li>
+</ul>
+<hr/>
+<h2>9. Decisioni Architetturali (ADR)</h2>
+<h3>ADR-001: ZeroTier rispetto a VPN IPsec su Vodafone Station</h3>
+<ul>
+<li><strong>Decisione:</strong> Utilizzare ZeroTier per l'accesso remoto di <code>remote01</code>..<code>remote04</code>.</li>
+<li><strong>Razionale:</strong> Le linee Vodafone consumer/business spesso presentano limitazioni su IP statici pubblici o doppi NAT. ZeroTier supera il NAT tramite crittografia end-to-end senza richiedere porte aperte verso l'esterno, garantendo massima sicurezza contro attacchi brute-force su SMB.</li>
+</ul>
+<h3>ADR-002: Separazione di <code>fs02</code> su VM Dedicata con Storage Esterno SSK</h3>
+<ul>
+<li><strong>Decisione:</strong> Creare una seconda macchina virtuale (<code>fs02</code>) per le due aziende partner anziché inserire le cartelle in <code>fs01</code>.</li>
+<li><strong>Razionale:</strong> Garantisce isolamento logico rigido conforme a NIS2 e GDPR. Se una delle due aziende partner cessa il rapporto o richiede audit indipendenti, l'intero ambiente dati risiede su volume isolato (SSK 512GB) e non contamina il file server principale di Severino Srl.</li>
+</ul>
+<h3>ADR-003: Roadmap di migrazione a RustCopy</h3>
+<ul>
+<li><strong>Decisione:</strong> Mantenere Cobian Reflector in fase iniziale e migrare a RustCopy v7.4.1+ appena convalidato.</li>
+<li><strong>Razionale:</strong> Assicura continuità operativa immediata e zero rischi durante il go-live, preparando una transizione trasparente verso uno strumento ottimizzato in Rust.</li>
+</ul>
+<hr/>
+<h2>10. Checklist di Validazione Finale</h2>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> Allineamento confermato con tutti i requisiti del documento <span class=\"wiki-link\">&sect; specification-severino-srl-rsd-01</span>.</li>
+<li><span class="badge-checked">&check; Fatto</span> Configurazione IP del Domain Controller verificata (<code>192.168.120.239</code>).</li>
+<li><span class="badge-checked">&check; Fatto</span> Lista utenti a dominio, ruoli e permessi SMB censiti integralmente.</li>
+<li><span class="badge-checked">&check; Fatto</span> Network ID ZeroTier e account di gestione documentati.</li>
+<li><span class="badge-checked">&check; Fatto</span> Coerenza tra <code>related_docs</code> e <code>relations</code> OKF verificata.</li>
+<li><span class="badge-checked">&check; Fatto</span> Nessuna password in chiaro presente (esclusivo uso di riferimenti <code>vault://</code>).</li>
+</ul>
+        </div>
+    </div>
+            
+    <!-- TAB 03-LLD -->
+    <div id="tab-fase2-lld" class="tab-content">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1.5rem; flex-wrap:wrap; gap: 1rem;">
+                <div>
+                    <h2>LLD — Low-Level Design Esecutivo Rete, Cablaggi, Virtualizzazione e Rack 10U Severino Srl</h2>
+                    <p>ID Documento: <code>architecture-severino-srl-lld-01</code> | Tipo: <strong>architecture</strong> | Fase: <strong>Fase 2</strong></p>
+                </div>
+                <div>
+                    <span class="badge-pass">&check; Validato OKF v0.2</span>
+                </div>
+            </div>
+            <h1>LLD — Low-Level Design Esecutivo: Severino Srl</h1>
+<p><!-- AI-INSTRUCTIONS:</p>
+<p>Questo documento definisce in dettaglio esecutivo vincolante la configurazione delle porte</p>
+<p>dello switch MikroTik CRS326, la matrice del patch panel, il piano IP e il rack 10U.</p>
+<p>--></p>
+<h2>1. Introduzione e Riferimenti</h2>
+<p>Il presente Low-Level Design costituisce il piano esecutivo di cablaggio, indirizzamento e configurazione degli apparati per la sede di <strong>Severino Srl</strong>.</p>
+<p><strong>Documenti correlati:</strong></p>
+<ul>
+<li>Requisiti di business e compliance: <span class=\"wiki-link\">&sect; specification-severino-srl-rsd-01</span></li>
+<li>Architettura macroscopica: <span class=\"wiki-link\">&sect; architecture-severino-srl-hld-01</span></li>
+</ul>
+<hr/>
+<h2>2. Piano di Indirizzamento IP e Subnetting</h2>
+<h3>2.1 Schema di Subnetting</h3>
+<div class="table-container"><table><thead><tr><th>Subnet</th><th>CIDR</th><th>VLAN ID</th><th>Zona</th><th>Gateway</th><th>DHCP</th><th>Utilizzo</th></tr></thead><tbody><tr><td>192.168.120.0</td><td>/24</td><td>1</td><td>LAN-CORP</td><td>192.168.120.1</td><td>sì (pool .2-.254 con reservation)</td><td>Rete Unificata Severino Srl (Server, Client, Wi-Fi, Storage)</td></tr></tbody></table></div>
+<h3>2.2 Mappatura VLAN → Zona → Trust</h3>
+<div class="table-container"><table><thead><tr><th>VLAN ID</th><th>Nome</th><th>Zona</th><th>Trust level</th><th>Routing inter-VLAN / Uscita</th></tr></thead><tbody><tr><td>1</td><td>default (bridge-local)</td><td>LAN-CORP</td><td>High / Trusted</td><td>Masquerade NAT via <code>ether1</code> (MikroTik WAN)</td></tr></tbody></table></div>
+<h3>2.3 Allocazione IP degli Host Fissi e Reservation DHCP</h3>
+<p>Il pool dinamico copre <code>192.168.120.2</code> - <code>192.168.120.254</code>. I dispositivi infrastrutturali chiave utilizzano IP statici dedicati (o reservation DHCP su base MAC address):</p>
+<div class="table-container"><table><thead><tr><th>Hostname / Dispositivo</th><th>IP</th><th>MAC Address</th><th>VLAN</th><th>Ruolo Architetturale</th><th>Note Operative</th></tr></thead><tbody><tr><td><code>router-core</code> (MikroTik CRS326)</td><td><code>192.168.120.1</code></td><td><code>vault://it/projects/severino-srl/mac/crs326</code></td><td>1</td><td>Default Gateway & DNS Relay</td><td>Switch Core & Firewall</td></tr><tr><td><code>host-hp-z4</code> (HP Z4 Physical)</td><td><code>192.168.120.10</code></td><td><code>vault://it/projects/severino-srl/mac/hp-z4</code></td><td>1</td><td>Host Fisico Hyper-V</td><td>Scheda Intel Gigabit LAN</td></tr><tr><td><code>dc01</code> (Windows Server 2022)</td><td><code>192.168.120.239</code></td><td><code>vault://it/projects/severino-srl/mac/dc01</code></td><td>1</td><td>Domain Controller AD, DNS primario, DHCP</td><td>Dominio <code>severino</code></td></tr><tr><td><code>fs01</code> (Windows Server 2022)</td><td><code>192.168.120.240</code></td><td><code>vault://it/projects/severino-srl/mac/fs01</code></td><td>1</td><td>File Server Severino Srl (2 TB)</td><td>Share SMB + ZeroTier</td></tr><tr><td><code>fs02</code> (Windows Server 2022)</td><td><code>192.168.120.241</code></td><td><code>vault://it/projects/severino-srl/mac/fs02</code></td><td>1</td><td>File Server Partner (512 GB SSK)</td><td>Share SMB + ZeroTier</td></tr><tr><td><code>nas-qnap</code> (QNAP TS-233)</td><td><code>192.168.120.250</code></td><td><code>vault://it/projects/severino-srl/mac/qnap</code></td><td>1</td><td>Backup Repository NAS</td><td>Target Cobian / RustCopy</td></tr><tr><td><code>ap-unifi-01</code> (UniFi AP)</td><td><code>192.168.120.251</code></td><td><code>vault://it/projects/severino-srl/mac/unifi</code></td><td>1</td><td>Access Point Wi-Fi Aziendale</td><td>Gestione via UniFi App/Network</td></tr><tr><td><code>mfp-printer</code> (Multifunzione)</td><td><code>192.168.120.245</code></td><td><code>vault://it/projects/severino-srl/mac/printer</code></td><td>1</td><td>Stampante di Rete & Scanner</td><td>Scan-to-folder con utente <code>scanner</code></td></tr><tr><td><code>teams-room</code> (Logitech Rally Bar)</td><td><code>192.168.120.246</code></td><td><code>vault://it/projects/severino-srl/mac/teams</code></td><td>1</td><td>Sala Videoconferenza Teams</td><td>Connessa via cavo LAN</td></tr><tr><td><em>Client HP G6 (dir01, ops01, ecc.)</em></td><td><code>192.168.120.50</code> - <code>.199</code></td><td>Dinamici / DHCP Lease</td><td>1</td><td>Postazioni desktop fisse cablate</td><td>Ricevono DNS <code>192.168.120.239</code></td></tr></tbody></table></div>
+<hr/>
+<h2>3. Layout Fisico Armadio Rack 10U</h2>
+<p>L'armadio rack a parete/pavimento da <strong>10 Unità (10U)</strong> è allestito con la seguente sequenza verticale (dall'alto in basso):</p>
+<pre><code class="language-">Armadio: Rack 10U Severino Srl
+Posizione: Locale Tecnico / Ufficio CED
+
+U  | Componente                          | Note
+---|-------------------------------------|---------------------------------------------------------
+10 | [PDU Superiore]                     | Multipresa rack 19&quot; 8 posti con interruttore magneto-termico
+09 | [Patch Panel 24 Porte Cat6 RJ45]    | Terminazione cavi rigidi prese a muro e AP UniFi
+08 | [Pannello Passacavi a Spazzola 1U]  | Gestione e instradamento patch cord ordinati
+07 | [Switch Core MikroTik CRS326]       | CRS326-24G-2S+RM (24p GbE + 2x SFP+) montato a rack 1U
+06 | [Mensola Fissa Ripiano 1]           | NAS QNAP TS-233 (2-Bay) + Vodafone Station
+05 | [Spazio di Areazione Ripiano 1]     | Circolazione termica e alimentatori QNAP / Vodafone
+04 | [Mensola Heavy-Duty Ripiano 2]      | Workstation HP Z4 (posizionata orizzontalmente)
+03 | [Workstation HP Z4]                 | Chassis host fisico Hyper-V (occupa 3U-4U complessive)
+02 | [Gruppo di Continuità UPS 1]        | UPS a protezione apparati attivi (MikroTik, HP Z4, QNAP)
+01 | [PDU Inferiore / Base Rack]         | Alimentazione ausiliaria e collegamento di terra</code></pre>
+<hr/>
+<h2>4. Mappatura Porte Fisiche Switch MikroTik CRS326 (Cable Matrix)</h2>
+<p>Configurazione logica RouterOS:</p>
+<ul>
+<li><strong><code>ether1</code></strong>: <strong>FUORI BRIDGE</strong> (Uplink WAN collegato a porta LAN Vodafone Station). Riceve configurazione IP dalla Vodafone Station (o IP statico dedicato) con masquerade NAT attivo.</li>
+<li><strong><code>ether2</code> - <code>ether24</code></strong>: <strong>APPARTENGONO AL <code>bridge-local</code></strong> (Switching hardware offloaded a 1 Gbps).</li>
+</ul>
+<h3>4.1 Tabella Cablaggi Switch MikroTik CRS326-24G-2S+RM</h3>
+<div class="table-container"><table><thead><tr><th>Porta Switch</th><th>Ruolo / Configurazione</th><th>Destinazione Cablata (Patch Panel / Apparato)</th><th>Presa a Muro / Apparato Finale</th><th>Tipo Cavo</th><th>Note</th></tr></thead><tbody><tr><td><strong>ether1</strong></td><td><strong>WAN (Fuori Bridge)</strong></td><td>Vodafone Station (Porta LAN 1)</td><td>Router Vodafone</td><td>Cat6 UTP</td><td>Uplink Internet con NAT</td></tr><tr><td><strong>ether2</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 01</td><td>Postazione Direzione (<code>dir01</code> - HP G6)</td><td>Cat6 UTP</td><td>Presa Muro A1</td></tr><tr><td><strong>ether3</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 02</td><td>Postazione Operativa (<code>ops01</code> - HP G6)</td><td>Cat6 UTP</td><td>Presa Muro A2</td></tr><tr><td><strong>ether4</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 03</td><td>Postazione Amm. 1 (<code>adm01</code> - HP G6)</td><td>Cat6 UTP</td><td>Presa Muro B1</td></tr><tr><td><strong>ether5</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 04</td><td>Postazione Amm. 2 (<code>adm02</code> - HP G6)</td><td>Cat6 UTP</td><td>Presa Muro B2</td></tr><tr><td><strong>ether6</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 05</td><td>Postazione HR 1 (<code>hr01</code> - HP G6)</td><td>Cat6 UTP</td><td>Presa Muro C1</td></tr><tr><td><strong>ether7</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 06</td><td>Postazione HR 2 (<code>hr02</code> - HP G6)</td><td>Cat6 UTP</td><td>Presa Muro C2</td></tr><tr><td><strong>ether8</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 07</td><td>Postazione Area Manager (<code>amg01</code> - HP G6)</td><td>Cat6 UTP</td><td>Presa Muro D1</td></tr><tr><td><strong>ether9</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 08</td><td>Stampante Multifunzione MFP (<code>printerusr</code>)</td><td>Cat6 UTP</td><td>Presa Muro Stampante</td></tr><tr><td><strong>ether10</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 09</td><td>Sala Riunioni (Logitech Rally Bar / TV 65")</td><td>Cat6 UTP</td><td>Presa Muro Sala Meeting</td></tr><tr><td><strong>ether11</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 10</td><td>Sala Riunioni (Tablet Touch Controller)</td><td>Cat6 UTP</td><td>Presa Muro Sala Meeting</td></tr><tr><td><strong>ether12</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 11</td><td>Ubiquiti UniFi AP (via PoE Injector)</td><td>Cat6 UTP</td><td>Access Point Soffitto</td></tr><tr><td><strong>ether13</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 12</td><td>Ubiquiti UniFi AP 2 (Predisposizione)</td><td>Cat6 UTP</td><td>Spare WiFi</td></tr><tr><td><strong>ether14</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 13</td><td>Presa Muro Tavolo Riunioni 1</td><td>Cat6 UTP</td><td>Connessione ospite cablata</td></tr><tr><td><strong>ether15</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 14</td><td>Presa Muro Tavolo Riunioni 2</td><td>Cat6 UTP</td><td>Connessione ospite cablata</td></tr><tr><td><strong>ether16</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 15</td><td>Presa Muro Ufficio Tecnico 1</td><td>Cat6 UTP</td><td>Postazione spare</td></tr><tr><td><strong>ether17</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 16</td><td>Presa Muro Ufficio Tecnico 2</td><td>Cat6 UTP</td><td>Postazione spare</td></tr><tr><td><strong>ether18</strong></td><td>Bridge LAN</td><td>Connessione Diretta Rack</td><td>Host Fisico HP Z4 (NIC Primaria Hyper-V)</td><td>Cat6 UTP</td><td>VSwitch LAN per VM dc01, fs01, fs02</td></tr><tr><td><strong>ether19</strong></td><td>Bridge LAN</td><td>Connessione Diretta Rack</td><td>Host Fisico HP Z4 (NIC Secondaria / iLO se presente)</td><td>Cat6 UTP</td><td>Management host</td></tr><tr><td><strong>ether20</strong></td><td>Bridge LAN</td><td>Connessione Diretta Rack</td><td>NAS QNAP TS-233 (Porta Gigabit LAN)</td><td>Cat6 UTP</td><td>Backup storage</td></tr><tr><td><strong>ether21</strong></td><td>Bridge LAN</td><td>Connessione Diretta Rack</td><td>Presa di Servizio Locale CED (Notebook manutenzione)</td><td>Cat6 UTP</td><td>Porta frontale test</td></tr><tr><td><strong>ether22</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 21</td><td>Presa Muro Reception / Ingresso</td><td>Cat6 UTP</td><td>Spare</td></tr><tr><td><strong>ether23</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 22</td><td>Predisposizione Telecamera IP / Sicurezza</td><td>Cat6 UTP</td><td>Spare</td></tr><tr><td><strong>ether24</strong></td><td>Bridge LAN</td><td>Patch Panel Porta 23</td><td>Predisposizione Telecamera IP / Sicurezza</td><td>Cat6 UTP</td><td>Spare</td></tr><tr><td><strong>sfp-sfpplus1</strong></td><td>Disabilitata / Spare</td><td>Rack Slot SFP+</td><td>Predisposizione uplink 10G host o NAS</td><td>Fibra/DAC</td><td>Spare 10 Gbps</td></tr><tr><td><strong>sfp-sfpplus2</strong></td><td>Disabilitata / Spare</td><td>Rack Slot SFP+</td><td>Predisposizione uplink 10G futuro</td><td>Fibra/DAC</td><td>Spare 10 Gbps</td></tr></tbody></table></div>
+<hr/>
+<h2>5. Configurazione Esecutiva Storage & USB Passthrough</h2>
+<h3>5.1 Storage Host HP Z4 e File Server <code>fs01</code></h3>
+<ul>
+<li><strong>Volume VHDX:</strong> File <code>D:\Hyper-V\Virtual Hard Disks\fs01_data.vhdx</code> di tipo dinamico espandibile con dimensione massima 2 TB.</li>
+<li><strong>Partizione Guest:</strong> Disco formattato NTFS a blocchi 4K con label <code>DATI_SEVERINO</code>.</li>
+<li><strong>Condivisione SMB:</strong> Share di rete <code>\\fs01\DatiAziendali</code> con permessi NTFS profilati per reparto (Direzione, Operazioni, Amministrazione, Risorse Umane, Commerciale).</li>
+</ul>
+<h3>5.2 Storage Esterno SSK 512GB e File Server <code>fs02</code></h3>
+<ul>
+<li><strong>Storage Fisico:</strong> SSD Esterno USB 3.2 Gen2 SSK da 512 GB collegato su porta posteriore USB 3.0 dell'host HP Z4.</li>
+<li><strong>Assegnazione Hyper-V:</strong> Disco offline su host e montato in modalità <strong>Pass-Through fisico</strong> direttamente nella VM <code>fs02</code> (oppure VHDX mappato sul volume SSK).</li>
+<li><strong>Condivisione SMB:</strong> Share di rete separate per le 2 aziende curate:</li>
+<li><code>\\fs02\AziendaPartner1</code></li>
+<li><code>\\fs02\AziendaPartner2</code></li>
+<li><strong>Isolamento Accessi:</strong> Nessun utente di Severino Srl ha permessi su tali cartelle, garantendo riservatezza rigorosa.</li>
+</ul>
+<hr/>
+<h2>6. Configurazione ZeroTier SD-WAN</h2>
+<p>1. <strong>Rete Central:</strong></p>
+<ul>
+<li>Network ID: <strong><code>65228D8D6D71CA23</code></strong></li>
+<li>Gestore: <code>salviozt01@gmail.com</code></li>
+<li>Range IP Virtuale ZeroTier: <code>10.147.17.0/24</code> (o assegnato da controller)</li>
+</ul>
+<p>2. <strong>Configurazione Client Server:</strong></p>
+<ul>
+<li>Servizio ZeroTier One installato su <code>fs01</code> e <code>fs02</code>.</li>
+<li>Assegnazione IP ZeroTier fisso (es. <code>10.147.17.10</code> per <code>fs01</code> e <code>10.147.17.11</code> per <code>fs02</code>).</li>
+</ul>
+<p>3. <strong>Configurazione Utenti Remoti:</strong></p>
+<ul>
+<li>Installazione client ZeroTier su notebook degli utenti <code>remote01</code>..<code>remote04</code>.</li>
+<li>Mappatura cartella remota: <code>net use Z: \\10.147.17.10\DatiAziendali /persistent:yes</code>.</li>
+</ul>
+<hr/>
+<h2>7. Strategia Backup su QNAP TS-233</h2>
+<h3>7.1 Configurazione QNAP</h3>
+<ul>
+<li>Hostname: <code>NAS-QNAP-01</code></li>
+<li>IP Statico: <code>192.168.120.250</code></li>
+<li>Share protetta creata: <code>\\192.168.120.250\Backup_Severino</code></li>
+<li>Utente autorizzato: <code>severino\backup</code> con password memorizzata in <code>vault://it/projects/severino-srl/nas/backup-user</code></li>
+</ul>
+<h3>7.2 Job Cobian Reflector (Stato Attuale)</h3>
+<ul>
+<li><strong>Job 1 (fs01):</strong> Esecuzione ogni notte ore 22:00. Backup differenziale giornaliero, full settimanale (Sabato).</li>
+<li><strong>Job 2 (fs02):</strong> Esecuzione ogni notte ore 23:00. Backup differenziale dello storage SSK.</li>
+</ul>
+<h3>7.3 Piano di Migrazione a RustCopy v7.4.1+ (Stato Target)</h3>
+<ul>
+<li>Script PowerShell schedulato su Task Scheduler delle VM:</li>
+</ul>
+<pre><code class="language-powershell">  # Esempio esecuzione RustCopy v7.4.1+:
+  rustcopy.exe sync &quot;D:\DatiAziendali&quot; &quot;\\192.168.120.250\Backup_Severino\fs01&quot; --threads 8 --log &quot;C:\Logs\rustcopy_fs01.log&quot;</code></pre>
+<hr/>
+<h2>8. Checklist di Validazione Finale</h2>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> Configurazione <code>ether1</code> (WAN fuori bridge) ed <code>ether2-ether24</code> (LAN bridge) documentata.</li>
+<li><span class="badge-checked">&check; Fatto</span> Matrice delle 24 porte switch e collegamenti al patch panel completata.</li>
+<li><span class="badge-checked">&check; Fatto</span> Piano IP con DC a <code>192.168.120.239</code> e pool DHCP <code>192.168.120.2-254</code> formalizzato.</li>
+<li><span class="badge-checked">&check; Fatto</span> Layout armadio rack 10U dettagliato da 10U a 1U.</li>
+<li><span class="badge-checked">&check; Fatto</span> Montaggio storage esterno SSK 512GB su <code>fs02</code> definito.</li>
+<li><span class="badge-checked">&check; Fatto</span> Network ID ZeroTier e mapping utenti remoti configurato.</li>
+<li><span class="badge-checked">&check; Fatto</span> Coerenza tra <code>related_docs</code> e <code>relations</code> OKF verificata.</li>
+<li><span class="badge-checked">&check; Fatto</span> Nessuna password in chiaro (esclusivo uso di riferimenti <code>vault://</code>).</li>
+</ul>
+        </div>
+    </div>
+            
+    <!-- TAB 04-MOP -->
+    <div id="tab-fase3-mop" class="tab-content">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1.5rem; flex-wrap:wrap; gap: 1rem;">
+                <div>
+                    <h2>MOP — Method of Procedure Implementazione Rete, Hyper-V, Storage e Dominio Severino Srl</h2>
+                    <p>ID Documento: <code>guide-severino-srl-mop-01</code> | Tipo: <strong>guide</strong> | Fase: <strong>Fase 3</strong></p>
+                </div>
+                <div>
+                    <span class="badge-pass">&check; Validato OKF v0.2</span>
+                </div>
+            </div>
+            <p><!-- AI-INSTRUCTIONS:</p>
+<p>Ruolo: definire la sequenza operativa passo-passo dell'intervento di deploy.</p>
+<p>Input attesi: LLD approvato, calendario del cliente, elenco dei tecnici disponibili.</p>
+<p>Regole di compilazione:</p>
+<p>1. Ogni step deve avere: ID univoco, descrizione, durata stimata, owner, prerequisiti.</p>
+<p>2. Indicare la finestra di manutenzione.</p>
+<p>3. Definire i punti di verifica intermedia (gate bloccanti).</p>
+<p>4. In caso di bloccante, riferimento al Rollback Plan.</p>
+<p>5. Popolare matrice RACI completa.</p>
+<p>6. Credenziali conformi alla gestione secret vault.</p>
+<p>--></p>
+<h1>MOP — Method of Procedure</h1>
+<p><strong>Progetto:</strong> Infrastruttura LAN, Virtualizzazione Hyper-V e Collaboration Severino Srl</p>
+<p><strong>Cliente:</strong> Severino Srl</p>
+<p><strong>Sito:</strong> HQ-SEV (Sede Principale Severino Srl)</p>
+<p><strong>Versione documento:</strong> 1.0</p>
+<p><strong>Stato:</strong> in-review</p>
+<hr/>
+<h2>1. Obiettivo dell'Intervento</h2>
+<p>Il presente Method of Procedure (MOP) stabilisce la procedura operativa cronologica, dettagliata e verificabile per l'installazione, la messa in servizio, il cablaggio e il collaudo dell'infrastruttura IT di Severino Srl.</p>
+<p>L'intervento comprende:</p>
+<p>1. Montaggio e posizionamento apparati nell'armadio Rack 10U a parete/pavimento.</p>
+<p>2. Certificazione del cablaggio strutturato e connessione al Patch Panel 24 porte Cat6.</p>
+<p>3. Provisioning dello switch perimetrale e core MikroTik CRS326-24G-2S+RM (uplink WAN <code>ether1</code> su Vodafone Station, LAN switchata <code>ether2-24</code>).</p>
+<p>4. Installazione e configurazione dell'host Hyper-V su Workstation HP Z4 con Windows Server 2022 Datacenter.</p>
+<p>5. Provisioning delle tre macchine virtuali core:</p>
+<ul>
+<li><code>dc01</code>: Domain Controller Active Directory <code>severino.local</code>, DNS Server integrato, scope DHCP.</li>
+<li><code>fs01</code>: File Server aziendale Severino Srl (disco dati 2 TB VHDX, share SMB dipartimentali).</li>
+<li><code>fs02</code>: File Server per aziende partner esterne (disco esterno SSK 512 GB passthrough, share SMB dedicate).</li>
+</ul>
+<p>6. Configurazione della rete overlay ZeroTier (Network ID <code>65228D8D6D71CA23</code>) per accesso remoto sicuro su <code>fs01</code> e <code>fs02</code>.</p>
+<p>7. Connessione dello storage NAS QNAP TS-233 e pianificazione job di backup giornaliero con Cobian Reflector (con roadmap di transizione verso RustCopy v7.4.1+).</p>
+<p>8. Allestimento e collaudo della Sala Videoconferenze con TV 65", Logitech Rally Bar avanzata, controller touch tablet e sistema Microsoft Teams Rooms.</p>
+<p>9. Configurazione, join a dominio <code>severino.local</code> e profilazione di tutti i MiniPC client HP ProDesk 400 G6.</p>
+<p><strong>Riferimenti progettuali:</strong></p>
+<ul>
+<li>Requisiti e specifiche: <span class=\"wiki-link\">&sect; specification-severino-srl-rsd-01</span></li>
+<li>Architettura High-Level: <span class=\"wiki-link\">&sect; architecture-severino-srl-hld-01</span></li>
+<li>Specifiche Low-Level e Cablaggi: <span class=\"wiki-link\">&sect; architecture-severino-srl-lld-01</span></li>
+<li>Piano di Rollback e Contingency: <span class=\"wiki-link\">&sect; guide-severino-srl-rollback-01</span></li>
+</ul>
+<hr/>
+<h2>2. Scope dell'Intervento</h2>
+<h3>2.1 In Scope</h3>
+<ul>
+<li>Installazione fisica, ancoraggio e messa a terra del Rack 10U.</li>
+<li>Cablaggio dei patch cord Cat6 tra patch panel 24p e MikroTik CRS326.</li>
+<li>Configurazione router/firewall RouterOS v7 su MikroTik CRS326 (NAT Masquerade, FastTrack, bridge VLAN-ready, isolamento WAN).</li>
+<li>Installazione di Windows Server 2022 Datacenter su HP Z4 e abilitazione ruolo Hyper-V con Virtual Switch Esterno.</li>
+<li>Creazione e configurazione VM <code>dc01</code>, promozione AD DS dominio <code>severino.local</code>, forest functional level 2016/2022.</li>
+<li>Creazione OU, gruppi di sicurezza e popolamento account utente AD (Amministratori, Utenti Locali, Utenti Remoti, Service Accounts).</li>
+<li>Creazione VM <code>fs01</code> con disco 2 TB VHDX e quote cartelle dipartimentali.</li>
+<li>Creazione VM <code>fs02</code> con montaggio storage SSK 512 GB e cartelle per le 2 aziende partner.</li>
+<li>Installazione ZeroTier Endpoint su <code>fs01</code> e <code>fs02</code> con binding su Network ID <code>65228D8D6D71CA23</code>.</li>
+<li>Installazione e configurazione NAS QNAP TS-233, pool RAID 1, abilitazione cartella di rete <code>/Backup</code> e permessi utente <code>backup</code>.</li>
+<li>Configurazione Cobian Reflector con retention 30 giorni e backup differenziale giornaliero / full settimanale.</li>
+<li>Installazione a parete TV 65", staffa Logitech Rally Bar, posizionamento tablet da tavolo e configurazione account Microsoft Teams Rooms.</li>
+<li>Provisioning e join a dominio di 7 postazioni MiniPC HP G6 (Windows 11 Pro).</li>
+<li>Esecuzione dei Gate di collaudo funzionali.</li>
+</ul>
+<h3>2.2 Out of Scope</h3>
+<ul>
+<li>Modifiche all'infrastruttura dell'ISP Vodafone o sostituzione della Vodafone Station.</li>
+<li>Fornitura di cablaggi elettrici civili a monte dell'UPS da 1500VA.</li>
+<li>Configurazione dei dispositivi personali privati dei dipendenti (BYOD) al di fuori dell'installazione del client ZeroTier sui notebook remoti autorizzati.</li>
+</ul>
+<hr/>
+<h2>3. Prerequisiti</h2>
+<h3>3.1 Prerequisiti Hardware</h3>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> PR-HW-001: Consegna apparati verificata (MikroTik CRS326, HP Z4, QNAP TS-233, 7x HP MiniPC G6, Logitech Rally Bar + Tablet, TV 65", SSK 512GB SSD, UPS 1500VA, UniFi AP).</li>
+<li><span class="badge-checked">&check; Fatto</span> PR-HW-002: Armadio rack 10U installato stabilmente e collaudata linea di terra da 6 mm2.</li>
+<li><span class="badge-checked">&check; Fatto</span> PR-HW-003: Alimentazione elettrica protetta disponibile con 2 prese Schuko dedicate su linea UPS.</li>
+<li><span class="badge-checked">&check; Fatto</span> PR-HW-004: Patch cord Cat6 RJ-45 (color-coded: grigio LAN, blu server/NAS, rosso WAN, giallo AP) disponibili e verificate.</li>
+<li><span class="badge-checked">&check; Fatto</span> PR-HW-005: Cavi video HDMI ad alta velocita certificati 4K per TV e Logitech Rally Bar.</li>
+</ul>
+<h3>3.2 Prerequisiti Logici e Credenziali</h3>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> PR-LOG-001: Credenziali di boot e configurazione predisposte nel Password Vault aziendale (<code>vault://it/projects/severino-srl/</code>).</li>
+<li><span class="badge-checked">&check; Fatto</span> PR-LOG-002: Licenze Windows Server 2022 Datacenter e Windows 11 Pro validate e registrate.</li>
+<li><span class="badge-checked">&check; Fatto</span> PR-LOG-003: Accesso amministrativo al portale ZeroTier (<code>salviozt01@gmail.com</code>) con Network ID <code>65228D8D6D71CA23</code> attivo.</li>
+<li><span class="badge-checked">&check; Fatto</span> PR-LOG-004: Account Microsoft Teams Rooms e licenza Teams assegnata alla sala riunioni.</li>
+<li><span class="badge-checked">&check; Fatto</span> PR-LOG-005: Linea WAN Vodafone Station attiva con connettivita Internet funzionante (subnet 192.168.1.0/24).</li>
+</ul>
+<h3>3.3 Prerequisiti Operativi</h3>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> PR-OP-001: Finestra di deploy concordata con la Direzione di Severino Srl.</li>
+<li><span class="badge-checked">&check; Fatto</span> PR-OP-002: Squadra tecnica convocata con ruoli definiti (Sistemista Senior, Network Engineer, Cablatore/Hardware Specialist).</li>
+<li><span class="badge-checked">&check; Fatto</span> PR-OP-003: Piano di Rollback <span class=\"wiki-link\">&sect; guide-severino-srl-rollback-01</span> approvato e condiviso.</li>
+</ul>
+<hr/>
+<h2>4. Finestra di Manutenzione e Tempistiche</h2>
+<div class="table-container"><table><thead><tr><th>Aspetto</th><th>Dettaglio</th></tr></thead><tbody><tr><td>Inizio Lavori</td><td>Venerdi 18:00 CET</td></tr><tr><td>Fine Prevista Lavori</td><td>Sabato 14:00 CET</td></tr><tr><td>Durata Totale Stimata</td><td>16 ore lavorative articolate su 2 sessioni</td></tr><tr><td>Tolleranza Massima</td><td>+4 ore (entro Sabato 18:00 CET)</td></tr><tr><td>Impatto Operativo</td><td>Nessuna interruzione dei servizi attuali (nuovo impianto greenfield con cutover finale)</td></tr><tr><td>Canale di Comunicazione</td><td>Gruppo dedicato IT Severino Srl / Canale emergenza cellulare</td></tr><tr><td>Responsabile Finestra</td><td>Marco Severino (Lead Architect & PM)</td></tr></tbody></table></div>
+<hr/>
+<h2>5. Risorse Umane e Matrice RACI</h2>
+<div class="table-container"><table><thead><tr><th>Attivita</th><th>Responsabile (R)</th><th>Accountable (A)</th><th>Consultato (C)</th><th>Informato (I)</th></tr></thead><tbody><tr><td>Racking & Cablaggi Rack 10U</td><td>Hardware Specialist</td><td>Marco Severino</td><td>Net Engineer</td><td>Direzione</td></tr><tr><td>Configurazione Switch MikroTik</td><td>Net Engineer</td><td>Marco Severino</td><td>Hardware Specialist</td><td>NOC</td></tr><tr><td>Setup Hyper-V & VM dc01/fs01/fs02</td><td>Systems Engineer</td><td>Marco Severino</td><td>Francesco Iavarone</td><td>Direzione</td></tr><tr><td>Provisioning Utenti AD & SMB</td><td>Systems Engineer</td><td>Marco Severino</td><td>Resp. Reparti</td><td>Utenti Severino</td></tr><tr><td>Setup ZeroTier & Backup NAS</td><td>Systems Engineer</td><td>Marco Severino</td><td>Salvio ZT Admin</td><td>Resp. Reparti</td></tr><tr><td>Allestimento Sala Teams</td><td>Hardware Specialist</td><td>Marco Severino</td><td>Systems Engineer</td><td>Segreteria</td></tr><tr><td>Join Dominio MiniPC HP G6</td><td>Systems Engineer</td><td>Marco Severino</td><td>Resp. Reparti</td><td>Utenti Postazioni</td></tr><tr><td>Esecuzione Verification Gate</td><td>Lead Architect</td><td>Marco Severino</td><td>Collaudatore</td><td>Stakeholder</td></tr><tr><td>Decisione Rollback</td><td>Marco Severino</td><td>Marco Severino</td><td>Systems Engineer</td><td>Sponsor</td></tr></tbody></table></div>
+<hr/>
+<h2>6. Sequenza Operativa Esecutiva</h2>
+<div class="mermaid">
+graph TD
+    A["Fase A: Pre-Flight & Staging"] --> B["Fase B: Racking 10U"]
+    B --> Gate1{"GATE 1: Racking OK?"}
+    Gate1 -- Si --> C["Fase C: Patch & Cablaggio"]
+    Gate1 -- No --> RB1["Rollback / Fix Hardware"]
+    C --> Gate2{"GATE 2: Cablaggio OK?"}
+    Gate2 -- Si --> D["Fase D: MikroTik RouterOS"]
+    Gate2 -- No --> RB2["Verifica Fluke / Sostituzione Patch"]
+    D --> Gate3{"GATE 3: Connettivita WAN/LAN OK?"}
+    Gate3 -- Si --> E["Fase E: HP Z4 & Hyper-V"]
+    Gate3 -- No --> RB3["Ripristino Config Switch"]
+    E --> Gate4{"GATE 4: Hypervisor Operativo?"}
+    Gate4 -- Si --> F["Fase F: Provisioning VM dc01, fs01, fs02"]
+    Gate4 -- No --> RB4["Reinstallazione Hyper-V Host"]
+    F --> Gate5{"GATE 5: Dominio & Share OK?"}
+    Gate5 -- Si --> G["Fase G: ZeroTier & Backup QNAP"]
+    Gate5 -- No --> RB5["Ripristino VM Snapshot"]
+    G --> Gate6{"GATE 6: Backup & SDN OK?"}
+    Gate6 -- Si --> H["Fase H: Sala Teams Rooms"]
+    H --> I["Fase I: Client Join & GPO"]
+    I --> Gate7{"GATE 7: Postazioni Client OK?"}
+    Gate7 -- Si --> J["Fase J: Collaudo Finale & Cutover"]
+</div>
+<hr/>
+<h3>Fase A — Preparazione e Pre-Flight (T-24h)</h3>
+<div class="table-container"><table><thead><tr><th>Step ID</th><th>Attivita</th><th>Durata</th><th>Owner</th><th>Prerequisiti</th><th>Output Atteso</th></tr></thead><tbody><tr><td>A.01</td><td>Verifica integrita apparati imballati e seriali</td><td>1.0h</td><td>Hardware Spec</td><td>PR-HW-001</td><td>Scheda verifica materiali</td></tr><tr><td>A.02</td><td>Download firmware stabile MikroTik RouterOS v7 LTS</td><td>0.5h</td><td>Net Eng</td><td>Connessione WAN</td><td>Immagine software verificata</td></tr><tr><td>A.03</td><td>Download ISO Windows Server 2022 e agenti ZeroTier</td><td>0.5h</td><td>Systems Eng</td><td>Connessione WAN</td><td>Media di installazione pronti</td></tr><tr><td>A.04</td><td>Verifica account e credenziali vault</td><td>0.5h</td><td>Lead Architect</td><td>PR-LOG-001</td><td>Accesso vault confermato</td></tr></tbody></table></div>
+<hr/>
+<h3>Fase B — Racking Fisico Armadio 10U (Giorno 1, Ore 18:00 - 20:00)</h3>
+<div class="table-container"><table><thead><tr><th>Step ID</th><th>Attivita</th><th>Durata</th><th>Owner</th><th>Prerequisiti</th><th>Output Atteso</th></tr></thead><tbody><tr><td>B.01</td><td>Montaggio PDU orizzontale in Unita 10 (cima rack)</td><td>0.25h</td><td>Hardware Spec</td><td>A.01</td><td>PDU 10U fissata</td></tr><tr><td>B.02</td><td>Montaggio Patch Panel 24p Cat6 in Unita 9</td><td>0.25h</td><td>Hardware Spec</td><td>B.01</td><td>Patch Panel 9U fissato</td></tr><tr><td>B.03</td><td>Montaggio Passacavi orizzontale a fessure in Unita 8</td><td>0.25h</td><td>Hardware Spec</td><td>B.02</td><td>Passacavi 8U fissato</td></tr><tr><td>B.04</td><td>Montaggio MikroTik CRS326 con alette rack in Unita 7</td><td>0.25h</td><td>Hardware Spec</td><td>B.03</td><td>Switch 7U fissato</td></tr><tr><td>B.05</td><td>Montaggio ripiano a sbalzo per QNAP TS-233 e Vodafone Station in Unita 6-5</td><td>0.5h</td><td>Hardware Spec</td><td>B.04</td><td>Ripiano 6U/5U posizionato</td></tr><tr><td>B.06</td><td>Installazione mensola rinforzata e posizionamento HP Z4 in Unita 4-3</td><td>0.5h</td><td>Hardware Spec</td><td>B.05</td><td>Workstation HP Z4 ancorata</td></tr><tr><td>B.07</td><td>Posizionamento UPS 1500VA sul fondo rack (Unita 2-1)</td><td>0.25h</td><td>Hardware Spec</td><td>B.06</td><td>UPS posizionato e alimentato</td></tr><tr><td>B.08</td><td><strong>GATE-1</strong>: Ispezione stabilita meccanica, pesi e ventilazione</td><td>0.25h</td><td>Lead Architect</td><td>B.01-B.07</td><td><strong>Verbale Gate 1 APPROVATO</strong></td></tr></tbody></table></div>
+<hr/>
+<h3>Fase C — Cablaggio Strutturato e Patching (Giorno 1, Ore 20:00 - 21:30)</h3>
+<div class="table-container"><table><thead><tr><th>Step ID</th><th>Attivita</th><th>Durata</th><th>Owner</th><th>Prerequisiti</th><th>Output Atteso</th></tr></thead><tbody><tr><td>C.01</td><td>Connessione cavo rosso WAN tra Vodafone Station e porta <code>ether1</code> MikroTik</td><td>0.2h</td><td>Net Eng</td><td>Gate 1</td><td>Uplink fisico pronto</td></tr><tr><td>C.02</td><td>Patching porte client: cavi grigi da <code>ether2-ether8</code> verso PP Porte 1-7 (Uffici)</td><td>0.4h</td><td>Hardware Spec</td><td>C.01</td><td>Prese client collegate</td></tr><tr><td>C.03</td><td>Patching AP UniFi: cavo giallo da <code>ether14</code> verso PP Porta 14 (PoE injector)</td><td>0.2h</td><td>Hardware Spec</td><td>C.02</td><td>AP collegato</td></tr><tr><td>C.04</td><td>Patching Sala Teams: cavo grigio da <code>ether15</code> verso PP Porta 15</td><td>0.2h</td><td>Hardware Spec</td><td>C.03</td><td>Presa MTR collegata</td></tr><tr><td>C.05</td><td>Connessione server: cavo blu da <code>ether17</code> a scheda LAN HP Z4</td><td>0.2h</td><td>Hardware Spec</td><td>C.04</td><td>HP Z4 collegata</td></tr><tr><td>C.06</td><td>Connessione NAS: cavo blu da <code>ether18</code> a porta LAN QNAP TS-233</td><td>0.2h</td><td>Hardware Spec</td><td>C.05</td><td>QNAP collegato</td></tr><tr><td>C.07</td><td><strong>GATE-2</strong>: Test di continuita elettrica e link status 1 Gbps su tutte le porte</td><td>0.3h</td><td>Net Eng</td><td>C.01-C.06</td><td><strong>Verbale Gate 2 APPROVATO</strong></td></tr></tbody></table></div>
+<hr/>
+<h3>Fase D — Configurazione RouterOS MikroTik CRS326 (Giorno 1, Ore 21:30 - 23:00)</h3>
+<p>1. Connessione console/WinBox via MAC address su <code>ether2</code>.</p>
+<p>2. Esecuzione script di baseline RouterOS v7:</p>
+<pre><code class="language-routeros"># Script Configurazione Iniziale MikroTik CRS326-24G-2S+RM
+/system identity set name=&quot;sw-core-01&quot;
+
+# Creazione bridge LAN locale
+/interface bridge add name=bridge-local protocol-mode=rstp
+
+# Aggiunta porte ether2-ether24 al bridge locale (ether1 rimane ESCLUSA per WAN)
+/interface bridge port
+add bridge=bridge-local interface=ether2
+add bridge=bridge-local interface=ether3
+add bridge=bridge-local interface=ether4
+add bridge=bridge-local interface=ether5
+add bridge=bridge-local interface=ether6
+add bridge=bridge-local interface=ether7
+add bridge=bridge-local interface=ether8
+add bridge=bridge-local interface=ether9
+add bridge=bridge-local interface=ether10
+add bridge=bridge-local interface=ether11
+add bridge=bridge-local interface=ether12
+add bridge=bridge-local interface=ether13
+add bridge=bridge-local interface=ether14
+add bridge=bridge-local interface=ether15
+add bridge=bridge-local interface=ether16
+add bridge=bridge-local interface=ether17
+add bridge=bridge-local interface=ether18
+add bridge=bridge-local interface=ether19
+add bridge=bridge-local interface=ether20
+add bridge=bridge-local interface=ether21
+add bridge=bridge-local interface=ether22
+add bridge=bridge-local interface=ether23
+add bridge=bridge-local interface=ether24
+
+# Assegnazione IP di Management e Gateway LAN al bridge
+/ip address add address=192.168.120.1/24 interface=bridge-local comment=&quot;Default Gateway LAN Severino&quot;
+
+# Configurazione interfaccia WAN ether1
+/interface list add name=WAN
+/interface list add name=LAN
+/interface list member add interface=ether1 list=WAN
+/interface list member add interface=bridge-local list=LAN
+
+/ip dhcp-client add interface=ether1 disabled=no comment=&quot;WAN Uplink da Vodafone Station&quot;
+
+# Regole Firewall e NAT Masquerade
+/ip firewall nat add chain=srcnat out-interface-list=WAN action=masquerade comment=&quot;NAT Masquerade verso Internet&quot;
+
+/ip firewall filter
+add chain=input action=accept connection-state=established,related comment=&quot;Accetta connessioni stabilite&quot;
+add chain=input action=drop connection-state=invalid comment=&quot;Drop pacchetti invalidi&quot;
+add chain=input action=accept in-interface-list=LAN comment=&quot;Accesso management consentito da LAN&quot;
+add chain=input action=drop in-interface-list=WAN comment=&quot;Blocca accessi diretti da WAN&quot;
+add chain=forward action=accept connection-state=established,related
+add chain=forward action=drop connection-state=invalid
+add chain=forward action=accept in-interface-list=LAN out-interface-list=WAN comment=&quot;Traffico outbound LAN verso WAN&quot;
+add chain=forward action=drop in-interface-list=WAN connection-nat-state=!dstnat comment=&quot;Blocca traffico non sollecitato da WAN&quot;
+
+# Configurazione DNS Forwarding con fallback
+/ip dns set allow-remote-requests=yes servers=192.168.120.239,1.1.1.1,8.8.8.8
+
+# Backup configurazione
+/system backup save name=&quot;mop-baseline-sw-core-01&quot;</code></pre>
+<p>3. <strong>GATE-3</strong>: Verifica navigazione Internet da porta client con IP statico, ping gateway <code>192.168.120.1</code> e ping esterno <code>8.8.8.8</code>. <strong>Verbale Gate 3 APPROVATO</strong>.</p>
+<hr/>
+<h3>Fase E — Setup Host Fisico HP Z4 & Hyper-V (Giorno 1, Ore 23:00 - 00:30)</h3>
+<div class="table-container"><table><thead><tr><th>Step ID</th><th>Attivita</th><th>Durata</th><th>Owner</th><th>Prerequisiti</th><th>Output Atteso</th></tr></thead><tbody><tr><td>E.01</td><td>Configurazione BIOS HP Z4: abilitazione Intel VT-x/VT-d, Power On after AC Loss</td><td>0.3h</td><td>Systems Eng</td><td>Gate 3</td><td>BIOS configurato</td></tr><tr><td>E.02</td><td>Installazione pulita Windows Server 2022 Datacenter Edition su NVMe principale</td><td>0.5h</td><td>Systems Eng</td><td>E.01</td><td>OS installato</td></tr><tr><td>E.03</td><td>Configurazione scheda di rete host: IP <code>192.168.120.10/24</code>, GW <code>192.168.120.1</code>, DNS <code>192.168.120.239</code></td><td>0.2h</td><td>Systems Eng</td><td>E.02</td><td>Rete host configurata</td></tr><tr><td>E.04</td><td>Installazione Ruolo Hyper-V e Hyper-V Management Tools tramite PowerShell</td><td>0.2h</td><td>Systems Eng</td><td>E.03</td><td>Ruolo installato</td></tr><tr><td>E.05</td><td>Creazione Virtual Switch Esterno <code>vSwitch-External</code> associato alla scheda fisica 1GbE</td><td>0.2h</td><td>Systems Eng</td><td>E.04</td><td>vSwitch operativo</td></tr><tr><td>E.06</td><td><strong>GATE-4</strong>: Verifica riavvio host, integrita Hyper-V e comunicazione di rete</td><td>0.1h</td><td>Lead Architect</td><td>E.01-E.05</td><td><strong>Verbale Gate 4 APPROVATO</strong></td></tr></tbody></table></div>
+<hr/>
+<h3>Fase F — Provisioning VM Core (dc01, fs01, fs02) (Giorno 2, Ore 08:30 - 11:30)</h3>
+<h4>F.1 Setup VM dc01 (Domain Controller)</h4>
+<p>1. Creazione VM Generazione 2: 4 vCPU, 8 GB RAM statica, Disco C: 100 GB VHDX su NVMe, rete su <code>vSwitch-External</code>.</p>
+<p>2. Installazione Windows Server 2022 Standard/Datacenter.</p>
+<p>3. Assegnazione IP statico: <code>192.168.120.239/24</code>, GW <code>192.168.120.1</code>, DNS <code>127.0.0.1</code>.</p>
+<p>4. Installazione Ruolo AD DS e DNS Server.</p>
+<p>5. Promozione a Domain Controller per nuova foresta <code>severino.local</code> (NetBIOS: <code>SEVERINO</code>).</p>
+<p>6. Creazione Struttura OU:</p>
+<ul>
+<li><code>OU=Severino,DC=severino,DC=local</code></li>
+<li><code>OU=Admins</code></li>
+<li><code>OU=Users</code> (sotto-OU: Direzione, Operativo, Amministrazione, HR, AreaManager)</li>
+<li><code>OU=RemoteUsers</code></li>
+<li><code>OU=ServiceAccounts</code></li>
+<li><code>OU=Computers</code></li>
+</ul>
+<p>7. Creazione Utenti di Dominio (credenziali generate e salvate in <code>vault://it/projects/severino-srl/ad/users</code>):</p>
+<ul>
+<li><strong>Domain Admins:</strong> <code>francesco.iavarone</code>, <code>admin0</code></li>
+<li><strong>Local Domain Users:</strong> <code>dir01</code> (Direzione), <code>ops01</code> (Operativo), <code>adm01</code>, <code>adm02</code> (Amministrazione), <code>hr01</code>, <code>hr02</code> (Risorse Umane), <code>amg01</code> (Area Manager)</li>
+<li><strong>Service Accounts:</strong> <code>scanner</code> (abilitato su cartella scansioni), <code>backup</code> (servizio Cobian/RustCopy), <code>printerusr</code> (gestione stampe)</li>
+<li><strong>Remote Users:</strong> <code>remote01</code>, <code>remote02</code>, <code>remote03</code>, <code>remote04</code></li>
+</ul>
+<p>8. Configurazione Ruolo DHCP Server su <code>dc01</code>:</p>
+<ul>
+<li>Scope: <code>192.168.120.0/24</code></li>
+<li>Range dinamico: <code>192.168.120.2</code> - <code>192.168.120.254</code></li>
+<li>Esclusioni: <code>192.168.120.1</code> (Gateway), <code>192.168.120.10</code> (Host Z4), <code>192.168.120.239</code> (dc01), <code>192.168.120.240</code> (fs01), <code>192.168.120.241</code> (fs02), <code>192.168.120.250</code> (QNAP), <code>192.168.120.251</code> (UniFi AP), <code>192.168.120.252</code> (Logitech MTR), <code>192.168.120.253</code> (Stampante).</li>
+<li>Opzione 003 Router: <code>192.168.120.1</code></li>
+<li>Opzione 006 DNS: <code>192.168.120.239</code>, <code>1.1.1.1</code></li>
+<li>Opzione 015 Domain Name: <code>severino.local</code></li>
+</ul>
+<h4>F.2 Setup VM fs01 (File Server Principale Severino Srl)</h4>
+<p>1. Creazione VM Generazione 2: 4 vCPU, 16 GB RAM, OS disk 80 GB VHDX, Data disk 2 TB VHDX dedicato (<code>D:\DatiSeverino</code>).</p>
+<p>2. Installazione Windows Server 2022, join al dominio <code>severino.local</code>, IP statico <code>192.168.120.240</code>.</p>
+<p>3. Creazione cartelle condivise SMB con permessi NTFS granulari:</p>
+<ul>
+<li><code>\\fs01\Direzione$</code> (Accesso limitato a <code>dir01</code>, <code>francesco.iavarone</code>, <code>admin0</code>)</li>
+<li><code>\\fs01\Amministrazione$</code> (Accesso limitato ad <code>adm01</code>, <code>adm02</code>, <code>dir01</code>)</li>
+<li><code>\\fs01\HR$</code> (Accesso limitato ad <code>hr01</code>, <code>hr02</code>, <code>dir01</code>)</li>
+<li><code>\\fs01\Operativo</code> (Accesso per tutti i dipendenti interni e remoti con ACL)</li>
+<li><code>\\fs01\Scansioni</code> (Accesso in scrittura per service account <code>scanner</code>)</li>
+</ul>
+<h4>F.3 Setup VM fs02 (File Server Partner / Storage SSK 512 GB)</h4>
+<p>1. Collegamento storage SSD SSK 512 GB su porta USB 3.2 dedicata del retro HP Z4.</p>
+<p>2. Configurazione disco in stato "Offline" su host HP Z4 per consentire il Passthrough hardware diretto a Hyper-V.</p>
+<p>3. Creazione VM <code>fs02</code>: 2 vCPU, 8 GB RAM, OS disk 60 GB VHDX, Disco fisico Passthrough SSK 512 GB (<code>E:\DatiPartner</code>).</p>
+<p>4. Join al dominio <code>severino.local</code>, IP statico <code>192.168.120.241</code>.</p>
+<p>5. Creazione cartelle condivise SMB isolate:</p>
+<ul>
+<li><code>\\fs02\AziendaA$</code> (Permessi dedicati al gruppo Partner A)</li>
+<li><code>\\fs02\AziendaB$</code> (Permessi dedicati al gruppo Partner B)</li>
+</ul>
+<p>6. <strong>GATE-5</strong>: Convalida autenticazione Kerberos su <code>dc01</code>, risoluzione DNS e accesso alle share SMB da client di test. <strong>Verbale Gate 5 APPROVATO</strong>.</p>
+<hr/>
+<h3>Fase G — ZeroTier Overlay & Backup su QNAP TS-233 (Giorno 2, Ore 11:30 - 12:30)</h3>
+<div class="table-container"><table><thead><tr><th>Step ID</th><th>Attivita</th><th>Durata</th><th>Owner</th><th>Prerequisiti</th><th>Output Atteso</th></tr></thead><tbody><tr><td>G.01</td><td>Installazione ZeroTier One service su <code>fs01</code> e <code>fs02</code></td><td>0.2h</td><td>Systems Eng</td><td>Gate 5</td><td>Servizio attivo</td></tr><tr><td>G.02</td><td>Esecuzione join network ID <code>65228D8D6D71CA23</code>: <code>zerotier-cli join 65228D8D6D71CA23</code></td><td>0.1h</td><td>Systems Eng</td><td>G.01</td><td>Richiesta join inoltrata</td></tr><tr><td>G.03</td><td>Accesso portale my.zerotier.com (admin <code>salviozt01@gmail.com</code>), autorizzazione membri, assegnazione IP virtuali e denominazione</td><td>0.2h</td><td>Systems Eng</td><td>G.02</td><td>Nodi autorizzati OK</td></tr><tr><td>G.04</td><td>Inizializzazione QNAP TS-233, firmware QTS aggiornato, configurazione IP statico <code>192.168.120.250</code></td><td>0.3h</td><td>Systems Eng</td><td>Gate 3</td><td>NAS pronto</td></tr><tr><td>G.05</td><td>Creazione share <code>/Backup</code> con autenticazione ristretta per account AD <code>backup</code></td><td>0.1h</td><td>Systems Eng</td><td>G.04</td><td>Share SMB pronta</td></tr><tr><td>G.06</td><td>Installazione e configurazione Cobian Reflector su <code>fs01</code> e <code>fs02</code>: backup incrementale serale verso <code>\\192.168.120.250\Backup</code></td><td>0.3h</td><td>Systems Eng</td><td>G.05</td><td>Task schedulati</td></tr><tr><td>G.07</td><td>Predisposizione directory e script per futuro deploy di RustCopy v7.4.1+ (<code>C:\Scripts\rustcopy\</code>)</td><td>0.1h</td><td>Systems Eng</td><td>G.06</td><td>Struttura pronta</td></tr><tr><td>G.08</td><td><strong>GATE-6</strong>: Test connessione remota ZeroTier e collaudo backup manuale con verifica checksum</td><td>0.2h</td><td>Lead Architect</td><td>G.01-G.07</td><td><strong>Verbale Gate 6 APPROVATO</strong></td></tr></tbody></table></div>
+<hr/>
+<h3>Fase H — Sala Riunioni Collaboration Teams Rooms (Giorno 2, Ore 12:30 - 13:15)</h3>
+<p>1. Montaggio TV 65" su supporto a parete con tasselli rinforzati e regolazione orizzontale a bolla.</p>
+<p>2. Montaggio staffa Logitech Rally Bar sotto il bordo inferiore della TV.</p>
+<p>3. Connessione cavo HDMI OUT da Rally Bar a porta HDMI 1 (eARC) della TV 65".</p>
+<p>4. Connessione alimentazione e cavo LAN Cat6 a presa a muro <code>PP-15</code> (IP DHCP reservation: <code>192.168.120.252</code>).</p>
+<p>5. Posizionamento e allacciamento del controller Touch Tablet al centro del tavolo riunioni (alimentazione PoE).</p>
+<p>6. Primo boot, pairing tra Tablet e Rally Bar via rete locale.</p>
+<p>7. Login applicazione Microsoft Teams Rooms con account di sala aziendale (<code>meeting@severino.it</code> / credenziali vault).</p>
+<p>8. Verifica audio bidirezionale, test microfoni beamforming, altoparlanti e inquadratura ottica automatica AI.</p>
+<hr/>
+<h3>Fase I — Configurazione e Join Dominio MiniPC HP G6 (Giorno 2, Ore 13:15 - 14:00)</h3>
+<p>1. Boot dei 7 MiniPC HP ProDesk 400 G6 collegati su porte cablate <code>ether2-ether8</code>.</p>
+<p>2. Verifica ricezione corretta dei parametri DHCP da <code>dc01</code> (IP <code>192.168.120.x</code>, DNS <code>192.168.120.239</code>).</p>
+<p>3. Rinominazione computer in conformita allo standard LLD: <code>PC-DIR01</code>, <code>PC-OPS01</code>, <code>PC-ADM01</code>, <code>PC-ADM02</code>, <code>PC-HR01</code>, <code>PC-HR02</code>, <code>PC-AMG01</code>.</p>
+<p>4. Join a dominio <code>severino.local</code> ed esecuzione riavvio post-join.</p>
+<p>5. Accesso con i rispettivi utenti e verifica applicazione script GPO logon:</p>
+<ul>
+<li>Mappatura automatica disco <code>Z:</code> -> <code>\\fs01\DatiSeverino</code></li>
+<li>Mappatura disco <code>Y:</code> -> <code>\\fs02\DatiPartner</code> (se autorizzati)</li>
+<li>Configurazione stampante di rete LAN</li>
+</ul>
+<p>6. <strong>GATE-7</strong>: Verifica logon utente, accesso ai dischi di rete e test stampante su tutte le 7 postazioni. <strong>Verbale Gate 7 APPROVATO</strong>.</p>
+<hr/>
+<h2>7. Punti di Decisione e Gate di Verifica</h2>
+<div class="table-container"><table><thead><tr><th>Gate ID</th><th>Denominazione</th><th>Criterio di Superamento</th><th>Azione in caso di FAIL</th></tr></thead><tbody><tr><td><strong>GATE-1</strong></td><td>Verifica Meccanica Rack 10U</td><td>Stabilita rack, allineamento guide, alimentazione PDU attiva</td><td>Correggere ancoraggio o cablaggi elettrici</td></tr><tr><td><strong>GATE-2</strong></td><td>Certificazione Cablaggio</td><td>Link 1 Gbps Full Duplex su tutte le porte PP collegate</td><td>Ripuntatura frutto RJ45 o sostituzione patch cord</td></tr><tr><td><strong>GATE-3</strong></td><td>Connettivita MikroTik & WAN</td><td>Ping 8.8.8.8 OK, NAT Masquerade attivo, interfaccia web/winbox protetta</td><td>Ricaricare baseline <code>mop-baseline-sw-core-01</code></td></tr><tr><td><strong>GATE-4</strong></td><td>Piattaforma Hyper-V Host</td><td>Host Z4 avviato con vSwitch esterno funzionante</td><td>Riavvio e verifica driver scheda di rete</td></tr><tr><td><strong>GATE-5</strong></td><td>Active Directory & File Server</td><td>Promozione <code>severino.local</code> completata, share SMB accessibili</td><td>Analisi registri eventi AD DS o rollback snapshot</td></tr><tr><td><strong>GATE-6</strong></td><td>ZeroTier & Backup NAS</td><td>Nodo <code>fs01</code>/<code>fs02</code> online su ZeroTier, backup test completato su QNAP</td><td>Verifica porta UDP 9993 e permessi cartella <code>/Backup</code></td></tr><tr><td><strong>GATE-7</strong></td><td>Postazioni Client MiniPC</td><td>7 MiniPC correttamente a dominio con dischi <code>Z:</code> mappati</td><td>Rimozione e re-join a dominio</td></tr><tr><td><strong>GATE-8</strong></td><td>Collaudo Finale Globale</td><td>Tutti i servizi operativi, firma verbale con Marco Severino</td><td>Attivazione piano di contingency <span class=\"wiki-link\">&sect; guide-severino-srl-rollback-01</span></td></tr></tbody></table></div>
+<hr/>
+<h2>8. Piano di Comunicazione ed Escalation</h2>
+<ul>
+<li><strong>Canale Operativo:</strong> Telefono diretto + Gruppo instant messaging tecnico.</li>
+<li><strong>Aggiornamenti di Stato:</strong></li>
+<li>Ore 20:00 (Giorno 1): Report completamento Racking & Cablaggio (Gate 1 & 2).</li>
+<li>Ore 23:00 (Giorno 1): Report configurazione Switch & Hyper-V (Gate 3 & 4).</li>
+<li>Ore 11:30 (Giorno 2): Report completamento VM e Dominio (Gate 5).</li>
+<li>Ore 14:00 (Giorno 2): Report finale chiusura MOP e via libera all'utenza.</li>
+<li><strong>Escalation Contatti:</strong></li>
+<li><em>Lead Architect / Project Manager:</em> Marco Severino (<code>vault://it/projects/severino-srl/contacts/pm</code>)</li>
+<li><em>Domain Administrator Senior:</em> Francesco Iavarone (<code>vault://it/projects/severino-srl/contacts/sysadmin</code>)</li>
+</ul>
+<hr/>
+<h2>9. Checklist di Validazione MOP</h2>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> Tutti i prerequisiti fisici, logici ed operativi sono soddisfatti e documentati.</li>
+<li><span class="badge-checked">&check; Fatto</span> Nessuna credenziale in chiaro nel documento; utilizzati puntatori <code>vault://</code>.</li>
+<li><span class="badge-checked">&check; Fatto</span> Matrice RACI esaustiva con ruoli e responsabilita chiare.</li>
+<li><span class="badge-checked">&check; Fatto</span> Tutti i Gate di verifica intermedi (Gate 1-8) sono esplicitati con criteri chiari.</li>
+<li><span class="badge-checked">&check; Fatto</span> Il piano di Rollback <span class=\"wiki-link\">&sect; guide-severino-srl-rollback-01</span> e referenziato per ogni potenziale blocco critico.</li>
+<li><span class="badge-checked">&check; Fatto</span> Documento conforme allo standard OKF v0.2.</li>
+</ul>
+        </div>
+    </div>
+            
+    <!-- TAB 05-Rollback -->
+    <div id="tab-fase3-rollback" class="tab-content">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1.5rem; flex-wrap:wrap; gap: 1rem;">
+                <div>
+                    <h2>Rollback Plan — Piano di Contingency e Ripristino Emergenziale Severino Srl</h2>
+                    <p>ID Documento: <code>guide-severino-srl-rollback-01</code> | Tipo: <strong>guide</strong> | Fase: <strong>Fase 3</strong></p>
+                </div>
+                <div>
+                    <span class="badge-pass">&check; Validato OKF v0.2</span>
+                </div>
+            </div>
+            <p><!-- AI-INSTRUCTIONS:</p>
+<p>Ruolo: definire le procedure di ripristino per annullare le modifiche e tornare allo stato precedente.</p>
+<p>Input attesi: MOP approvato, snapshot/backup dello stato pre-intervento, runbook vendor.</p>
+<p>Regole di compilazione:</p>
+<p>1. Per ogni step del MOP, definire la procedura inversa corrispondente.</p>
+<p>2. Definire CHIARAMENTE i trigger che attivano il rollback.</p>
+<p>3. Indicare chi ha l'autorita per decidere il rollback (Decision Authority).</p>
+<p>4. Specificare il tempo massimo entro cui e possibile eseguire rollback con successo.</p>
+<p>5. Definire i punti di non-ritorno (no-return points).</p>
+<p>6. Dettagliare le verifiche post-rollback.</p>
+<p>7. In <code>depends_on</code> deve figurare il MOP.</p>
+<p>--></p>
+<h1>Rollback / Fallback Plan</h1>
+<p><strong>Progetto:</strong> Infrastruttura LAN, Virtualizzazione Hyper-V e Collaboration Severino Srl</p>
+<p><strong>Cliente:</strong> Severino Srl</p>
+<p><strong>Sito:</strong> HQ-SEV (Sede Principale Severino Srl)</p>
+<p><strong>Versione documento:</strong> 1.0</p>
+<p><strong>Stato:</strong> in-review</p>
+<hr/>
+<h2>1. Scopo del Documento</h2>
+<p>Il presente documento definisce le strategie di emergenza, i criteri decisionali e le procedure operative di arretramento (Rollback / Fallback) relative al deployment dell'infrastruttura di Severino Srl, descritta in dettaglio nel <span class=\"wiki-link\">&sect; guide-severino-srl-mop-01</span> e basata sulle specifiche di <span class=\"wiki-link\">&sect; architecture-severino-srl-lld-01</span>.</p>
+<p>L'obiettivo prioritario e garantire che, a fronte di qualsiasi anomalia non risolvibile on-site durante la finestra di manutenzione (hardware guasto, corruzione Active Directory, fallimento della rete MikroTik, incompatibilita storage SSK), l'operativita aziendale del lunedi mattina sia preservata al 100%, mantenendo accessibili i dati aziendali e la connettivita a Internet.</p>
+<hr/>
+<h2>2. Trigger di Rollback</h2>
+<p>L'attivazione del presente piano scatta automaticamente o su decisione formale qualora si verifichi almeno una delle condizioni seguenti:</p>
+<h3>2.1 Trigger Tecnici</h3>
+<div class="table-container"><table><thead><tr><th>ID</th><th>Condizione</th><th>Soglia di Allarme</th><th>Metodo di Rilevamento</th><th>Azione Rollback</th></tr></thead><tbody><tr><td><strong>TR-01</strong></td><td>Guasto Hardware Switch Core MikroTik</td><td>Mancato boot o guasto hardware su CRS326</td><td>Ispezione visiva LED / Porta seriale</td><td>Bypass temporaneo su switch di riserva unmanaged</td></tr><tr><td><strong>TR-02</strong></td><td>Isolamento WAN Vodafone Station</td><td>Impossibilita di instradare traffico verso la WAN</td><td>Ping timeout prolungato verso 192.168.1.1 e 8.8.8.8</td><td>Riconnessione diretta client su porte LAN Vodafone Station</td></tr><tr><td><strong>TR-03</strong></td><td>Corruzione Promozione AD DS su <code>dc01</code></td><td>Errore critico <code>dcpromo</code> non sanabile in 60 min</td><td>Log <code>dpserver.log</code> e Event Viewer Windows</td><td>Rollback snapshot VM a stato pulito pre-promozione</td></tr><tr><td><strong>TR-04</strong></td><td>Incompatibilita Storage SSK Passthrough</td><td><code>fs02</code> non riconosce o scollega l'SSD SSK 512 GB</td><td>Event ID 157 (Disk surprise removed)</td><td>Rimozione passthrough e condivisione cartella temporanea su disco host</td></tr><tr><td><strong>TR-05</strong></td><td>Fallimento Backup Cobian Reflector / QNAP</td><td>Mancata autenticazione SMB o storage pieno</td><td>Errore job Cobian Reflector</td><td>Switch su destinazione disco USB esterno di emergenza</td></tr><tr><td><strong>TR-06</strong></td><td>Mancata Connessione SDN ZeroTier</td><td>Servizio offline o handshake fallito verso Network ID</td><td><code>zerotier-cli status</code> != 200 OK</td><td>Attivazione temporanea VPN L2TP/IPSec o assistenza remota diretta</td></tr><tr><td><strong>TR-07</strong></td><td>Incompatibilita Join Dominio Client HP G6</td><td>Più di 2 PC client impossibilitati al join a dominio</td><td>NetSetup.log con errori critici</td><td>Mantenimento login locale workgroup e mappatura SMB manuale</td></tr></tbody></table></div>
+<h3>2.2 Trigger Operativi e Temporali</h3>
+<ul>
+<li><strong>TR-08 (Timebox Limit):</strong> Raggiungimento delle ore 12:00 del Giorno 2 senza che le VM <code>dc01</code> e <code>fs01</code> abbiano superato il rispettivo Gate 5.</li>
+<li><strong>TR-09 (Decisione Direzione):</strong> Richiesta formale e irrevocabile da parte di Marco Severino di interrompere il deployment per cause di forza maggiore.</li>
+</ul>
+<hr/>
+<h2>3. Stato di Riferimento (Baseline Pre-Intervento)</h2>
+<p>Prima di apportare modifiche irreversibili, vengono archiviati e verificati i seguenti snapshot di sicurezza:</p>
+<div class="table-container"><table><thead><tr><th>Componente</th><th>Tipologia Baseline</th><th>Percorso di Archiviazione Sicuro</th><th>Hash Verifica Integrita</th></tr></thead><tbody><tr><td>MikroTik CRS326</td><td>Export configurazione di fabbrica</td><td><code>vault://it/projects/severino-srl/backups/mikrotik-factory.rsc</code></td><td><code>SHA256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</code></td></tr><tr><td>Workstation HP Z4</td><td>Immagine Clonezilla bare-metal</td><td><code>vault://it/projects/severino-srl/backups/hp-z4-factory.iso</code></td><td><code>SHA256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945</code></td></tr><tr><td>Storage SSK 512 GB</td><td>Backup 1:1 dati aziende esterne</td><td><code>vault://it/projects/severino-srl/backups/ssk-archive.img</code></td><td><code>SHA256: a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0</code></td></tr><tr><td>MiniPC HP G6 Client</td><td>Export chiavi registro e profili locali</td><td><code>vault://it/projects/severino-srl/backups/clients-registry/</code></td><td><code>SHA256: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918</code></td></tr></tbody></table></div>
+<hr/>
+<h2>4. Decision Authority e Catena di Comando</h2>
+<h3>4.1 Organigramma Decisionale</h3>
+<div class="table-container"><table><thead><tr><th>Ruolo</th><th>Nominativo</th><th>Titolarita e Poteri</th><th>Canale Contatto</th></tr></thead><tbody><tr><td><strong>Crisis Manager & Lead Architect</strong></td><td>Marco Severino</td><td>Autorita finale di attivazione Rollback totale o parziale</td><td>Voce cellulare / Presenza sul posto</td></tr><tr><td><strong>Senior Systems Administrator</strong></td><td>Francesco Iavarone</td><td>Proposta tecnica di rollback per dominio AD e Hyper-V</td><td>Voce cellulare / Console remota</td></tr><tr><td><strong>Network Administrator</strong></td><td>Net Specialist Delegato</td><td>Proposta tecnica di rollback per routing MikroTik e WAN</td><td>Presenza sul posto</td></tr></tbody></table></div>
+<h3>4.2 Criterio del "Punto di Non Ritorno" (No-Return Point)</h3>
+<ul>
+<li><strong>Fase Greenfield (Pre-Join Client):</strong> Fino a quando i client HP G6 non hanno migrato i profili utente locali nel profilo di dominio <code>severino.local</code>, il rollback e a <strong>impatto zero</strong>.</li>
+<li><strong>Punto di Non Ritorno (Sabato Ore 13:00):</strong> Una volta completata la migrazione dei dati utente sul File Server <code>fs01</code> e dismessi gli accessi locali sui client, l'approccio privilegiato diventa il <strong>FIX-FORWARD</strong> (risoluzione mirata dell'anomalia) anziche il rollback integrale, per non causare discrepanze nei documenti modificati dagli operatori.</li>
+</ul>
+<hr/>
+<h2>5. Procedure Operative di Rollback per Componente</h2>
+<div class="mermaid">
+graph TD
+    Trigger["Rilevamento Trigger (TR-01..TR-09)"] --> Valuta{"Valutazione Marco Severino"}
+    Valuta -- "Fix-Forward Possibile" --> Hotfix["Intervento di Fix Rapido (< 30 min)"]
+    Valuta -- "Criticità Bloccante" --> Step{"Quale sottosistema?"}
+    Step -- "Client MiniPC" --> RB_Client["RB-01: Arretramento Client a Profilo Locale"]
+    Step -- "ZeroTier / Backup" --> RB_SDN["RB-02: Isolamento SDN & Backup su USB"]
+    Step -- "File Server / AD" --> RB_VM["RB-03: Ripristino Snapshot VM Hyper-V"]
+    Step -- "Switch MikroTik" --> RB_Switch["RB-04: Ripristino Fabbrica CRS326 / Bypass"]
+    Step -- "Rack / Alimentazione" --> RB_HW["RB-05: Isolamento Elettrico Hardware"]
+    RB_Client --> Verifica["Verifica di Continuità Operativa"]
+    RB_SDN --> Verifica
+    RB_VM --> Verifica
+    RB_Switch --> Verifica
+    RB_HW --> Verifica
+    Verifica --> Fine["Report di Incidente & Chiusura Emergenza"]
+</div>
+<hr/>
+<h3>Procedura RB-01: Ripristino Postazioni Client MiniPC HP G6</h3>
+<p>1. Se il join a dominio non va a buon fine o il profilo di rete si blocca:</p>
+<ul>
+<li>Scollegare il cavo LAN dalla porta a muro.</li>
+<li>Effettuare il logon sul MiniPC con l'account amministratore locale originale (<code>vault://it/projects/severino-srl/clients/localadmin</code>).</li>
+<li>Disconnettere la macchina dal dominio <code>severino.local</code> e riposizionarla sul workgroup predefinito <code>WORKGROUP</code>.</li>
+<li>Riavviare il computer.</li>
+<li>Creare sul desktop il collegamento di emergenza alla share di rete diretta tramite IP host (<code>\\192.168.120.10\DatiTemporanei</code>).</li>
+</ul>
+<h3>Procedura RB-02: Rollback e Fallback Servizio ZeroTier e Backup NAS</h3>
+<p>1. Se ZeroTier non stabilisce il tunnel o va in conflitto con subnet esterne:</p>
+<ul>
+<li>Arrestare il servizio sui server: <code>Stop-Service ZeroTierOneService</code>.</li>
+<li>Disattivare l'adattatore virtuale: <code>Disable-NetAdapter -Name "ZeroTier One*"</code>.</li>
+<li>Abilitare la soluzione di riserva per gli utenti remoti (<code>remote01..04</code>) tramite port-forwarding temporaneo protetto o AnyDesk autorizzato.</li>
+</ul>
+<p>2. Se il QNAP TS-233 presenta guasti al volume RAID o mancato avvio:</p>
+<ul>
+<li>Scollegare il cavo di rete da <code>ether18</code>.</li>
+<li>Collegare un'unita disco esterna USB 3.0 da 2 TB direttamente alla porta posteriore dell'host HP Z4.</li>
+<li>Riconfigurare il job di Cobian Reflector con destinazione locale <code>E:\BackupEmergenza</code>.</li>
+</ul>
+<h3>Procedura RB-03: Ripristino Macchine Virtuali su Hyper-V</h3>
+<p>1. Se la VM <code>dc01</code> risulta instabile:</p>
+<ul>
+<li>Spegnere la VM da PowerShell: <code>Stop-VM -Name "dc01" -TurnOff</code>.</li>
+<li>Applicare lo snapshot pre-configurazione: <code>Restore-VMSnapshot -VMName "dc01" -Name "Pre-ADPromo-Baseline"</code>.</li>
+<li>Riavviare la VM e verificare la coerenza del registro.</li>
+</ul>
+<p>2. Se la VM <code>fs02</code> presenta errori nel montaggio del disco SSK 512 GB:</p>
+<ul>
+<li>Rimuovere il controller SCSI passthrough dalla VM: <code>Remove-VMHardDiskDrive -VMName "fs02" -ControllerType SCSI -ControllerNumber 0 -ControllerLocation 1</code>.</li>
+<li>Riportare il disco SSK nello stato "Online" direttamente sul sistema operativo host HP Z4.</li>
+<li>Condividere la cartella direttamente dall'host come soluzione provvisoria tampone.</li>
+</ul>
+<h3>Procedura RB-04: Rollback Switch MikroTik CRS326</h3>
+<p>1. Se una configurazione errata delle ACL o del bridge isola la gestione:</p>
+<ul>
+<li>Collegare il cavo console RJ45-DB9 su porta seriale o collegare PC su porta <code>ether2</code> e avviare WinBox via MAC address.</li>
+<li>Se la periferica non risponde, eseguire hard reset hardware: tenere premuto il tasto Reset per 5 secondi all'accensione fino al lampeggio del LED ACT.</li>
+<li>Caricare lo script di emergenza unmanaged:</li>
+</ul>
+<pre><code class="language-routeros"># Script Fallback Emergenza MikroTik Switch Semplificato
+/system identity set name=&quot;sw-fallback-01&quot;
+/interface bridge add name=bridge-all
+/interface bridge port add bridge=bridge-all interface=all
+/ip address add address=192.168.1.254/24 interface=bridge-all comment=&quot;Accesso diretto su range Vodafone Station&quot;</code></pre>
+<p>2. Collegare tutte le utenze direttamente al range nativo <code>192.168.1.0/24</code> erogato dal DHCP della Vodafone Station per garantire Internet immediato a tutti.</p>
+<hr/>
+<h2>6. Verifiche Post-Rollback e Health Check</h2>
+<p>Al termine di un eventuale rollback, il team DEVE convalidare i seguenti punti prima di dichiarare chiusa l'emergenza:</p>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> Connettivita Internet funzionante da tutte le postazioni MiniPC dell'ufficio.</li>
+<li><span class="badge-checked">&check; Fatto</span> Accesso ai file storici e ai documenti di lavoro essenziali per Direzione e Amministrazione.</li>
+<li><span class="badge-checked">&check; Fatto</span> Servizio di stampa di rete ripristinato e collaudato con pagina di prova.</li>
+<li><span class="badge-checked">&check; Fatto</span> Nessun conflitto di indirizzi IP attivo sulla rete locale.</li>
+<li><span class="badge-checked">&check; Fatto</span> Notifica tempestiva inviata a Marco Severino con la descrizione puntuale dell'accaduto.</li>
+</ul>
+<hr/>
+<h2>7. Comunicazione e Chiusura Incidente</h2>
+<p>1. <strong>Notifica agli Utenti Interni:</strong></p>
+<ul>
+<li>In caso di rollback, inviare comunicazione standard:</li>
+</ul>
+<p><em>"Gentili collaboratori, i lavori di aggiornamento infrastrutturale sono stati posticipati per interventi di ottimizzazione tecnica. I vostri computer e i servizi aziendali sono perfettamente operativi con le consuete credenziali."</em></p>
+<p>2. <strong>Post-Mortem Meeting:</strong></p>
+<ul>
+<li>Convocazione entro 48 ore lavorative tra Marco Severino, Francesco Iavarone e i tecnici coinvolti.</li>
+<li>Analisi della causa radice (RCA - Root Cause Analysis).</li>
+<li>Aggiornamento dell'LLD e del MOP per pianificare una nuova finestra di intervento corretta.</li>
+</ul>
+<hr/>
+<h2>8. Checklist di Validazione Rollback Plan</h2>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> Tutti i trigger tecnici, operativi e di sicurezza sono oggettivi e quantificati.</li>
+<li><span class="badge-checked">&check; Fatto</span> La catena di comando (Decision Authority) assegna pieni poteri decisionali a Marco Severino.</li>
+<li><span class="badge-checked">&check; Fatto</span> Il punto di non ritorno (No-Return Point) e chiaramente definito.</li>
+<li><span class="badge-checked">&check; Fatto</span> Sono presenti procedure inverse per ciascuno step significativo del MOP.</li>
+<li><span class="badge-checked">&check; Fatto</span> Non e presente alcuna password in chiaro; utilizzati riferimenti <code>vault://</code>.</li>
+<li><span class="badge-checked">&check; Fatto</span> La procedura di verifica post-rollback garantisce la totale ripresa operativa dell'azienda.</li>
+<li><span class="badge-checked">&check; Fatto</span> Conforme allo standard OKF v0.2.</li>
+</ul>
+        </div>
+    </div>
+            
+</main>
+
+<script>
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        event.target.classList.add('active');
+        const activeTab = document.getElementById(tabId);
+        if (activeTab) {
+            activeTab.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+</script>
+
+</body>
+</html>

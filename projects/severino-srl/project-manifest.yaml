@@ -48,11 +48,11 @@ sla_baseline:
 
 # Matrice di avanzamento del ciclo lavorativo a 7 fasi
 documents:
-  01-RSD-URS: "missing"          # missing | draft | in-review | approved
-  02-HLD: "missing"
-  03-LLD: "missing"
-  04-MOP: "missing"
-  05-Rollback: "missing"
+  01-RSD-URS: "in-review"          # missing | draft | in-review | approved
+  02-HLD: "in-review"
+  03-LLD: "in-review"
+  04-MOP: "in-review"
+  05-Rollback: "in-review"
   06-As-Built: "missing"
   07-ATP: "missing"
   08-SOP-Runbook: "missing"

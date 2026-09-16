@@ -7,6 +7,7 @@ Suite per la gestione di progetti di infrastrutture IT e validazione documentale
 import sys
 import os
 import re
+import html
 import argparse
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
@@ -76,6 +77,7 @@ def colorize(text: str, color: str) -> str:
 
 def parse_frontmatter(content: str) -> Tuple[Optional[Dict[str, Any]], str, Optional[str]]:
     """Estrae frontmatter YAML e body markdown."""
+    content = content.lstrip("\ufeff")
     pattern = r"^---\r?\n(.*?)\r?\n---\r?\n(.*)$"
     match = re.search(pattern, content, re.DOTALL)
     if not match:
@@ -697,6 +699,706 @@ def cmd_generate_diagram(args: argparse.Namespace) -> int:
 
     return 0
 
+def markdown_to_html_enhanced(md: str) -> str:
+    """Converte un testo markdown in HTML pulito con supporto a tabelle, blocchi mermaid e checklist."""
+    import html as html_lib
+    
+    lines = md.splitlines()
+    html_out = []
+    in_code_block = False
+    code_lang = ""
+    code_lines = []
+    in_table = False
+    table_headers = []
+    table_rows = []
+    in_list = False
+
+    def close_table():
+        nonlocal in_table, table_headers, table_rows
+        if not in_table:
+            return ""
+        out = ["<div class=\"table-container\"><table>"]
+        if table_headers:
+            out.append("<thead><tr>")
+            for h in table_headers:
+                out.append(f"<th>{h}</th>")
+            out.append("</tr></thead>")
+        if table_rows:
+            out.append("<tbody>")
+            for row in table_rows:
+                out.append("<tr>")
+                for cell in row:
+                    out.append(f"<td>{cell}</td>")
+                out.append("</tr>")
+            out.append("</tbody>")
+        out.append("</table></div>")
+        in_table = False
+        table_headers = []
+        table_rows = []
+        return "".join(out)
+
+    def close_list():
+        nonlocal in_list
+        if not in_list:
+            return ""
+        in_list = False
+        return "</ul>"
+
+    def format_inline(text: str) -> str:
+        # Checkbox
+        text = text.replace("[x]", "<span class=\"badge-checked\">&check; Fatto</span>")
+        text = text.replace("[ ]", "<span class=\"badge-unchecked\">&square; Da fare</span>")
+        # Bold
+        text = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", text)
+        # Italic
+        text = re.sub(r"\*(.*?)\*", r"<em>\1</em>", text)
+        # Inline code
+        text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
+        # Wiki-links [[target]]
+        text = re.sub(r"\[\[(.*?)\]\]", r"<span class=\"wiki-link\">&sect; \1</span>", text)
+        return text
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Blocchi di codice ```
+        if stripped.startswith("```"):
+            if in_code_block:
+                in_code_block = False
+                block_content = html_lib.escape("\n".join(code_lines))
+                if code_lang.lower() == "mermaid":
+                    html_out.append(f"<div class=\"mermaid\">\n{'\n'.join(code_lines)}\n</div>")
+                else:
+                    html_out.append(f"<pre><code class=\"language-{code_lang}\">{block_content}</code></pre>")
+                code_lines = []
+                code_lang = ""
+            else:
+                if in_table:
+                    html_out.append(close_table())
+                if in_list:
+                    html_out.append(close_list())
+                in_code_block = True
+                code_lang = stripped[3:].strip()
+                code_lines = []
+            continue
+
+        if in_code_block:
+            code_lines.append(line)
+            continue
+
+        # Tabelle Markdown
+        if stripped.startswith("|") and stripped.endswith("|"):
+            if in_list:
+                html_out.append(close_list())
+            cells = [format_inline(c.strip()) for c in stripped[1:-1].split("|")]
+            # Riga divisoria |---|---|
+            if all(re.match(r"^:?-+:?$", re.sub(r"<.*?>", "", c).strip()) for c in cells):
+                continue
+            if not in_table:
+                in_table = True
+                table_headers = cells
+            else:
+                table_rows.append(cells)
+            continue
+        elif in_table:
+            html_out.append(close_table())
+
+        # Liste non ordinate
+        if stripped.startswith("- ") or stripped.startswith("* "):
+            if not in_list:
+                in_list = True
+                html_out.append("<ul>")
+            item_text = format_inline(stripped[2:].strip())
+            html_out.append(f"<li>{item_text}</li>")
+            continue
+        elif in_list and not stripped.startswith("- ") and not stripped.startswith("* "):
+            html_out.append(close_list())
+
+        # Headers
+        if stripped.startswith("# "):
+            html_out.append(f"<h1>{format_inline(stripped[2:].strip())}</h1>")
+        elif stripped.startswith("## "):
+            html_out.append(f"<h2>{format_inline(stripped[3:].strip())}</h2>")
+        elif stripped.startswith("### "):
+            html_out.append(f"<h3>{format_inline(stripped[4:].strip())}</h3>")
+        elif stripped.startswith("#### "):
+            html_out.append(f"<h4>{format_inline(stripped[5:].strip())}</h4>")
+        elif stripped.startswith("---") or stripped.startswith("***"):
+            html_out.append("<hr/>")
+        elif stripped:
+            html_out.append(f"<p>{format_inline(stripped)}</p>")
+
+    if in_table:
+        html_out.append(close_table())
+    if in_list:
+        html_out.append(close_list())
+
+    return "\n".join(html_out)
+
+def cmd_export_html(args) -> int:
+    """Genera un report consolidato completo in formato HTML per il progetto."""
+    target_path = Path(args.project)
+    if not target_path.exists():
+        project_dir = Path("projects") / args.project
+        if project_dir.exists():
+            target_path = project_dir
+        else:
+            print(colorize(f"ERRORE: Cartella progetto '{args.project}' non trovata.", COLOR_RED))
+            return 1
+
+    # Carica manifest se presente
+    manifest_file = target_path / "project-manifest.yaml"
+    manifest = {}
+    if manifest_file.exists():
+        try:
+            manifest = yaml.safe_load(manifest_file.read_text(encoding="utf-8")) or {}
+        except Exception as e:
+            print(colorize(f"AVVISO: Impossibile leggere il manifesto: {e}", COLOR_YELLOW))
+
+    project_name = manifest.get("project_name", target_path.name)
+    client_name = manifest.get("customer", "N/A")
+    lead_arch = manifest.get("lead_architect", "N/A")
+    net_baseline = manifest.get("network_baseline", {})
+    hw_baseline = manifest.get("hardware_baseline", {})
+    sla_baseline = manifest.get("sla_baseline", {})
+
+    # Raccogli e valida documenti
+    validator = OKFValidator(is_template=False)
+    doc_sections = []
+    completed_count = 0
+    total_docs = len(IT_DOCUMENT_TYPES)
+
+    for prefix, phase, okf_type, desc in IT_DOCUMENT_TYPES:
+        doc_files = list(target_path.glob(f"{prefix}*.md"))
+        if doc_files:
+            file_p = doc_files[0]
+            val_res = validator.validate(file_p)
+            status_ok = len(val_res["errors"]) == 0
+            if status_ok:
+                completed_count += 1
+            content = file_p.read_text(encoding="utf-8").lstrip("\ufeff")
+            fm, body, _ = parse_frontmatter(content)
+            doc_sections.append({
+                "prefix": prefix,
+                "phase": phase,
+                "type": okf_type,
+                "desc": desc,
+                "path": file_p.name,
+                "frontmatter": fm or {},
+                "body_html": markdown_to_html_enhanced(body),
+                "is_valid": status_ok,
+                "errors": val_res["errors"],
+                "warnings": val_res["warnings"]
+            })
+        else:
+            doc_sections.append({
+                "prefix": prefix,
+                "phase": phase,
+                "type": okf_type,
+                "desc": desc,
+                "path": None,
+                "frontmatter": {},
+                "body_html": f"<p class='doc-missing'>Documento non ancora redatto (previsto per la Fase {phase}).</p>",
+                "is_valid": False,
+                "errors": [],
+                "warnings": []
+            })
+
+    pct_complete = int((completed_count / total_docs) * 100)
+
+    # HTML Template con CSS Moderno Dark/Light e Mermaid
+    html_template = f"""<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Progetto IT: {html.escape(project_name)}</title>
+    <style>
+        :root {{
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --border-color: #334155;
+            --font-main: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            --font-mono: 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
+        }}
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            padding-bottom: 80px;
+        }}
+        header {{
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 2.5rem 2rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }}
+        .header-content {{
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }}
+        .header-title h1 {{
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }}
+        .header-title p {{
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 0.3rem;
+        }}
+        .header-meta {{
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }}
+        .progress-pill {{
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 9999px;
+            padding: 0.5rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }}
+        .progress-bar-bg {{
+            width: 110px;
+            height: 10px;
+            background-color: #334155;
+            border-radius: 5px;
+            overflow: hidden;
+        }}
+        .progress-bar-fill {{
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+            width: {pct_complete}%;
+            border-radius: 5px;
+        }}
+        .container {{
+            max-width: 1300px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }}
+        .kpi-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+        }}
+        .kpi-card {{
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            transition: transform 0.15s ease, border-color 0.15s ease;
+        }}
+        .kpi-card:hover {{
+            transform: translateY(-2px);
+            border-color: var(--accent-cyan);
+        }}
+        .kpi-label {{
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }}
+        .kpi-val {{
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-top: 0.4rem;
+            color: #ffffff;
+        }}
+        .nav-tabs {{
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }}
+        .tab-btn {{
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.75rem 1.2rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }}
+        .tab-btn:hover {{
+            color: #ffffff;
+            background-color: var(--bg-secondary);
+        }}
+        .tab-btn.active {{
+            color: #ffffff;
+            background-color: var(--accent-blue);
+        }}
+        .tab-content {{
+            display: none;
+        }}
+        .tab-content.active {{
+            display: block;
+        }}
+        .card {{
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }}
+        .card h2 {{
+            font-size: 1.4rem;
+            margin-bottom: 1.2rem;
+            color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.6rem;
+        }}
+        .card h3 {{
+            font-size: 1.15rem;
+            margin: 1.5rem 0 0.8rem;
+            color: var(--accent-cyan);
+        }}
+        .card h4 {{
+            font-size: 1.05rem;
+            margin: 1.2rem 0 0.6rem;
+            color: #e2e8f0;
+        }}
+        .card p {{
+            margin-bottom: 1rem;
+            color: #cbd5e1;
+        }}
+        .card ul {{
+            margin: 0.8rem 0 1.2rem 1.5rem;
+            color: #cbd5e1;
+        }}
+        .card li {{
+            margin-bottom: 0.4rem;
+        }}
+        .table-container {{
+            overflow-x: auto;
+            margin: 1.2rem 0 1.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }}
+        th {{
+            background-color: #273549;
+            color: #e2e8f0;
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }}
+        td {{
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: #cbd5e1;
+        }}
+        tr:nth-child(even) td {{
+            background-color: rgba(255, 255, 255, 0.02);
+        }}
+        tr:hover td {{
+            background-color: rgba(255, 255, 255, 0.05);
+        }}
+        pre {{
+            background-color: #0b1120;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.2rem;
+            overflow-x: auto;
+            margin: 1rem 0 1.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            color: #38bdf8;
+        }}
+        code {{
+            font-family: var(--font-mono);
+            background-color: #0b1120;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            color: #38bdf8;
+        }}
+        .mermaid {{
+            background-color: #0b1120;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            display: flex;
+            justify-content: center;
+        }}
+        .badge-pass {{
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            padding: 0.25rem 0.7rem;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }}
+        .badge-checked {{
+            color: #34d399;
+            font-weight: 600;
+        }}
+        .badge-unchecked {{
+            color: var(--accent-amber);
+            font-weight: 600;
+        }}
+        .wiki-link {{
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+        }}
+        .doc-missing {{
+            color: #64748b;
+            font-style: italic;
+            padding: 2rem;
+            text-align: center;
+        }}
+        .manifest-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }}
+        .manifest-box {{
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }}
+        .manifest-box h4 {{
+            margin-top: 0;
+            color: var(--accent-cyan);
+            margin-bottom: 0.8rem;
+        }}
+    </style>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({{ startOnLoad: true, theme: 'dark' }});
+    </script>
+</head>
+<body>
+
+<header>
+    <div class="header-content">
+        <div class="header-title">
+            <h1>{html.escape(project_name)}</h1>
+            <p>Cliente: <strong>{html.escape(client_name)}</strong> | Lead Architect: <strong>{html.escape(lead_arch)}</strong> | Standard: <strong>OKF v0.2 Nativo</strong></p>
+        </div>
+        <div class="header-meta">
+            <div class="progress-pill">
+                <span>Avanzamento Fasi: <strong>{pct_complete}%</strong> ({completed_count}/{total_docs})</span>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Supernet LAN</div>
+            <div class="kpi-val">{html.escape(net_baseline.get('supernet_ipv4', '192.168.120.0/24'))}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Dominio Active Directory</div>
+            <div class="kpi-val">{html.escape(net_baseline.get('active_directory_domain', 'severino'))}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Domain Controller IP</div>
+            <div class="kpi-val">{html.escape(net_baseline.get('dc_ip', '192.168.120.239'))}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">ZeroTier Network</div>
+            <div class="kpi-val" style="font-size: 1.15rem;">{html.escape(net_baseline.get('zerotier_network_id', '65228D8D6D71CA23'))}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Core Switch</div>
+            <div class="kpi-val" style="font-size: 1.15rem;">MikroTik CRS326</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Virtualizzazione</div>
+            <div class="kpi-val" style="font-size: 1.15rem;">HP Z4 / Hyper-V 2022</div>
+        </div>
+    </div>
+
+    <nav class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-dashboard')">Dashboard & Manifest</button>
+        <button class="tab-btn" onclick="switchTab('tab-fase1')">Fase 1: RSD / URS</button>
+        <button class="tab-btn" onclick="switchTab('tab-fase2-hld')">Fase 2: HLD</button>
+        <button class="tab-btn" onclick="switchTab('tab-fase2-lld')">Fase 2: LLD & Cablaggi</button>
+        <button class="tab-btn" onclick="switchTab('tab-fase3-mop')">Fase 3: MOP Operativo</button>
+        <button class="tab-btn" onclick="switchTab('tab-fase3-rollback')">Fase 3: Piano Rollback</button>
+    </nav>
+
+    <!-- TAB DASHBOARD -->
+    <div id="tab-dashboard" class="tab-content active">
+        <div class="card">
+            <h2>Manifesto di Progetto & Baseline Tecnologica</h2>
+            <div class="manifest-grid">
+                <div class="manifest-box">
+                    <h4>Topologia & Rete Locale</h4>
+                    <p><strong>Switch Core:</strong> {html.escape(net_baseline.get('core_switch_model', 'MikroTik CRS326-24G-2S+RM'))}</p>
+                    <p><strong>Configurazione Porte:</strong> <code>ether1</code> WAN isolata verso Vodafone Station; <code>ether2-24</code> in Hardware Bridge LAN 1 Gbps.</p>
+                    <p><strong>WiFi:</strong> {html.escape(net_baseline.get('wifi_solution', 'UniFi AP'))} su porta <code>ether14</code>.</p>
+                    <p><strong>DHCP Server:</strong> Erogato da DC <code>dc01</code> (range 192.168.120.2 - 192.168.120.254).</p>
+                </div>
+                <div class="manifest-box">
+                    <h4>Compute & Virtualizzazione</h4>
+                    <p><strong>Workstation Host:</strong> {html.escape(hw_baseline.get('hypervisor_host', 'HP Z4'))} con Windows Server 2022 Datacenter.</p>
+                    <p><strong>VM dc01:</strong> Active Directory Domain Controller, DNS integrato (IP: 192.168.120.239).</p>
+                    <p><strong>VM fs01:</strong> File Server Severino Srl con 2 TB VHDX dedicati (IP: 192.168.120.240).</p>
+                    <p><strong>VM fs02:</strong> File Server Partner con storage SSK 512 GB in passthrough fisico (IP: 192.168.120.241).</p>
+                </div>
+                <div class="manifest-box">
+                    <h4>Collaboration & Sicurezza</h4>
+                    <p><strong>Sala Riunioni:</strong> {html.escape(hw_baseline.get('meeting_room', 'TV 65\", Logitech Rally Bar + Tablet touch, Teams Rooms'))}.</p>
+                    <p><strong>Overlay SDN:</strong> ZeroTier Network ID <code>{html.escape(net_baseline.get('zerotier_network_id', '65228D8D6D71CA23'))}</code> gestito da <code>{html.escape(net_baseline.get('zerotier_admin_email', 'salviozt01@gmail.com'))}</code>.</p>
+                    <p><strong>Backup:</strong> QNAP TS-233 (IP: 192.168.120.250) con Cobian Reflector serale e transizione a RustCopy v7.4.1+.</p>
+                    <p><strong>SLA Target:</strong> RTO 2 ore, RPO 1 ora. Finestra di manutenzione standard: weekend.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Matrice di Conformità Fasi e Documentazione OKF v0.2</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fase</th>
+                            <th>Identificativo Doc</th>
+                            <th>Tipologia OKF</th>
+                            <th>Titolo Descrittivo</th>
+                            <th>Stato Formale</th>
+                            <th>Checklist & Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    """
+
+    for s in doc_sections:
+        badge_cls = "badge-pass" if s["is_valid"] else "badge-unchecked"
+        status_txt = "VALIDATO (0 errori)" if s["is_valid"] else ("NON REDATTO" if not s["path"] else "NON CONFORME")
+        file_label = s["path"] if s["path"] else "In attesa"
+        html_template += f"""
+                        <tr>
+                            <td><strong>Fase {s['phase']}</strong></td>
+                            <td><code>{s['prefix']}</code></td>
+                            <td><span class="wiki-link">{s['type']}</span></td>
+                            <td>{html.escape(s['desc'])}</td>
+                            <td><span class="{badge_cls}">{status_txt}</span></td>
+                            <td>{html.escape(file_label)}</td>
+                        </tr>
+        """
+
+    html_template += f"""
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    """
+
+    # Genera le singole tab documentali
+    tab_mapping = {
+        "01-RSD-URS": "tab-fase1",
+        "02-HLD": "tab-fase2-hld",
+        "03-LLD": "tab-fase2-lld",
+        "04-MOP": "tab-fase3-mop",
+        "05-Rollback": "tab-fase3-rollback"
+    }
+
+    for s in doc_sections:
+        if s["prefix"] in tab_mapping:
+            tab_id = tab_mapping[s["prefix"]]
+            fm = s["frontmatter"]
+            doc_id = fm.get("id", s["prefix"])
+            doc_title = fm.get("title", s["desc"])
+            html_template += f"""
+    <!-- TAB {s['prefix']} -->
+    <div id="{tab_id}" class="tab-content">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1.5rem; flex-wrap:wrap; gap: 1rem;">
+                <div>
+                    <h2>{html.escape(doc_title)}</h2>
+                    <p>ID Documento: <code>{html.escape(doc_id)}</code> | Tipo: <strong>{s['type']}</strong> | Fase: <strong>Fase {s['phase']}</strong></p>
+                </div>
+                <div>
+                    <span class="badge-pass">&check; Validato OKF v0.2</span>
+                </div>
+            </div>
+            {s['body_html']}
+        </div>
+    </div>
+            """
+
+    html_template += """
+</main>
+
+<script>
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        event.target.classList.add('active');
+        const activeTab = document.getElementById(tabId);
+        if (activeTab) {
+            activeTab.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+</script>
+
+</body>
+</html>
+"""
+
+    out_file_path = Path(args.out) if args.out else target_path / "report.html"
+    out_file_path.parent.mkdir(parents=True, exist_ok=True)
+    out_file_path.write_text(html_template, encoding="utf-8")
+
+    print(colorize(f"\n[OK] Report consolidato HTML generato con successo!", COLOR_GREEN + COLOR_BOLD))
+    print(colorize(f"     File salvato in: {out_file_path.resolve()}", COLOR_CYAN))
+    print(colorize(f"     Documenti inclusi: {completed_count}/{total_docs} ({pct_complete}% avanzamento)\n", COLOR_BOLD))
+
+    return 0
+
 def main():
     if hasattr(sys.stdout, "reconfigure"):
         try:
@@ -740,6 +1442,11 @@ def main():
     p_diag.add_argument("--type", choices=["topology", "rack", "all"], default="topology", help="Tipo diagramma (topology, rack, all)")
     p_diag.add_argument("--out", help="File di output opzionale (se omesso, stampa a video)")
 
+    # Comando export-html
+    p_html = subparsers.add_parser("export-html", help="Genera un report consolidato completo in formato HTML per il progetto")
+    p_html.add_argument("project", help="Slug del progetto o percorso della cartella progetto")
+    p_html.add_argument("--out", help="Percorso del file HTML di destinazione (default: projects/<slug>/report.html)")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -758,6 +1465,8 @@ def main():
         return cmd_export_ipam(args)
     elif args.command == "generate-diagram":
         return cmd_generate_diagram(args)
+    elif args.command == "export-html":
+        return cmd_export_html(args)
     else:
         parser.print_help()
         return 1
