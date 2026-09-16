@@ -3,199 +3,260 @@
 <head>
   <meta charset="UTF-8">
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    .tab-active {
+      background: rgba(14, 165, 233, 0.15) !important;
+      color: #38bdf8 !important;
+      border-color: rgba(56, 189, 248, 0.4) !important;
+    }
+    .action-card:hover .copy-badge {
+      background: #0ea5e9 !important;
+      color: #ffffff !important;
+      border-color: #38bdf8 !important;
+    }
+    .action-card:active {
+      transform: scale(0.98);
+    }
+  </style>
 </head>
-<body class="bg-transparent text-[var(--foreground)] antialiased p-2 font-sans">
-  <div class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-2xl p-6 shadow-2xl max-w-3xl mx-auto backdrop-blur-md">
+<body class="bg-transparent text-[var(--foreground)] antialiased p-2 font-sans select-none">
+  <div class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-2xl p-4 shadow-2xl max-w-2xl mx-auto backdrop-blur-md relative overflow-hidden">
     
-    <!-- 1. Header & Live Telemetry Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[var(--border)] pb-4 mb-5 gap-3">
-      <div>
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold text-sm shadow-sm">
-            IT
+    <!-- 1. Header Compatto -->
+    <div class="flex items-center justify-between border-b border-[var(--border)] pb-2.5 mb-3">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-black text-xs shadow-sm">
+          IT
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm font-bold tracking-tight text-sky-400">ITInfra Enterprise Suite</h2>
+            <span class="text-[9px] uppercase font-semibold px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">v0.9.9</span>
           </div>
+          <p class="text-[10px] text-[var(--muted-foreground)]">Governance OKF v0.2 • Ciclo Lavorativo 7 Fasi</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          Share Online
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Navigazione a Tab Compatte -->
+    <div class="flex items-center gap-1.5 bg-[var(--background)] p-1 rounded-xl border border-[var(--border)] mb-3">
+      <button id="btn-tab-actions" onclick="switchTab('tab-actions')" class="tab-active flex-1 py-1 px-2 rounded-lg text-xs font-semibold border transition-all text-center flex items-center justify-center gap-1.5">
+        <span>⚡</span> Azioni Rapide
+      </button>
+      <button id="btn-tab-kpi" onclick="switchTab('tab-kpi')" class="flex-1 py-1 px-2 rounded-lg text-xs font-semibold border border-transparent text-[var(--muted-foreground)] transition-all text-center flex items-center justify-center gap-1.5">
+        <span>📊</span> Telemetria & KPI
+      </button>
+      <button id="btn-tab-phases" onclick="switchTab('tab-phases')" class="flex-1 py-1 px-2 rounded-lg text-xs font-semibold border border-transparent text-[var(--muted-foreground)] transition-all text-center flex items-center justify-center gap-1.5">
+        <span>🔄</span> Workflow 7 Fasi
+      </button>
+    </div>
+
+    <!-- 3. Contenuti Tab -->
+
+    <!-- TAB 1: AZIONI RAPIDE (DEFAULT ACTIVE - CLICK TO COPY) -->
+    <div id="tab-actions" class="space-y-2">
+      <div class="text-[10px] text-[var(--muted-foreground)] flex items-center justify-between px-0.5">
+        <span>💡 <em>Clicca su un'azione per copiare il comando negli appunti e incollarlo in chat:</em></span>
+        <span class="text-sky-400 font-mono text-[9px]">Click-to-Copy</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div onclick="copyCmd('aggiorna')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-sky-400/60 bg-[var(--background)] cursor-pointer transition-all">
           <div>
-            <h2 class="text-lg font-bold tracking-tight text-sky-400 flex items-center gap-2">
-              ITInfra Enterprise Suite
-              <span class="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">v0.9.9 Enterprise</span>
-            </h2>
-            <p class="text-xs text-[var(--muted-foreground)]">Standard OKF v0.2 • Governance, Staging & Continuous Delivery</p>
+            <div class="text-xs font-semibold flex items-center gap-1"><span>🔄</span> Allinea Motore</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Sync SHA-256 da share</div>
           </div>
+          <span class="copy-badge text-[10px] bg-slate-800 text-sky-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">aggiorna</span>
         </div>
-      </div>
-      
-      <!-- Telemetry Status Pills -->
-      <div class="flex items-center gap-2">
-        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shadow-sm">
-          <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Share Master Online
+
+        <div onclick="copyCmd('controlla')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-emerald-400/60 bg-[var(--background)] cursor-pointer transition-all">
+          <div>
+            <div class="text-xs font-semibold flex items-center gap-1"><span>🩺</span> Verifica Rete</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Salute SMB & permessi</div>
+          </div>
+          <span class="copy-badge text-[10px] bg-slate-800 text-emerald-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">controlla</span>
         </div>
-        <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
-          ⚡ SSD Workspace
+
+        <div onclick="copyCmd('pubblica severino-srl')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-emerald-400/60 bg-[var(--background)] cursor-pointer transition-all">
+          <div>
+            <div class="text-xs font-semibold flex items-center gap-1"><span>🚀</span> Pubblica Progetto</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Quality Gate & rilascio</div>
+          </div>
+          <span class="copy-badge text-[10px] bg-slate-800 text-emerald-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">pubblica severino-srl</span>
+        </div>
+
+        <div onclick="copyCmd('stato severino-srl')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-amber-400/60 bg-[var(--background)] cursor-pointer transition-all">
+          <div>
+            <div class="text-xs font-semibold flex items-center gap-1"><span>📈</span> Stato Progetto</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Avanzamento 7 fasi</div>
+          </div>
+          <span class="copy-badge text-[10px] bg-slate-800 text-amber-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">stato severino-srl</span>
+        </div>
+
+        <div onclick="copyCmd('test-suite')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-purple-400/60 bg-[var(--background)] cursor-pointer transition-all">
+          <div>
+            <div class="text-xs font-semibold flex items-center gap-1"><span>🧪</span> Collaudo Totale</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">12 moduli di test</div>
+          </div>
+          <span class="copy-badge text-[10px] bg-slate-800 text-purple-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">test-suite</span>
+        </div>
+
+        <div onclick="copyCmd('it init nuovo-cliente --client &quot;Nome&quot; --name &quot;Titolo&quot;')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-sky-400/60 bg-[var(--background)] cursor-pointer transition-all">
+          <div>
+            <div class="text-xs font-semibold flex items-center gap-1"><span>📁</span> Nuovo Cliente</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Manifesto & struttura</div>
+          </div>
+          <span class="copy-badge text-[10px] bg-slate-800 text-sky-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">inizializza</span>
         </div>
       </div>
     </div>
 
-    <!-- 2. KPI Metrics Grid -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-      <div class="bg-[var(--background)] p-3 rounded-xl border border-[var(--border)] shadow-sm">
-        <div class="text-[11px] font-medium text-[var(--muted-foreground)]">Template OKF v0.2</div>
-        <div class="text-lg font-bold text-emerald-400 mt-0.5">10 / 10</div>
-        <div class="text-[10px] text-[var(--muted-foreground)] flex items-center gap-1 mt-1">
-          <span class="text-emerald-400 font-bold">✓</span> 100% Sincronizzati
+    <!-- TAB 2: TELEMETRIA & KPI (HIDDEN INIZIALMENTE) -->
+    <div id="tab-kpi" class="hidden space-y-2.5">
+      <div class="grid grid-cols-4 gap-2">
+        <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
+          <div class="text-[10px] font-medium text-[var(--muted-foreground)]">Template OKF</div>
+          <div class="text-base font-bold text-emerald-400 mt-0.5">10 / 10</div>
+          <div class="text-[9px] text-emerald-400 mt-0.5">✓ Allineati</div>
+        </div>
+        <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
+          <div class="text-[10px] font-medium text-[var(--muted-foreground)]">Secret Vault</div>
+          <div class="text-base font-bold text-sky-400 mt-0.5">AES-256</div>
+          <div class="text-[9px] text-sky-400 mt-0.5">🔒 Zero Leak</div>
+        </div>
+        <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
+          <div class="text-[10px] font-medium text-[var(--muted-foreground)]">Test Suite</div>
+          <div class="text-base font-bold text-indigo-400 mt-0.5">100% Pass</div>
+          <div class="text-[9px] text-indigo-400 mt-0.5">12/12 Moduli</div>
+        </div>
+        <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
+          <div class="text-[10px] font-medium text-[var(--muted-foreground)]">Storage Master</div>
+          <div class="text-base font-bold text-amber-400 mt-0.5">1ms SMB</div>
+          <div class="text-[9px] text-amber-400 mt-0.5">\fileserv01</div>
         </div>
       </div>
 
-      <div class="bg-[var(--background)] p-3 rounded-xl border border-[var(--border)] shadow-sm">
-        <div class="text-[11px] font-medium text-[var(--muted-foreground)]">Local Secret Vault</div>
-        <div class="text-lg font-bold text-sky-400 mt-0.5">AES-256-GCM</div>
-        <div class="text-[10px] text-[var(--muted-foreground)] flex items-center gap-1 mt-1">
-          <span class="text-sky-400 font-bold">🔒</span> AES-256-GCM (Zero Leak)
+      <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)] flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2">
+          <span class="text-sky-400">⚡</span>
+          <span>Workspace Locale: <strong class="font-mono text-sky-300">C:\project</strong></span>
         </div>
-      </div>
-
-      <div class="bg-[var(--background)] p-3 rounded-xl border border-[var(--border)] shadow-sm">
-        <div class="text-[11px] font-medium text-[var(--muted-foreground)]">Quality Gate</div>
-        <div class="text-lg font-bold text-indigo-400 mt-0.5">Strict Grounding</div>
-        <div class="text-[10px] text-[var(--muted-foreground)] flex items-center gap-1 mt-1">
-          <span class="text-indigo-400 font-bold">🛡️</span> Anti-Hallucination
-        </div>
-      </div>
-
-      <div class="bg-[var(--background)] p-3 rounded-xl border border-[var(--border)] shadow-sm">
-        <div class="text-[11px] font-medium text-[var(--muted-foreground)]">Enterprise Test Suite</div>
-        <div class="text-lg font-bold text-amber-400 mt-0.5">12/12 Pass (100%)</div>
-        <div class="text-[10px] text-[var(--muted-foreground)] flex items-center gap-1 mt-1">
-          <span class="text-amber-400 font-bold">●</span> Affidabilita' Core
-        </div>
-      </div>
-    </div>
-
-    <!-- Active project banner if present -->
-    
-
-    <!-- 3. Visual 7-Phase Life-Cycle Stepper -->
-    <div class="bg-[var(--background)] p-4 rounded-xl border border-[var(--border)] mb-5 shadow-sm">
-      <div class="flex items-center justify-between text-xs font-semibold mb-3">
-        <span class="text-[var(--foreground)] flex items-center gap-1.5">
-          <span>🔄</span> Ciclo Lavorativo IT a 7 Fasi (Flusso Standard)
-        </span>
-        <span class="text-[10px] text-[var(--muted-foreground)]">End-to-End Delivery</span>
-      </div>
-      <div class="grid grid-cols-7 gap-1.5 text-center text-[10px]">
-        <div class="bg-slate-800/60 border border-slate-700/60 rounded-lg p-2 flex flex-col justify-between">
-          <span class="text-slate-400 font-bold">1. Assessment</span>
-          <span class="text-[9px] text-sky-400 font-mono mt-1">RSD / URS</span>
-        </div>
-        <div class="bg-slate-800/60 border border-slate-700/60 rounded-lg p-2 flex flex-col justify-between">
-          <span class="text-slate-400 font-bold">2. Design</span>
-          <span class="text-[9px] text-sky-400 font-mono mt-1">HLD & LLD</span>
-        </div>
-        <div class="bg-slate-800/60 border border-slate-700/60 rounded-lg p-2 flex flex-col justify-between">
-          <span class="text-slate-400 font-bold">3. Staging</span>
-          <span class="text-[9px] text-sky-400 font-mono mt-1">MOP & Rollback</span>
-        </div>
-        <div class="bg-slate-800/60 border border-slate-700/60 rounded-lg p-2 flex flex-col justify-between">
-          <span class="text-slate-400 font-bold">4. Racking</span>
-          <span class="text-[9px] text-indigo-400 font-mono mt-1">Cabling Plan</span>
-        </div>
-        <div class="bg-slate-800/60 border border-slate-700/60 rounded-lg p-2 flex flex-col justify-between">
-          <span class="text-slate-400 font-bold">5. Commission</span>
-          <span class="text-[9px] text-indigo-400 font-mono mt-1">As-Built Base</span>
-        </div>
-        <div class="bg-slate-800/60 border border-slate-700/60 rounded-lg p-2 flex flex-col justify-between">
-          <span class="text-slate-400 font-bold">6. Testing</span>
-          <span class="text-[9px] text-amber-400 font-mono mt-1">ATP Suite</span>
-        </div>
-        <div class="bg-emerald-950/30 border border-emerald-500/30 rounded-lg p-2 flex flex-col justify-between">
-          <span class="text-emerald-400 font-bold">7. Go-Live</span>
-          <span class="text-[9px] text-emerald-300 font-mono mt-1">Runbook & Handover</span>
+        <div class="text-[10px] text-[var(--muted-foreground)]">
+          Strict Grounding • Zero Hallucination
         </div>
       </div>
     </div>
 
-    <!-- 4. Interactive Action Hub (Two Column Layout) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      
-      <!-- Operations Column -->
-      <div class="bg-[var(--background)] p-4 rounded-xl border border-[var(--border)] shadow-sm">
-        <div class="text-xs font-bold text-sky-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-          <span>🚀</span> Operazioni di Progetto
+    <!-- TAB 3: WORKFLOW 7 FASI (HIDDEN INIZIALMENTE) -->
+    <div id="tab-phases" class="hidden space-y-2.5">
+      <div class="grid grid-cols-7 gap-1 text-center text-[9px]">
+        <div class="bg-[var(--background)] border border-sky-500/30 rounded-lg p-1.5">
+          <span class="text-sky-400 font-bold block">1. Assess</span>
+          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">RSD/URS</span>
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1"></span>
         </div>
-        <div class="space-y-2">
-          <div class="flex items-center justify-between p-2.5 rounded-lg border border-[var(--border)] hover:border-sky-400/50 bg-[var(--card)] cursor-pointer transition-all">
-            <div>
-              <div class="text-xs font-semibold">Inizializza Cliente</div>
-              <div class="text-[10px] text-[var(--muted-foreground)]">Crea manifesto e struttura 7 fasi</div>
-            </div>
-            <code class="text-[10px] bg-slate-800 px-2 py-1 rounded text-sky-300 font-mono">it init &lt;slug&gt;</code>
-          </div>
-
-          <div class="flex items-center justify-between p-2.5 rounded-lg border border-[var(--border)] hover:border-emerald-400/50 bg-[var(--card)] cursor-pointer transition-all">
-            <div>
-              <div class="text-xs font-semibold">Pubblica su Server Master</div>
-              <div class="text-[10px] text-[var(--muted-foreground)]">Quality Gate automatico e copia sicura</div>
-            </div>
-            <code class="text-[10px] bg-slate-800 px-2 py-1 rounded text-emerald-300 font-mono">pubblica &lt;slug&gt;</code>
-          </div>
-
-          <div class="flex items-center justify-between p-2.5 rounded-lg border border-[var(--border)] hover:border-amber-400/50 bg-[var(--card)] cursor-pointer transition-all">
-            <div>
-              <div class="text-xs font-semibold">Verifica Stato Fasi</div>
-              <div class="text-[10px] text-[var(--muted-foreground)]">Avanzamento documentale del cliente</div>
-            </div>
-            <code class="text-[10px] bg-slate-800 px-2 py-1 rounded text-amber-300 font-mono">stato &lt;slug&gt;</code>
-          </div>
+        <div class="bg-[var(--background)] border border-sky-500/30 rounded-lg p-1.5">
+          <span class="text-sky-400 font-bold block">2. Design</span>
+          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">HLD/LLD</span>
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1"></span>
         </div>
-      </div>
-
-      <!-- Governance & Tools Column -->
-      <div class="bg-[var(--background)] p-4 rounded-xl border border-[var(--border)] shadow-sm">
-        <div class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-          <span>🛡️</span> Governance & Manutenzione
+        <div class="bg-[var(--background)] border border-sky-500/30 rounded-lg p-1.5">
+          <span class="text-sky-400 font-bold block">3. Staging</span>
+          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">MOP/Roll</span>
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1"></span>
         </div>
-        <div class="space-y-2">
-          <div class="flex items-center justify-between p-2.5 rounded-lg border border-[var(--border)] hover:border-emerald-400/50 bg-[var(--card)] cursor-pointer transition-all">
-            <div>
-              <div class="text-xs font-semibold">Diagnostica Connessione</div>
-              <div class="text-[10px] text-[var(--muted-foreground)]">Verifica permessi SMB e salute share</div>
-            </div>
-            <code class="text-[10px] bg-slate-800 px-2 py-1 rounded text-emerald-300 font-mono">controlla</code>
-          </div>
-
-          <div class="flex items-center justify-between p-2.5 rounded-lg border border-[var(--border)] hover:border-sky-400/50 bg-[var(--card)] cursor-pointer transition-all">
-            <div>
-              <div class="text-xs font-semibold">Allinea Motore & Template</div>
-              <div class="text-[10px] text-[var(--muted-foreground)]">Sincronizzazione SHA-256 differenziale</div>
-            </div>
-            <code class="text-[10px] bg-slate-800 px-2 py-1 rounded text-sky-300 font-mono">aggiorna</code>
-          </div>
-
-          <div class="flex items-center justify-between p-2.5 rounded-lg border border-[var(--border)] hover:border-indigo-400/50 bg-[var(--card)] cursor-pointer transition-all">
-            <div>
-              <div class="text-xs font-semibold">Knowledge Graph D3.js</div>
-              <div class="text-[10px] text-[var(--muted-foreground)]">Mappa ontologica inter-progetto</div>
-            </div>
-            <code class="text-[10px] bg-slate-800 px-2 py-1 rounded text-indigo-300 font-mono">it export-graph</code>
-          </div>
+        <div class="bg-[var(--background)] border border-slate-700/60 rounded-lg p-1.5">
+          <span class="text-slate-400 font-bold block">4. Cabling</span>
+          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">Racking</span>
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-500 mt-1"></span>
+        </div>
+        <div class="bg-[var(--background)] border border-slate-700/60 rounded-lg p-1.5">
+          <span class="text-slate-400 font-bold block">5. Comm</span>
+          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">Config</span>
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-500 mt-1"></span>
+        </div>
+        <div class="bg-[var(--background)] border border-amber-500/30 rounded-lg p-1.5">
+          <span class="text-amber-400 font-bold block">6. Test</span>
+          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">ATP</span>
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 mt-1"></span>
+        </div>
+        <div class="bg-[var(--background)] border border-emerald-500/30 rounded-lg p-1.5">
+          <span class="text-emerald-400 font-bold block">7. Live</span>
+          <span class="text-[8px] text-[var(--muted-foreground)] block mt-0.5">Handover</span>
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1"></span>
         </div>
       </div>
 
+      <div class="bg-[var(--background)] p-2 rounded-xl border border-[var(--border)] text-xs flex items-center justify-between">
+        <div>
+          <span class="font-semibold text-sky-300">severino-srl</span>
+          <span class="text-[10px] text-[var(--muted-foreground)] ml-2">Fasi completate: 10 doc censiti</span>
+        </div>
+        <button onclick="copyCmd('stato severino-srl')" class="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/30 px-2 py-0.5 rounded hover:bg-sky-500/20">
+          Vedi Stato
+        </button>
+      </div>
     </div>
 
-    <!-- Footer Storage info -->
-    <div class="mt-4 pt-3 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between text-[11px] text-[var(--muted-foreground)] gap-2">
-      <div class="flex items-center gap-2">
-        <span>🏢 Storage Master:</span>
-        <span class="font-mono text-[var(--foreground)] bg-[var(--background)] px-2 py-0.5 rounded border border-[var(--border)] text-[10px]">
-          \\fileserv01\dati01\workaure
-        </span>
-      </div>
-      <div class="text-[10px]">
-        Digita in chat o usa il terminale per qualsiasi comando rapido.
-      </div>
+    <!-- 4. Floating Toast Notification (Click-to-Copy Feedback) -->
+    <div id="toast" class="hidden absolute bottom-2 left-1/2 -translate-x-1/2 bg-emerald-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl shadow-2xl border border-emerald-300 flex items-center gap-1.5 z-50 animate-bounce">
+      <span>✓</span> <span id="toast-msg">Copiato negli appunti!</span>
     </div>
 
   </div>
+
+  <script>
+    function switchTab(tabId) {
+      ['tab-actions', 'tab-kpi', 'tab-phases'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+        document.getElementById('btn-' + id).classList.remove('tab-active');
+      });
+      document.getElementById(tabId).classList.remove('hidden');
+      document.getElementById('btn-' + tabId).classList.add('tab-active');
+    }
+
+    function copyCmd(cmd) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(cmd).then(() => showToast(cmd)).catch(() => fallbackCopy(cmd));
+      } else {
+        fallbackCopy(cmd);
+      }
+    }
+
+    function fallbackCopy(cmd) {
+      var ta = document.createElement("textarea");
+      ta.value = cmd;
+      ta.style.position = "fixed";
+      ta.style.left = "-999999px";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(cmd);
+      } catch (e) {
+        console.error(e);
+      }
+      document.body.removeChild(ta);
+    }
+
+    function showToast(cmd) {
+      var toast = document.getElementById('toast');
+      var msg = document.getElementById('toast-msg');
+      if (toast && msg) {
+        msg.textContent = '"' + cmd + '" copiato! Premi Ctrl+V in chat';
+        toast.classList.remove('hidden');
+        clearTimeout(window.tTimer);
+        window.tTimer = setTimeout(() => { toast.classList.add('hidden'); }, 2500);
+      }
+    }
+  </script>
 </body>
 </html>
