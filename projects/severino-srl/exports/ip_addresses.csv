@@ -1,0 +1,12 @@
+address,status,vrf,tenant,dns_name,description
+192.168.120.1/24,reserved,LAN-CORP,Default,gw-lan-corp,Default Gateway VLAN 1
+`192.168.120.1`/32,active,Global,Default,,
+`192.168.120.10`/32,active,Global,Default,,
+`192.168.120.239`/32,active,Global,Default,,
+`192.168.120.240`/32,active,Global,Default,,
+`192.168.120.241`/32,active,Global,Default,,
+`192.168.120.250`/32,active,Global,Default,,
+`192.168.120.251`/32,active,Global,Default,,
+`192.168.120.245`/32,active,Global,Default,,
+`192.168.120.246`/32,active,Global,Default,,
+`192.168.120.50` - `.199`/32,active,Global,Default,,

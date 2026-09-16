@@ -1,0 +1,2 @@
+vid,name,status,tenant,description
+1,default (bridge-local),active,Default,Zona: LAN-CORP | Trust: High / Trusted

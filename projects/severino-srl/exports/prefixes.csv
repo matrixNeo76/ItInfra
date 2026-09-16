@@ -1,0 +1,2 @@
+prefix,status,vrf,tenant,vlan,description
+192.168.120.0/24,active,LAN-CORP,Default,1,"Rete Unificata Severino Srl (Server, Client, Wi-Fi, Storage)"
