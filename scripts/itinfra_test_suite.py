@@ -504,11 +504,25 @@ class SystemTestSuiteRunner:
         assert any(p.search(clear_sample) for p in CLEARTEXT_SECRET_PATTERNS), "Rilevamento secret in chiaro fallito"
         assert not any(p.search(vault_sample) for p in CLEARTEXT_SECRET_PATTERNS), "Falso positivo su vault://"
 
+        # 5. Test Diagnostica check_share_permissions su share mock
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp_share:
+            tmp_p = Path(tmp_share)
+            (tmp_p / "projects").mkdir()
+            (tmp_p / "templates").mkdir()
+            (tmp_p / "scripts").mkdir()
+            (tmp_p / "docs").mkdir()
+            chk_ok, chk_msg, chk_rep = publisher.check_share_permissions(target_share=tmp_share)
+            assert chk_rep["reachable"], "Share temporanea dovrebbe essere raggiungibile"
+            assert chk_rep["read_ok"], "Cartelle temporanee dovrebbero essere leggibili"
+            assert chk_rep["projects_write_ok"], "Scrittura su projects temporaneo dovrebbe riuscire"
+
         details = [
             f"Pre-Flight Quality Gate su 'severino-srl': 100% CONFORME ({stats['files_count']} file analizzati)",
             "Protezione Secret Leaks: test positivo con blocco di password in chiaro e conformità vault://",
             "Sincronizzazione atomica e confinata a projects/<slug>/ convalidata in dry-run",
-            f"Destinazione master centrale configurata: {stats['target_dir']}"
+            f"Destinazione master centrale configurata: {stats['target_dir']}",
+            "Diagnostica di rete 'check-share' convalidata per conformità permessi client"
         ]
 
         return {

@@ -2368,6 +2368,31 @@ def cmd_sync_engine(args: argparse.Namespace) -> int:
         print(colorize(msg, COLOR_RED))
         return 1
 
+def cmd_check_share(args: argparse.Namespace) -> int:
+    """Verifica connettività, permessi di pubblicazione e protezione core sulla share centrale (Release v0.9.1)."""
+    try:
+        from itinfra_publish import ProjectPublisher
+    except ImportError:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from itinfra_publish import ProjectPublisher
+
+    repo_root = Path(__file__).resolve().parent.parent
+    publisher = ProjectPublisher(workspace_root=repo_root)
+    user = getattr(args, "user", None)
+    password = getattr(args, "password", None)
+    success, msg, report = publisher.check_share_permissions(
+        target_share=args.path,
+        username=user,
+        password=password
+    )
+    if success:
+        print(colorize(msg, COLOR_GREEN))
+        return 0
+    else:
+        print(colorize(msg, COLOR_RED if not report.get("reachable") else COLOR_YELLOW))
+        return 1
+
 def cmd_memory(args: argparse.Namespace) -> int:
     """Gestisce la Memoria Locale Ibrida a 3 Livelli e i Trust Signals (Release v0.6 e v0.8)."""
     try:
@@ -2790,6 +2815,12 @@ def main():
     p_sync.add_argument("--source", default=None, help=f"Percorso della share centrale (default: '{DEFAULT_CENTRAL_SHARE}')")
     p_sync.add_argument("--dry-run", action="store_true", help="Mostra i file che verrebbero aggiornati senza eseguire la copia")
 
+    # Comando check-share (Release v0.9.1)
+    p_chk = subparsers.add_parser("check-share", help="Verifica connettività, permessi di pubblicazione e protezione core sulla share centrale (Release v0.9.1)")
+    p_chk.add_argument("--path", default=None, help=f"Percorso della share centrale da testare (default: '{DEFAULT_CENTRAL_SHARE}')")
+    p_chk.add_argument("--user", default=None, help="Nome utente SMB per simulare un profilo tecnico (opzionale)")
+    p_chk.add_argument("--password", default=None, help="Password SMB per simulare un profilo tecnico (opzionale)")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -2834,6 +2865,8 @@ def main():
         return cmd_publish(args)
     elif args.command == "sync-engine":
         return cmd_sync_engine(args)
+    elif args.command == "check-share":
+        return cmd_check_share(args)
     else:
         parser.print_help()
         return 1

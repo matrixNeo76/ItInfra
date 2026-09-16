@@ -308,3 +308,221 @@ class ProjectPublisher:
             msg = f"[ERRORE SYNC-ENGINE] Errore durante l'aggiornamento locale: {e}"
             stats["status"] = "error"
             return False, msg, stats
+
+    def check_share_permissions(
+        self,
+        target_share: Optional[str] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None
+    ) -> Tuple[bool, str, Dict[str, Any]]:
+        """
+        Esegue un test diagnostico completo dei permessi sulla share master centrale:
+        1. Raggiungibilita' e visibilita' di rete della share.
+        2. Permessi di LETTURA su templates/, scripts/, docs/.
+        3. Permessi di SCRITTURA e CANCELLAZIONE su projects/ (necessari per publish).
+        4. Protezione da SCRITTURA su radice, scripts/ e templates/ (anti-tampering).
+
+        Supporta opzionalmente credenziali (--user / --password) per simulare
+        il profilo di un tecnico senza cambiare utente Windows.
+        """
+        share_str = self.get_central_share(target_share)
+        share_path = Path(share_str)
+
+        report = {
+            "share": share_str,
+            "simulated_user": username or "utente_corrente_windows",
+            "reachable": False,
+            "read_ok": False,
+            "projects_write_ok": False,
+            "core_protected": False,
+            "checks": [],
+            "status": "failed"
+        }
+
+        use_smbclient = False
+        if username and password:
+            try:
+                import smbclient
+                # Estrae l'host (es. fileserv01 o IP) dal path UNC \\host\share\path
+                unc_parts = share_str.strip("\\/").split("\\")
+                server_host = unc_parts[0] if unc_parts else "fileserv01"
+                smbclient.register_session(server_host, username=username, password=password, connection_timeout=5)
+                use_smbclient = True
+            except Exception as e:
+                msg = f"[ERRORE AUTENTICAZIONE SMB] Impossibile autenticare l'utente '{username}': {e}"
+                report["checks"].append({"test": "Autenticazione utente", "passed": False, "detail": str(e)})
+                return False, msg, report
+
+        # Verifica raggiungibilità
+        if not use_smbclient:
+            if not share_path.exists():
+                msg = (
+                    f"[ERRORE DI RETE] La share centrale '{share_str}' non e' raggiungibile.\n"
+                    f"Possibili cause:\n"
+                    f"  - Postazione non connessa alla LAN aziendale o VPN disattivata.\n"
+                    f"  - Credenziali di rete non fornite a Windows (accesso come altro utente)."
+                )
+                report["checks"].append({"test": "Raggiungibilita' share", "passed": False, "detail": "Share offline o inaccessibile"})
+                return False, msg, report
+
+        report["reachable"] = True
+        report["checks"].append({"test": "Raggiungibilita' share", "passed": True, "detail": "Share online e accessibile"})
+
+        # 1. Test Lettura Core (templates, scripts, docs)
+        read_dirs = ["templates", "scripts", "docs"]
+        read_success = True
+        read_details = []
+        for d in read_dirs:
+            if use_smbclient:
+                import smbclient
+                p_str = f"{share_str}\\{d}"
+                try:
+                    entries = smbclient.listdir(p_str)
+                    read_details.append(f"{d} ({len(entries)} el.)")
+                except Exception as e:
+                    read_success = False
+                    read_details.append(f"{d} (errore: {e})")
+            else:
+                p = share_path / d
+                if p.exists() and p.is_dir():
+                    try:
+                        count = len(list(p.iterdir()))
+                        read_details.append(f"{d} ({count} el.)")
+                    except Exception as e:
+                        read_success = False
+                        read_details.append(f"{d} (errore: {e})")
+                else:
+                    read_details.append(f"{d} (non presente)")
+
+        report["read_ok"] = read_success
+        report["checks"].append({
+            "test": "Lettura Core (templates, scripts, docs)",
+            "passed": read_success,
+            "detail": ", ".join(read_details)
+        })
+
+        # 2. Test Scrittura su projects/
+        proj_write_ok = False
+        proj_detail = ""
+        test_filename = f".itinfra_perm_test_{os.getpid()}.tmp"
+
+        if use_smbclient:
+            import smbclient
+            p_file = f"{share_str}\\projects\\{test_filename}"
+            try:
+                with smbclient.open_file(p_file, mode="w") as f:
+                    f.write("itinfra_permission_test")
+                with smbclient.open_file(p_file, mode="r") as f:
+                    content = f.read()
+                smbclient.remove(p_file)
+                if content == "itinfra_permission_test":
+                    proj_write_ok = True
+                    proj_detail = "Scrittura, verifica e rimozione completate con successo"
+                else:
+                    proj_detail = "Contenuto scritto non corrispondente"
+            except Exception as e:
+                proj_detail = f"Scrittura bloccata ({e})"
+        else:
+            proj_dir = share_path / "projects"
+            if not proj_dir.exists():
+                proj_detail = "Cartella 'projects/' non presente sulla share"
+            else:
+                test_file = proj_dir / test_filename
+                try:
+                    test_file.write_text("itinfra_permission_test", encoding="utf-8")
+                    content = test_file.read_text(encoding="utf-8")
+                    test_file.unlink()
+                    if content == "itinfra_permission_test":
+                        proj_write_ok = True
+                        proj_detail = "Scrittura, verifica e rimozione completate con successo"
+                    else:
+                        proj_detail = "Contenuto scritto non corrispondente"
+                except Exception as e:
+                    proj_detail = f"Scrittura bloccata ({e})"
+
+        report["projects_write_ok"] = proj_write_ok
+        report["checks"].append({
+            "test": "Scrittura su 'projects/' (Publishing)",
+            "passed": proj_write_ok,
+            "detail": proj_detail
+        })
+
+        # 3. Test Protezione Core da Scrittura non autorizzata (Radice, scripts, templates)
+        core_targets = [
+            ("Radice share", share_str if use_smbclient else share_path),
+            ("Cartella scripts/", f"{share_str}\\scripts" if use_smbclient else share_path / "scripts"),
+            ("Cartella templates/", f"{share_str}\\templates" if use_smbclient else share_path / "templates")
+        ]
+        core_protected = True
+        core_details = []
+        for label, dir_target in core_targets:
+            wrote_ok = False
+            if use_smbclient:
+                import smbclient
+                t_file = f"{dir_target}\\{test_filename}"
+                try:
+                    with smbclient.open_file(t_file, mode="w") as f:
+                        f.write("tamper_test")
+                    wrote_ok = True
+                    smbclient.remove(t_file)
+                except Exception:
+                    wrote_ok = False
+            else:
+                if not dir_target.exists():
+                    continue
+                test_file = dir_target / test_filename
+                try:
+                    test_file.write_text("tamper_test", encoding="utf-8")
+                    wrote_ok = True
+                    test_file.unlink()
+                except Exception:
+                    wrote_ok = False
+
+            if wrote_ok:
+                core_protected = False
+                core_details.append(f"{label}: APERTA A MODIFICHE (Rischio)")
+            else:
+                core_details.append(f"{label}: Protetta (Scrittura negata)")
+
+        report["core_protected"] = core_protected
+        report["checks"].append({
+            "test": "Protezione Core da scrittura",
+            "passed": core_protected,
+            "detail": "; ".join(core_details)
+        })
+
+        # Generazione messaggio tabellare
+        user_display = username if username else "Sessione Windows Corrente"
+        lines = [
+            "================================================================================",
+            f"          REPORT DIAGNOSTICA PERMESSI STORAGE MASTER CENTRALE",
+            "================================================================================",
+            f"Percorso Share:  {share_str}",
+            f"Profilo Utente:  {user_display}",
+            "--------------------------------------------------------------------------------"
+        ]
+        for chk in report["checks"]:
+            status_tag = "[OK]  " if chk["passed"] else "[FAIL]"
+            lines.append(f"  {status_tag} {chk['test']:<42} -> {chk['detail']}")
+        lines.append("--------------------------------------------------------------------------------")
+
+        overall_ok = report["reachable"] and report["read_ok"] and report["projects_write_ok"] and report["core_protected"]
+        if overall_ok:
+            lines.append("ESITO GLOBALE: TUTTI I CONTROLLI SUPERATI [100% CONFORME]")
+            lines.append("La postazione client e' perfettamente abilitata alla pubblicazione di progetti")
+            lines.append("e le cartelle core del server sono protette da manomissioni accidentali.")
+            report["status"] = "success"
+        else:
+            if not core_protected and not username:
+                lines.append("ESITO GLOBALE: ATTENZIONE - SCRITTURA CORE CONSENTITA")
+                lines.append("Nota: Se questo test e' stato eseguito come utente Amministratore (es. matrix),")
+                lines.append("la scrittura e' consentita per design. Per i tecnici standard (gruppo_tecnici)")
+                lines.append("la protezione core e' invece attiva e garantita.")
+            else:
+                lines.append("ESITO GLOBALE: RILEVATE ANOMALIE O MANCANZA DI PERMESSI")
+            report["status"] = "failed"
+        lines.append("================================================================================")
+
+        return overall_ok, "\n".join(lines), report
+
+

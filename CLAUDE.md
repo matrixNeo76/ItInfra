@@ -75,7 +75,7 @@ Claude Code dispone dell'esecuzione di comandi da terminale (`Bash`). Usala atti
 - Memoria locale ibrida, Global Scratchpad e Trust Signals (Release v0.6 & v0.8): `python scripts/itinfra.py memory [init|log|show|merge|consolidate|prune] <slug>` e `python scripts/itinfra.py memory [init|log|show|prune] --global`
 - Global Enterprise Asset & Entity Knowledge Graph (Release v0.7): `python scripts/itinfra.py inventory [find|list-hardware|summary]`
 - Enterprise System Test Suite & Verification Dashboard (Release v0.8): `python scripts/itinfra.py test-suite [--report-html]`
-- Architettura Local Workspace & Central Publish con Quality Gate (Release v0.9): `python scripts/itinfra.py publish <slug>` e `python scripts/itinfra.py sync-engine`
+- Architettura Local Workspace & Central Publish con Quality Gate (Release v0.9): `python scripts/itinfra.py publish <slug>`, `python scripts/itinfra.py sync-engine` e `python scripts/itinfra.py check-share`
 
 ### Anti-pattern da evitare (Zero-Hallucination Policy)
 

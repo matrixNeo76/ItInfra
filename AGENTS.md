@@ -186,6 +186,7 @@ python scripts/itinfra.py test-suite [--report-html] [--no-html] [--out projects
 # Architettura Local Workspace & Central Publish con Quality Gate (Release v0.9):
 python scripts/itinfra.py publish <slug> [--dest <path>] [--dry-run] [--force]
 python scripts/itinfra.py sync-engine [--source <path>] [--dry-run]
+python scripts/itinfra.py check-share [--path <path>] [--user <user>] [--password <pass>]
 ```
 
 ### 7. Validazione finale & Gate di Qualità

@@ -47,12 +47,12 @@ graph TD
 
 ---
 
-### Fase 2: Rilevamento e Verifica Storage Centrale
-1. Verifica se lo storage centrale predefinito e' raggiungibile:
+### Fase 2: Rilevamento e Diagnostica Storage Centrale
+1. Esegui il test diagnostico integrato per connettività e permessi:
    ```powershell
-   Test-Path "\\fileserv01\dati01\workaure"
+   python scripts/itinfra.py check-share
    ```
-2. Se la share e' raggiungibile:
+2. Se la share e' raggiungibile e i permessi sono conformi (Lettura Core OK, Scrittura `projects/` OK):
    - Imposta come sorgente master centrale: `\\fileserv01\dati01\workaure`.
 3. Se la share NON e' raggiungibile (es. utente fuori sede o senza VPN):
    - Chiedi all'utente se desidera utilizzare la modalità Git remota (`origin: https://github.com/matrixNeo76/ItInfra.git`) oppure specificare un percorso di rete alternativo.

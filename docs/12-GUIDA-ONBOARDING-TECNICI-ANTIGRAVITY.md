@@ -162,6 +162,15 @@ Quando il progetto o una sua milestone è completa:
   ```
   sincronizzando in modo sicuro e atomico il progetto sul server `\\fileserv01\dati01\workaure\projects\banca-del-nord\`.
 
+### Caso E: Diagnostica Connettività e Permessi Share Master
+In qualsiasi momento per verificare se la postazione client può leggere i template e pubblicare su `projects/`:
+> *"Verifica se ho i permessi corretti sulla share master centrale."*
+- Antigravity eseguirà la diagnostica automatica:
+  ```powershell
+  python scripts/itinfra.py check-share
+  ```
+  restituendo un report tabellare con la conferma dell'abilitazione alla pubblicazione e della protezione del core.
+
 ---
 
 ## 6. Risoluzione dei Problemi Comuni (Troubleshooting)
