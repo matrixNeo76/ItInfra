@@ -151,11 +151,34 @@ admin_password_ref: "vault://it/projects/acme-dc/firewall/admin"
 snmp_community_ref: "vault://it/projects/acme-dc/snmp/ro-community"
 ```
 
-### 4.2 Gestione dei Dati Mancanti
-Se durante l'intervista un dato non è ancora noto o non disponibile (es. indirizzo MAC di uno switch non ancora sballato):
-- **NON inventare un valore plausibile.**
-- Usa il tag esplicito: `<DA-RICHIEDERE>`.
+### 4.2 Gestione dei Dati Mancanti & Zero-Hallucination Policy
+Se durante l'intervista un dato non è ancora noto o non disponibile (es. indirizzo MAC di uno switch, credenziali, seriali):
+- **DIVIETO ASSOLUTO DI INVENTARE DATI:** L'AI non deve mai allucinare o inserire valori fittizi.
+- Usa tassativamente il placeholder standard: `<DA-RICHIEDERE>`.
 - Inserisci la voce nella tabella "Open Issues" del documento.
+- Esegui `python scripts/itinfra.py audit-consistency <slug>` per verificare l'assenza di discrepanze semantiche.
 
 ### 4.3 Coerenza delle Relazioni Ontologiche
 Nel frontmatter YAML, ogni ID inserito nell'array `related_docs` DEVE avere un corrispondente record in `relations` con medesimo `targetId`. La CLI verificherà questa regola in fase di validazione.
+
+---
+
+## 5. Parallelismo e Git Worktree per Multi-Agente
+
+Nelle implementazioni complesse è possibile attivare più subagenti paralleli per accelerare la redazione del ciclo lavorativo senza conflitti di filesystem:
+
+1. **Creazione dei Worktree isolati:**
+   ```bash
+   python scripts/itinfra.py worktree add infra-architect
+   python scripts/itinfra.py worktree add infra-security
+   python scripts/itinfra.py worktree add infra-automation
+   python scripts/itinfra.py worktree add infra-qa
+   ```
+2. **Assegnazione dei compiti:**
+   - `infra-architect`: branch `feat/architecture` (HLD, LLD, topologie Mermaid).
+   - `infra-security`: branch `feat/security-vault` (Vault AES-256, matrici di accesso, compliance).
+   - `infra-automation`: branch `feat/ops-mop` (MOP, script RouterOS `.rsc`, PowerShell `.ps1`, Runbook).
+   - `infra-qa`: branch `feat/testing-atp` (Casi di test ATP, Handover, audit coerenza).
+3. **Sincronizzazione finale:**
+   Al termine, ciascun agente esegue `python scripts/itinfra.py worktree sync <ruolo>` per fondere in modo atomico le modifiche con il branch principale.
+

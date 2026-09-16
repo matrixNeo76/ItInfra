@@ -30,22 +30,31 @@ ItInfra/
 ├── CLAUDE.md                          ← Istruzioni auto-caricate da Claude Code (CLI Anthropic)
 ├── INTEGRAZIONE-REPO.md               ← Guida master in formato OKF v0.2: come integrare tutto nel Knowledge Vault
 ├── LICENSE                            ← MIT License
-├── .gitignore
+├── .gitignore                         ← Esclusione automatica .vault.enc, .vault.lock e secret
 │
 ├── docs/                              ← Documentazione architetturale interna (OKF v0.2)
+│   ├── 00-INDEX-DOCS.md               ← Indice navigazionale della documentazione
 │   ├── 01-SPEC-ITINFRA-ASSISTANT.md   ← Specifica tecnica suite agentica e CLI
-│   └── 02-ROADMAP-PIANO-SVILUPPO.md   ← Piano di sviluppo esecutivo e milestone
+│   ├── 02-ROADMAP-PIANO-SVILUPPO.md   ← Piano di sviluppo esecutivo e milestone
+│   ├── 03-GUIDA-CLI-ITINFRA.md        ← Manuale operativo completo di scripts/itinfra.py
+│   ├── 04-GUIDA-ASSISTENTE-AGENTICO.md← Guida per Antigravity, Claude Code e Cursor
+│   ├── 05-MANIFEST-E-PROGETTI.md      ← Specifica registro progetti e manifest condiviso
+│   └── 06-COMPLIANCE-E-SICUREZZA.md   ← Framework normativi NIS2, ISO 27001 e DORA
 │
 ├── projects/                          ← Registro progetti e manifest globali
 │   ├── _schema/                       ← Schema JSON formale del manifest
 │   ├── _template/                     ← Template di project-manifest.yaml
-│   └── demo-acme/                     ← Progetto demo collaudato (Acme Corporation)
+│   ├── demo-acme/                     ← Progetto demo collaudato (Acme Corporation)
+│   └── severino-srl/                  ← Progetto reale pilota (100% delle 7 fasi completate)
+│       └── configs/                   ← Script operativi RouterOS e PowerShell esportati
 │
 ├── scripts/                           ← Toolchain CLI e automazione
-│   └── itinfra.py                     ← CLI: init progetti, linter OKF v0.2, status avanzamento
+│   ├── itinfra.py                     ← CLI master: init, validate, status, vault, worktree, audit, export
+│   └── itinfra_vault.py               ← Motore crittografico locale AES-256-GCM con atomic file locking
 │
-├── skills/                            ← Skill agentiche per compilazione guidata
-│   └── itinfra-assistant/SKILL.md     ← Procedura guidata a turni (intervista a blocchi)
+├── .agents/skills/                    ← Skill universali per Antigravity e moderni agent framework
+│   ├── itinfra-assistant/SKILL.md     ← Procedura guidata a turni (intervista a blocchi)
+│   └── itinfra-vault/SKILL.md         ← Gestione sicura del Secret Vault crittografato
 │
 ├── templates/                         ← 10 template documentali OKF v0.2 + 3 file orientamento
 │   ├── 00-INDEX.md                    ← Indice navigazionale con link graph Mermaid
@@ -63,47 +72,20 @@ ItInfra/
 ├── examples/                          ← 11 prompt di esempio per agenti AI
 │   ├── README.md                      ← Indice esempi + workflow d'uso
 │   ├── 00-prompt-master-template.md   ← Struttura generica di un prompt efficace
-│   ├── 01-prompt-RSD-URS.md           ← 9 prompt completi e personalizzabili
-│   ├── 02-prompt-HLD.md               ← Scenario coerente: Acme S.p.A. Milano
-│   ├── 03-prompt-LLD.md
-│   ├── 04-prompt-MOP.md
-│   ├── 05-prompt-Rollback.md
-│   ├── 06-prompt-As-Built.md
-│   ├── 07-prompt-ATP.md
-│   ├── 08-prompt-SOP-Runbook.md
-│   └── 09-prompt-Handover-Inventory.md
+│   └── 01-prompt-RSD-URS.md ...       ← 9 prompt completi e personalizzabili
 │
 └── integration/                       ← Estensioni per Knowledge Vault (https://github.com/matrixNeo76/KnowledgeVault)
     ├── level-2/                       ← Estensione parser OKF per 9 tipi documentali IT
-    │   ├── README.md
-    │   ├── 01-PATCH-okfParser.md      ← Modifica a src/lib/okfParser.ts
-    │   ├── 02-PATCH-types.md          ← Modifica a src/types.ts
-    │   ├── 03-NEW-okfItTemplates.ts  ← Nuovo file src/lib/okfItTemplates.ts
-    │   ├── 04-PR-DESCRIPTION.md       ← PR description pronta per GitHub
-    │   └── 05-MIGRATION-GUIDE.md      ← Guida migrazione 7-step
-    │
     └── level-3/                       ← Modulo UI completo + API AI compiler
-        ├── README.md
-        ├── 01-NEW-ITProjectMetadataCard.tsx       ← Scheda metadata IT nel reader
-        ├── 02-NEW-ITWorkflowTimeline.tsx          ← Timeline visuale 7 fasi
-        ├── 03-NEW-ITInfrastructureSidebar.tsx      ← Drawer laterale con stats
-        ├── 04-NEW-ITTemplateCompilerModal.tsx     ← Modale compilazione AI
-        ├── 05-PATCH-KnowledgeReader.tsx.md         ← Patch: aggiungi tab "Ciclo IT"
-        ├── 06-PATCH-Sidebar.tsx.md                 ← Patch: aggiungi voce "Ciclo IT"
-        ├── 07-PATCH-CaptureBar.tsx.md              ← Patch: aggiungi pulsante "Template IT"
-        ├── 08-PATCH-captureRoutes.ts.md            ← Patch: 2 nuovi endpoint API
-        ├── 09-NEW-itInfrastructureService.ts        ← Servizio backend Gemini
-        ├── 10-PR-DESCRIPTION.md                    ← PR description
-        └── 11-MIGRATION-GUIDE.md                   ← Guida migrazione 11-step
 ```
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Gestione Progetti e Validazione con la CLI ITInfra (Consigliato)
+### 1. Gestione Progetti e Automazione con la CLI ITInfra (Release v0.4)
 
-Il repository include la CLI standalone `scripts/itinfra.py` per automatizzare il ciclo documentale:
+Il repository include la CLI standalone `scripts/itinfra.py` per orchestrare l'intero ciclo documentale:
 
 ```bash
 # Mostra tutti i template e le 7 fasi:
@@ -117,12 +99,32 @@ python scripts/itinfra.py status acme-dc
 
 # Valida formalmente la conformità OKF v0.2 di un file o dell'intero progetto:
 python scripts/itinfra.py validate projects/acme-dc/01-RSD-URS.md
+
+# Esegui l'Audit di Coerenza Incrociata & Strict Grounding (Zero-Hallucination):
+python scripts/itinfra.py audit-consistency acme-dc
+
+# Gestisci il Local Encrypted Secret Vault (AES-256-GCM):
+python scripts/itinfra.py vault init acme-dc
+python scripts/itinfra.py vault set acme-dc fw/admin --value "SegretoSicuro2026!"
+python scripts/itinfra.py vault audit acme-dc
+
+# Orchestra agenti paralleli su Git Worktree dedicati:
+python scripts/itinfra.py worktree add infra-architect
+python scripts/itinfra.py worktree list
+
+# Esporta playbook esecutivi (RouterOS .rsc e PowerShell .ps1):
+python scripts/itinfra.py export-configs acme-dc
+
+# Genera la Dashboard HTML offline completa e interattiva:
+python scripts/itinfra.py export-html acme-dc
 ```
 
-### 2. Compilazione Interattiva con Agenti AI
+### 2. Compilazione Interattiva con Agenti AI & Strict Grounding
 
-- **Google Antigravity**: Dispone della skill nativa `.agents/skills/itinfra-assistant/` che avvia un'**intervista guidata per blocchi logici** (Scope & SLA → Rete & IP → Compute & Storage → Sicurezza → Collaudo) prima di compilare e validare il documento.
-- **Claude Code / Cursor / Cline**: Leggono automaticamente `CLAUDE.md` o `AGENTS.md` e possono eseguire i comandi `scripts/itinfra.py` dal terminale integrato.
+- **Google Antigravity & Modern Frameworks**: Dispongono delle skill universali in `.agents/skills/`:
+  - `itinfra-assistant`: avvia un'**intervista guidata per blocchi logici** (Scope & SLA → Rete & IP → Compute & Storage → Sicurezza → Collaudo). Impone la policy **Zero-Hallucination**: è tassativamente vietato inventare dati tecnici; i valori non forniti devono essere registrati con `<DA-RICHIEDERE>`.
+  - `itinfra-vault`: gestisce la crittografia dei secret locali e convalida i riferimenti `vault://`.
+- **Claude Code / Cursor / Cline**: Leggono automaticamente `CLAUDE.md` o `AGENTS.md` ed eseguono i comandi `scripts/itinfra.py` dal terminale integrato.
 
 ### 3. Integrare nel Knowledge Vault (Livello 2 + 3)
 

@@ -130,14 +130,21 @@ Il regolamento DORA (Digital Operational Resilience Act) stabilisce requisiti un
 
 ---
 
-## 5. Protocollo di Sicurezza per le Credenziali (`vault://`)
+## 5. Protocollo di Sicurezza per le Credenziali & Local Encrypted Vault
 
-In conformità ai requisiti di audit e riservatezza:
-- **È SEVERAMENTE VIETATO** inserire chiavi crittografiche, token API o password in chiaro all'interno dei documenti.
-- Tutti i riferimenti a credenziali DEVONO utilizzare l'URI standard del password manager aziendale:
+In conformità ai requisiti di audit e riservatezza di NIS2 e ISO 27001:2022 (A.5.15, A.8.2):
+- **È SEVERAMENTE VIETATO** inserire chiavi crittografiche, token API o password in chiaro all'interno dei documenti tecnici o repository Git.
+- Tutti i riferimenti a credenziali DEVONO utilizzare l'URI standard:
   ```
-  vault://<dominio>/<progetto>/<apparato>/<utenza>
+  vault://it/projects/<slug>/<apparato_o_servizio>/<utenza>
   ```
-  *Esempio:* `vault://it/projects/acme-milano-dc/fw-01/admin`
+  *Esempio:* `vault://it/projects/severino-srl/mikrotik/admin`
 
-Il linter `python scripts/itinfra.py validate` verifica automaticamente l'assenza di stringhe di password in chiaro, bloccando la promozione dei documenti in caso di non conformità.
+### 5.1 Motore Crittografico Locale (AES-256-GCM)
+Il repository include il modulo `scripts/itinfra_vault.py` e il subparser CLI `vault`:
+1. **Cifratura Autenticata:** I secret vengono cifrati localmente in `projects/<slug>/.vault.enc` tramite algoritmo simmetrico **AES-256-GCM** (12-byte nonce, 16-byte authentication tag).
+2. **Derivazione della Chiave (KDF):** Master key derivata con **PBKDF2-HMAC-SHA256** (100.000 iterazioni con salt casuale a 16 byte).
+3. **Concorrenza Sicura e Multi-Worktree:** Un context manager di **File Locking Atomico** (`.vault.lock`) garantisce l'accesso esclusivo al vault, prevenendo corruzioni dei dati durante l'esecuzione parallela di più subagenti AI su Git Worktree.
+4. **Protezione Git Totale:** I file `.vault.enc`, `.vault.lock` e chiavi `.secret` sono tassativamente esclusi da Git via `.gitignore`.
+5. **Audit di Coerenza Automatico:** Il comando `python scripts/itinfra.py vault audit <slug>` scansiona tutti i file Markdown del progetto, verifica la corrispondenza dei riferimenti `vault://` e rileva secret mancanti o orfani.
+

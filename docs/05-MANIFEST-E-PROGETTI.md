@@ -91,8 +91,10 @@ projects/
 │   └── project-manifest.schema.json       ← Schema formale JSON Schema Draft-07
 ├── _template/
 │   └── project-manifest.yaml              ← Modello base commentato copiato da `init`
-└── <project-slug>/                        ← Cartella isolata per ciascun progetto
+└── <project-slug>/                        ← Cartella isolata per ciascun progetto (Multi-Tenant)
     ├── project-manifest.yaml              ← Configurazione globale del progetto
+    ├── .vault.enc                         ← Local Encrypted Vault AES-256-GCM (escluso da Git)
+    ├── .vault.lock                        ← File lock atomico temporaneo per concorrenza
     ├── 01-RSD-URS.md                      ← Requisiti (Fase 1)
     ├── 02-HLD.md                          ← High-Level Design (Fase 2)
     ├── 03-LLD.md                          ← Low-Level Design (Fase 2)
@@ -102,7 +104,9 @@ projects/
     ├── 07-ATP.md                          ← Acceptance Test Plan (Fase 6)
     ├── 08-SOP-Runbook.md                  ← Runbook & Procedure (Fase 7)
     ├── 09-Handover-Inventory.md           ← Handover & Asset (Fase 7)
-    └── exports/                           ← Esportazioni generate (CSV/JSON per NetBox)
+    ├── report.html                        ← Dashboard consolidata HTML offline
+    ├── configs/                           ← Script operativi esportati (RouterOS .rsc, PowerShell .ps1)
+    └── exports/                           ← Esportazioni IPAM (CSV/JSON per NetBox)
 ```
 
 ---

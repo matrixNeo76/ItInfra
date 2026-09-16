@@ -98,6 +98,11 @@ I comandi disponibili sono:
 - **`validate`**: Esegue il linter formale OKF v0.2, verifica i link e controlla la sicurezza.
 - **`export-ipam`**: Estrae le tabelle di indirizzamento da documenti LLD/As-Built in formati CSV/JSON per NetBox.
 - **`generate-diagram`**: Produce diagrammi Mermaid (topologia di rete o elevazione rack) a partire dai file LLD.
+- **`export-html`**: Genera un report consolidato completo in formato HTML per il progetto con grafici interattivi.
+- **`vault`**: Gestione del Local Encrypted Secret Vault (AES-256-GCM) con file locking atomico.
+- **`worktree`**: Orchestrazione di Git Worktrees isolati per agenti AI concorrenti.
+- **`audit-consistency`**: Linter semantico di coerenza incrociata e motore Strict Grounding (Zero-Hallucination).
+- **`export-configs`**: Estrazione di script di configurazione operativi RouterOS (`.rsc`) e PowerShell (`.ps1`).
 
 ---
 
@@ -239,4 +244,80 @@ python scripts/itinfra.py generate-diagram templates/03-LLD.md --type topology
 
 # Salva i diagrammi in un file markdown:
 python scripts/itinfra.py generate-diagram templates/03-LLD.md --type all --out ./diagrams.md
+```
+
+---
+
+### 3.7 `export-html`
+Genera una dashboard HTML standalone e interattiva che consolida l'intero ciclo documentale (tutti i 9 documenti tecnici, tabelle, metadati, diagrammi vettoriali Mermaid.js navigabili offline).
+
+```bash
+python scripts/itinfra.py export-html <project_slug> [--out <percorso_output.html>]
+```
+
+**Esempio:**
+```bash
+python scripts/itinfra.py export-html severino-srl
+```
+
+---
+
+### 3.8 `vault` — Local Encrypted Secret Vault (AES-256-GCM)
+Gestisce l'archivio locale dei secret cifrati `projects/<slug>/.vault.enc` protetto da PBKDF2-HMAC-SHA256 (100k iterazioni), AES-256-GCM e lock atomico `.vault.lock`.
+
+```bash
+# Inizializza il vault per un progetto:
+python scripts/itinfra.py vault init <slug> [--passphrase "<pass>"] [--overwrite]
+
+# Salva o aggiorna un secret cifrato:
+python scripts/itinfra.py vault set <slug> <key> [--value "<val>"] [--passphrase "<pass>"]
+
+# Recupera e decifra un secret:
+python scripts/itinfra.py vault get <slug> <key> [--passphrase "<pass>"]
+
+# Elenca le chiavi censite nel vault:
+python scripts/itinfra.py vault list <slug> [--passphrase "<pass>"]
+
+# Esegue l'audit dei puntatori vault:// nei documenti Markdown:
+python scripts/itinfra.py vault audit <slug> [--passphrase "<pass>"]
+```
+
+---
+
+### 3.9 `worktree` — Gestione Git Worktrees per Agenti Concorrenti
+Permette l'orchestrazione di subagenti paralleli isolati su directory e branch dedicati senza collisioni o conflitti:
+
+```bash
+# Crea un worktree per un ruolo agente:
+python scripts/itinfra.py worktree add [infra-architect|infra-security|infra-automation|infra-qa]
+
+# Elenca i worktree attivi:
+python scripts/itinfra.py worktree list
+
+# Sincronizza il worktree del ruolo con il branch main:
+python scripts/itinfra.py worktree sync <role>
+
+# Rimuove i worktree temporanei non più necessari:
+python scripts/itinfra.py worktree cleanup
+```
+
+---
+
+### 3.10 `audit-consistency` — Strict Grounding & Motore Anti-Allucinazione
+Effettua la verifica semantica incrociata tra tutti i 9 documenti del progetto e il manifesto:
+- Controlla che tutti gli IP appartengano alla supernet approvata.
+- Verifica la corrispondenza univoca del Domain Controller e dello Switch Core.
+- Rileva placeholder grezzi non conformi imponendo `<DA-RICHIEDERE>`.
+
+```bash
+python scripts/itinfra.py audit-consistency <project_slug>
+```
+
+---
+
+### 3.11 `export-configs` — Esportazione Configuration Playbooks
+Scansiona i documenti tecnici del progetto ed estrae blocchi di codice RouterOS (`sw-core-01.rsc`) e PowerShell (`setup_ad_hyperv.ps1`) pronti per il deployment.
+
+```bash
+python scripts/itinfra.py export-configs <project_slug> [--out <cartella>]
 ```
