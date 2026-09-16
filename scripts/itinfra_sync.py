@@ -45,7 +45,7 @@ class ClientSyncManager:
         if not share_path.exists():
             return False, [], f"Share centrale '{share_str}' non raggiungibile (offline o senza VPN)."
 
-        dirs_to_check = ["scripts", "templates", "docs"]
+        dirs_to_check = ["scripts", "templates", "docs", "skills", ".agents", ".vscode"]
         root_files = ["README.md", "ROADMAP.md", "AGENTS.md", "CLAUDE.md", "INTEGRAZIONE-REPO.md", "00-INDEX.md"]
 
         files_to_update = []

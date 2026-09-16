@@ -53,7 +53,7 @@ class CentralDeployer:
             return False, msg, stats
 
         # Cartelle e file da distribuire (ESCLUSA STRICTLY projects/ e .git/)
-        dirs_to_sync = ["scripts", "templates", "docs", "skills", ".agents"]
+        dirs_to_sync = ["scripts", "templates", "docs", "skills", ".agents", ".vscode"]
         root_files_to_sync = [
             "README.md", "ROADMAP.md", "AGENTS.md", "CLAUDE.md",
             "INTEGRAZIONE-REPO.md", "00-INDEX.md"

@@ -29,7 +29,7 @@ if (-not (Test-Path $LocalProjects)) {
     New-Item -ItemType Directory -Path $LocalProjects -Force | Out-Null
 }
 
-$FoldersToSync = @("scripts", "templates", "docs")
+$FoldersToSync = @("scripts", "templates", "docs", "skills", ".agents", ".vscode")
 foreach ($folder in $FoldersToSync) {
     $src = Join-Path $CentralShare $folder
     $dst = Join-Path $TargetLocalDir $folder

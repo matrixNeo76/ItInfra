@@ -255,8 +255,8 @@ class ProjectPublisher:
             stats["status"] = "source_unreachable"
             return False, msg, stats
 
-        directories_to_sync = ["templates", "scripts", "docs"]
-        root_files_to_sync = ["README.md", "ROADMAP.md", "AGENTS.md", "CLAUDE.md", "INTEGRAZIONE-REPO.md"]
+        directories_to_sync = ["templates", "scripts", "docs", "skills", ".agents", ".vscode"]
+        root_files_to_sync = ["README.md", "ROADMAP.md", "AGENTS.md", "CLAUDE.md", "INTEGRAZIONE-REPO.md", "00-INDEX.md"]
 
         files_to_update = []
 
