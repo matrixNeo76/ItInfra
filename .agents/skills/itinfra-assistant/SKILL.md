@@ -194,4 +194,25 @@ Per verificare periodicamente o prima di ogni consegna formale la piena integrit
    ```
 2. **Dashboard di Verifica Offline (Zero-CDN):**
    - Apri il report generato in `projects/system-test-report.html`.
-   - Verifica che tutti i 10 moduli (Linter OKF v0.2, Strict Grounding Audit, Encrypted Vault, Multi-Agent Worktrees, Playbook Exporter, Triage & RCA Engine, Hybrid Memory System, Asset Inventory Engine, Cross-Client Incident Intelligence, Interactive Knowledge Graph) risultino con esito `[PASS]` e Pass Rate 100%.
+   - Verifica che tutti gli 11 moduli (inclusa l'architettura di pubblicazione controllata) risultino con esito `[PASS]` e Pass Rate 100%.
+
+---
+
+## 8. Local Workspace & Central Publish Workflow (Release v0.9)
+
+Quando operi su un client LAN secondario in architettura distribuita:
+1. **Lavoro su SSD Locale:**
+   - Opera sempre nella cartella locale (es. `C:\itinfra`). Antigravity redige e valida i file markdown direttamente sul file system locale, senza vincoli o latenze di rete.
+2. **Pubblicazione con Quality Gate:**
+   - Quando il progetto o una sua fase e' completata e validata (`0 errori` al linter OKF v0.2), esegui:
+     ```powershell
+     python scripts/itinfra.py publish <slug>
+     ```
+   - Lo script esegue il Quality Gate (validazione OKF v0.2 + audit anti-allucinazione + scansione anti-leak) e sincronizza in modo atomico la cartella del cliente verso `\\fileserv01\dati01\workaure\projects\<slug>/`.
+   - In caso di progetto remoto approvato, per aggiornarlo e' richiesto `--force`.
+3. **Aggiornamento del Motore Locale:**
+   - Se l'amministratore master ha aggiornato template, script o guide, allinea il workspace con:
+     ```powershell
+     python scripts/itinfra.py sync-engine
+     ```
+

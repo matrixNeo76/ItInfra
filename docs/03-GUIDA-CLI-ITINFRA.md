@@ -485,4 +485,56 @@ python scripts/itinfra.py test-suite --out exports/system-audit.html
 [OK] Dashboard HTML di collaudo salvata in: projects/system-test-report.html
 ```
 
+---
+
+### 3.18 `publish` — Central Publisher con Pre-Flight Quality Gate (Release v0.9)
+Pubblica in modo atomico il progetto locale su storage master centrale (`\\fileserv01\dati01\workaure`) isolando le sessioni locali di lavoro da percorsi di rete instabili o lenti. Esegue prima un Quality Gate bloccante a 3 stadi (linter OKF v0.2 a 0 errori, strict grounding audit e scansione anti-leak credenziali in chiaro):
+
+```bash
+# Pubblicazione standard sulla share centrale:
+python scripts/itinfra.py publish <slug>
+
+# Simulazione (dry-run) per verificare Quality Gate e lista file pronti:
+python scripts/itinfra.py publish <slug> --dry-run
+
+# Pubblicazione verso percorso target personalizzato:
+python scripts/itinfra.py publish <slug> --dest "\\fileserv01\dati01\workaure"
+
+# Forzatura sovrascrittura di progetti remoti approvati:
+python scripts/itinfra.py publish <slug> --force
+```
+
+**Esempio di Output:**
+```text
+[SUCCESSO] Progetto 'severino-srl' pubblicato con successo!
+  Sorgente: C:\itinfra\projects\severino-srl
+  Destinazione centrale: \\fileserv01\dati01\workaure\projects\severino-srl
+  File sincronizzati: 19 (481.6 KB)
+  Quality Gate OKF v0.2: 100% CONFORME (0 errori)
+```
+
+---
+
+### 3.19 `sync-engine` — Sincronizzazione del Motore Locale (Release v0.9)
+Aggiorna la copia locale di template, script e guide del client Windows 11 scaricando l'ultima versione consolidata dallo storage master centrale:
+
+```bash
+# Allineamento del motore locale dalla share centrale predefinita:
+python scripts/itinfra.py sync-engine
+
+# Simulazione differenziale (dry-run):
+python scripts/itinfra.py sync-engine --dry-run
+
+# Sincronizzazione da sorgente specifica:
+python scripts/itinfra.py sync-engine --source "\\fileserv01\dati01\workaure"
+```
+
+**Esempio di Output:**
+```text
+[SUCCESSO SYNC-ENGINE] Motore locale allineato con successo!
+  Sorgente centrale: \\fileserv01\dati01\workaure
+  File aggiornati: 0 su 37 scansionati.
+```
+
+
 

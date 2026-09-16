@@ -155,6 +155,11 @@ python scripts/itinfra.py inventory summary
 # Enterprise System Test Suite & Verification Dashboard (Release v0.8):
 python scripts/itinfra.py test-suite --report-html
 
+# Architettura Local Workspace & Central Publish con Quality Gate (Release v0.9):
+python scripts/itinfra.py publish acme-dc              # Quality Gate OKF v0.2 + sync verso share centrale
+python scripts/itinfra.py publish acme-dc --dry-run    # Simulazione preflight senza copiare
+python scripts/itinfra.py sync-engine                  # Aggiorna template e script locali dal server master
+
 # Genera la Dashboard HTML offline completa e interattiva:
 python scripts/itinfra.py export-html acme-dc
 ```

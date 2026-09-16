@@ -285,3 +285,37 @@ Introduce un framework automatizzato di collaudo end-to-end e visualizzazione es
      - *Deep Navigation Tab Bar*: navigazione istantanea tra Documentazione, Sicurezza & Vault, Telemetria & Incidenti, e Inventario Globale.
      - *Quick Action Links*: collegamenti one-click alla mappa `global-graph.html`, ai report di progetto e ai documenti ufficiali.
 
+### 2.15 Architettura Local Workspace & Central Publish con Quality Gate (`itinfra.py publish`) (Release v0.9)
+Risolve in modo deterministico le criticità di latenza SMB, lock concorrenti di Git e conflitti di permessi NTFS su percorsi di rete, separando l'ambiente operativo dell'agente dal repository centrale aziendale:
+
+1. **Disaccoppiamento tra Ambiente Operativo (Local Workspace) e Hub Centrale (Central Share):**
+   - *Ambiente di Lavoro del Tecnico (SSD Locale)*:
+     - Ciascun tecnico o client LAN opera su una cartella locale su SSD (es. `C:\itinfra` o `C:\Users\<user>\itinfra`).
+     - Antigravity lavora a piena velocità SSD locale, senza crash o timeout dei file watcher su percorsi UNC/SMB.
+     - L'agente conduce l'intervista guidata, inizializza il nuovo cliente (`itinfra.py init <slug>`) e compila i template OKF v0.2 nella cartella locale `projects/<slug>/`.
+   - *Hub di Archiviazione e Conoscenza Centrale (`\\fileserv01\dati01\workaure`)*:
+     - Funge da archivio master aziendale per tutti i progetti approvati, l'inventario hardware aggregato e i grafi D3.js.
+     - I file del motore centrale (`scripts/`, `templates/`, `docs/`, `.git/`) restano protetti e immutabili rispetto all'attività dei client LAN.
+
+2. **Meccanismo di Pubblicazione Atomica e Pre-Flight Quality Gate (`scripts/itinfra_publish.py`):**
+   - Il tecnico pubblica il proprio progetto sul server centrale tramite comando dedicato:
+     `python scripts/itinfra.py publish <slug> [--dest \\fileserv01\dati01\workaure] [--dry-run] [--force]`
+   - *Pre-Publish Quality Gate obbligatorio*:
+     1. *Linter Formale OKF v0.2*: tutti i documenti in `projects/<slug>/` devono avere 0 errori di validazione.
+     2. *Strict Grounding Audit*: verifica semantica di coerenza IP/subnet e assenza di placeholder illegali.
+     3. *Zero Cleartext Secret Scan*: scansione automatica per prevenire fughe di credenziali o password in chiaro verso lo storage condiviso.
+     Se anche un solo controllo fallisce, la pubblicazione viene respinta con errore bloccante.
+   - *Copia Atomica Confinata*:
+     - La sincronizzazione copia **esclusivamente** i file all'interno di `projects/<slug>/` verso la cartella corrispondente sul server centrale.
+     - È strutturalmente impossibile per il comando toccare, sovrascrivere o alterare file al di fuori dello slug del cliente (nessun rischio per `scripts/`, `templates/` o progetti di altri clienti).
+
+3. **Protezione dei Progetti Approvati & Versioning:**
+   - Se sul server centrale esiste già un progetto con lo stesso `<slug>` avente stato `approved`, la pubblicazione viene rifiutata a meno del passaggio esplicito del flag `--force` (riservato al superamento dell'As-Built ufficiale).
+
+4. **Sincronizzazione Unidirezionale del Motore Locale (`itinfra.py sync-engine`):**
+   - I tecnici possono aggiornare in qualsiasi momento la propria copia locale di template e script scaricando l'ultima versione consolidata dal server centrale con un solo comando:
+     `python scripts/itinfra.py sync-engine [--source \\fileserv01\dati01\workaure]`
+   - Garantisce che tutti i client LAN utilizzino sempre gli standard normativi e le release software più recenti.
+
+
+

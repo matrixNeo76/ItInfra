@@ -29,6 +29,8 @@ related_docs:
   - "guide-memoria-ibrida-trust-signals-v02"
   - "guide-global-enterprise-graph-v02"
   - "guide-global-memory-system-test-01"
+  - "guide-local-workspace-central-publish-01"
+  - "guide-onboarding-tecnici-antigravity-01"
   - "guide-itinfra-repository-roadmap-v02"
 depends_on: []
 classification: "public"
@@ -97,6 +99,16 @@ relations:
     relationType: "documents"
     weight: 0.95
     description: "Gestione dello staging scratchpad globale, atomic locking, sanitizer multi-tenant e test suite unificata"
+  - targetTitle: "Guida all'Architettura Local Workspace & Central Publish con Quality Gate"
+    targetId: "guide-local-workspace-central-publish-01"
+    relationType: "documents"
+    weight: 0.95
+    description: "Architettura operativa per la pubblicazione controllata e sicura di progetti su storage master centrale"
+  - targetTitle: "Guida Operativa — Onboarding Client Windows 11 & Configurazione Rapida per Antigravity"
+    targetId: "guide-onboarding-tecnici-antigravity-01"
+    relationType: "documents"
+    weight: 0.95
+    description: "Manuale di benvenuto e setup rapido per nuovi tecnici e configurazione dell'ambiente Antigravity"
   - targetTitle: "Visione Strategica e Roadmap Esecutiva ITInfra"
     targetId: "guide-itinfra-repository-roadmap-v02"
     relationType: "documents"
@@ -131,10 +143,14 @@ graph TD
     DOCS --> MEM[08-GUIDA-MEMORIA-IBRIDA-TRUST-SIGNALS.md<br/>Memoria Locale Ibrida & Trust]
     DOCS --> GLOBAL[09-GUIDA-GLOBAL-ENTERPRISE-GRAPH.md<br/>Global Enterprise Graph & Inventory]
     DOCS --> TEST[10-GUIDA-GLOBAL-MEMORY-SYSTEM-TEST.md<br/>Global Memory & Test Suite]
+    DOCS --> PUB[11-GUIDA-LOCAL-WORKSPACE-CENTRAL-PUBLISH.md<br/>Local Workspace & Central Publish]
+    DOCS --> ONB[12-GUIDA-ONBOARDING-TECNICI-ANTIGRAVITY.md<br/>Onboarding Client Antigravity]
     
     CLI -.-> CLI_PY[scripts/itinfra.py]
     GLOBAL -.-> INV_CLI[scripts/itinfra_inventory.py]
     TEST -.-> TEST_PY[scripts/itinfra_test_suite.py]
+    PUB -.-> PUB_PY[scripts/itinfra_publish.py]
+    ONB -.-> SKILL_SETUP[.agents/skills/itinfra-setup/]
     TROUBLE -.-> SKILL_TB[.agents/skills/itinfra-troubleshooter/]
     AGENT -.-> SKILL[.agents/skills/itinfra-assistant/]
     MANIF -.-> PROJ_DIR[projects/<slug>/]
@@ -149,7 +165,7 @@ graph TD
 |-----------|----------|-------------------|
 | [`01-SPEC-ITINFRA-ASSISTANT.md`](./01-SPEC-ITINFRA-ASSISTANT.md) | `specification` | Architettura dei componenti della suite: Project Registry, Linter CLI, Wizard a turni e Skill. |
 | [`02-ROADMAP-PIANO-SVILUPPO.md`](./02-ROADMAP-PIANO-SVILUPPO.md) | `guide` | Tabella di marcia esecutiva a 5 fasi, criteri di accettazione e tracciabilità. |
-| [`03-GUIDA-CLI-ITINFRA.md`](./03-GUIDA-CLI-ITINFRA.md) | `guide` | Guida passo-passo a tutti i comandi di `scripts/itinfra.py` (`init`, `status`, `validate`, `inventory`, `test-suite`). |
+| [`03-GUIDA-CLI-ITINFRA.md`](./03-GUIDA-CLI-ITINFRA.md) | `guide` | Guida passo-passo a tutti i comandi di `scripts/itinfra.py` (`init`, `status`, `validate`, `publish`, `sync-engine`). |
 | [`04-GUIDA-ASSISTENTE-AGENTICO.md`](./04-GUIDA-ASSISTENTE-AGENTICO.md) | `guide` | Come utilizzare Google Antigravity, Claude Code e Cursor per condurre l'intervista guidata per blocchi. |
 | [`05-MANIFEST-E-PROGETTI.md`](./05-MANIFEST-E-PROGETTI.md) | `specification` | Gestione della cartella `projects/`, ereditarietà parametri di rete e schema `project-manifest.yaml`. |
 | [`06-COMPLIANCE-E-SICUREZZA.md`](./06-COMPLIANCE-E-SICUREZZA.md) | `specification` | Approfondimento normativo: integrazione e checklist per NIS2, ISO/IEC 27001:2022 e regolamento DORA. |
@@ -157,6 +173,8 @@ graph TD
 | [`08-GUIDA-MEMORIA-IBRIDA-TRUST-SIGNALS.md`](./08-GUIDA-MEMORIA-IBRIDA-TRUST-SIGNALS.md) | `guide` | Architettura di memoria locale a 3 livelli (Short, Staging Scratchpad, Truth OKF v0.2), anti-inquinamento Git e Trust Signals di confidenza. |
 | [`09-GUIDA-GLOBAL-ENTERPRISE-GRAPH.md`](./09-GUIDA-GLOBAL-ENTERPRISE-GRAPH.md) | `guide` | Knowledge Graph globale enterprise con nodi ponte (Shared Entity Bridges), inventario cross-progetto e incident intelligence. |
 | [`10-GUIDA-GLOBAL-MEMORY-SYSTEM-TEST.md`](./10-GUIDA-GLOBAL-MEMORY-SYSTEM-TEST.md) | `guide` | Staging scratchpad globale (`_global_scratchpad.md`), AtomicFileLock, sanitizer multi-tenant e test suite unificata. |
+| [`11-GUIDA-LOCAL-WORKSPACE-CENTRAL-PUBLISH.md`](./11-GUIDA-LOCAL-WORKSPACE-CENTRAL-PUBLISH.md) | `guide` | Architettura Local Workspace & Central Publish, setup Windows 11 su SSD locale e Quality Gate pre-publish. |
+| [`12-GUIDA-ONBOARDING-TECNICI-ANTIGRAVITY.md`](./12-GUIDA-ONBOARDING-TECNICI-ANTIGRAVITY.md) | `guide` | Manuale di benvenuto e setup rapido per client Windows 11, automazione One-Click e skill itinfra-setup. |
 
 ---
 

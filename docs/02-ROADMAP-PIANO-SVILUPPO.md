@@ -133,7 +133,15 @@ gantt
 - **Enterprise System Test Suite (`scripts/itinfra.py test-suite`):** collaudo end-to-end automatizzato di tutti i 10 moduli del framework con output a terminale e Pass Rate 100%.
 - **Unified Verification Dashboard (`projects/system-test-report.html`):** report HTML consolidato offline 100% Zero-CDN con KPI esecutive, tab interattivi e log diagnostico di collaudo.
 
-### Release v0.9 — Advanced Topology Engine, MCP Server & Automated CI/CD (Pianificato Q1 2027)
+### Release v0.9 — Local Workspace & Central Publish Architecture (`itinfra.py publish`) (In Pianificazione / Sviluppo)
+- **Disaccoppiamento Local Workspace & Central Storage (`\\fileserv01\dati01\workaure`):** i tecnici operano in locale (`C:\itinfra\`) a piena velocità SSD senza latenze SMB, timeout dei file watcher o conflitti di lock Git concorrenti.
+- **Modulo Central Publisher & Pre-Flight Quality Gate (`scripts/itinfra_publish.py`):** comando CLI `itinfra.py publish <slug>` con validazione obbligatoria prima della copia (linter formale OKF v0.2 a 0 errori, strict grounding audit semantico e scansione anti-leak credenziali).
+- **Copia Atomica Confinata:** sincronizzazione esclusiva dei file appartenenti a `projects/<slug>/`, garantendo l'assoluta inviolabilità di `scripts/`, `templates/`, `docs/`, `.git/` e dei progetti degli altri clienti.
+- **Protezione Progetti Approvati & Versioning:** blocco delle sovrascritture accidentali su progetti consolidati (`status: approved`) a meno di flag esplicito `--force`.
+- **Sincronizzazione Unidirezionale del Motore Locale (`itinfra.py sync-engine`):** comando per aggiornare la copia locale di script e template scaricando l'ultima release consolidata dal server master centrale.
+- **Automazione Setup & Guida Operativa:** script `init_central_share.ps1`, `setup_client_workspace.ps1` e manuale `docs/11-GUIDA-LOCAL-WORKSPACE-CENTRAL-PUBLISH.md`.
+
+### Release v0.10 — Advanced Topology Engine, MCP Server & Automated CI/CD (Pianificato Q1 2027)
 - **Server MCP Standalone (`scripts/itinfra_mcp.py`):** protocollo aperto per esporre tool e risorse a Claude Desktop, Cursor MCP e agenti LLM esterni.
 - **Advanced Topology & Cabling Generator:** generazione automatica di schemi Spine-Leaf complessi, patch panel e layout rack con codifica colori VLAN.
 - **Automated CI/CD Quality Gates (GitHub Actions):** validazione automatica obbligatoria su PR con verifica linter, audit coerenza e test-suite.
@@ -143,6 +151,7 @@ gantt
 - **Sincronizzazione Bidirezionale NetBox / Nautobot:** connettore API live per allineamento continuo dell'infrastruttura con il manifesto di progetto.
 - **Knowledge Graph 3D:** navigazione visiva tridimensionale interattiva dei datacenter e apparati.
 - **Lifecycle & Contract Automation:** scadenziario automatico e alert su garanzie hardware e contratti di supporto.
+
 
 
 

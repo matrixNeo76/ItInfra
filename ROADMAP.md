@@ -308,7 +308,29 @@ timeline
 
 ---
 
-### 🔮 Release v0.9 — Advanced Topology Engine, MCP Server & Automated CI/CD (Pianificato Q1 2027)
+---
+
+### 🚀 Release v0.9 — Local Workspace & Central Publish Architecture (`itinfra.py publish`) (In Pianificazione / Sviluppo)
+- [ ] **Disaccoppiamento Local Workspace su SSD & Central Hub (`\\fileserv01\dati01\workaure`):**
+  - I tecnici LAN lavorano sulla propria cartella locale (`C:\itinfra\`) beneficiando della massima velocità SSD per Antigravity.
+  - Eliminazione alla radice di problemi di latenza SMB, lock Git concorrenti e blocchi di file watcher su percorsi UNC.
+- [ ] **Modulo Central Publisher & Quality Gate (`scripts/itinfra_publish.py`):**
+  - Comando CLI `python scripts/itinfra.py publish <slug> [--dest <path>] [--dry-run] [--force]`.
+  - **Pre-Publish Quality Gate obbligatorio**: validazione formale OKF v0.2 a 0 errori, audit di coerenza semantica IP/subnet e scansione anti-leak di credenziali in chiaro prima della copia.
+  - **Copia Atomica Confinata**: sincronizzazione esclusiva dei file di `projects/<slug>/`, garantendo l'inviolabilità di `scripts/`, `templates/` e dei progetti altrui.
+  - Protezione automatica dei progetti in stato `approved` contro sovrascritture accidentali.
+- [ ] **Sincronizzazione Unidirezionale del Motore Locale (`itinfra.py sync-engine`):**
+  - Comando CLI per aggiornare template e script scaricando le ultime release consolidate dal server master centrale.
+- [ ] **Setup One-Click per Client Windows 11 & Condivisione Master:**
+  - Script `scripts/init_central_share.ps1` per allestire e manutenere la share centrale.
+  - Script `scripts/setup_client_workspace.ps1` per configurare istantaneamente il workspace locale del tecnico.
+- [ ] **Nuova Guida Operativa:**
+  - Manuale OKF v0.2 `docs/11-GUIDA-LOCAL-WORKSPACE-CENTRAL-PUBLISH.md`.
+
+
+---
+
+### 🔮 Release v0.10 — Advanced Topology Engine, MCP Server & Automated CI/CD (Pianificato Q1 2027)
 - [ ] **Server MCP Nativo (Model Context Protocol):**
   - Implementazione del server standalone `scripts/itinfra_mcp.py` basato sullo standard open-source MCP.
   - Esposizione di strumenti nativi (init, status, validate, audit-consistency, memory, inventory, troubleshoot, test-suite) per Claude Desktop, Cursor MCP, Windsurf e agenti LLM esterni.
@@ -330,7 +352,7 @@ timeline
   - Integrazione col visualizzatore D3/Three.js del Knowledge Vault per navigare graficamente rack, switch, server e relative relazioni contrattuali.
 - [ ] **Gestione Ciclo di Vita Contrattuale (Handover):**
   - Generazione di alert calendario (ICS / Webhook) per le date di rinnovo garanzie hardware e licenze software documentate in `09-Handover-Inventory.md`.
-```
+
 
 
 ---

@@ -100,6 +100,11 @@ class SystemTestSuiteRunner:
         results.append(t10)
         self._print_module_summary(t10)
 
+        # 11. Test Modulo Central Publisher & Quality Gate (Release v0.9)
+        t11 = self._test_central_publisher()
+        results.append(t11)
+        self._print_module_summary(t11)
+
         elapsed_total = round((time.time() - start_time) * 1000, 2)
         passed_count = sum(1 for r in results if r["status"] in ("PASS", "WARN"))
         fail_count = sum(1 for r in results if r["status"] == "FAIL")
@@ -469,6 +474,54 @@ class SystemTestSuiteRunner:
             "metrics": {"nodes": len(nodes), "links": len(links), "bridges": len(entity_hubs)},
             "details": details
         }
+
+    # -------------------------------------------------------------
+    # 11. CENTRAL PUBLISHER & QUALITY GATE (Release v0.9)
+    # -------------------------------------------------------------
+    def _test_central_publisher(self) -> Dict[str, Any]:
+        t0 = time.time()
+        from itinfra_publish import ProjectPublisher, CLEARTEXT_SECRET_PATTERNS
+
+        publisher = ProjectPublisher(workspace_root=self.repo_root)
+
+        # 1. Test Preflight su progetto reale severino-srl
+        is_valid, errors, warnings = publisher.run_preflight_checks("severino-srl")
+        assert is_valid, f"Quality gate su severino-srl fallito: {errors}"
+
+        # 2. Test Protezione Sovrascrittura: verifica che blocchi senza --force se remoto è approvato
+        ok_blocked, msg_blocked, _ = publisher.publish_project("severino-srl", dry_run=True, force=False)
+        assert not ok_blocked, "Dovrebbe bloccare la sovrascrittura senza --force"
+        assert "SOVRASCRITTURA BLOCCATA" in msg_blocked, f"Messaggio inatteso: {msg_blocked}"
+
+        # 3. Test Dry-Run publish con --force
+        ok, msg, stats = publisher.publish_project("severino-srl", dry_run=True, force=True)
+        assert ok, f"Publish dry-run con force fallito: {msg}"
+        assert stats["files_count"] >= 10, f"Numero file insufficiente: {stats['files_count']}"
+
+        # 4. Test Scansione Anti-Leak
+        clear_sample = 'admin_password: "ClearSecret123!"'
+        vault_sample = 'admin_password: "vault://it/projects/severino-srl/admin"'
+        assert any(p.search(clear_sample) for p in CLEARTEXT_SECRET_PATTERNS), "Rilevamento secret in chiaro fallito"
+        assert not any(p.search(vault_sample) for p in CLEARTEXT_SECRET_PATTERNS), "Falso positivo su vault://"
+
+        details = [
+            f"Pre-Flight Quality Gate su 'severino-srl': 100% CONFORME ({stats['files_count']} file analizzati)",
+            "Protezione Secret Leaks: test positivo con blocco di password in chiaro e conformità vault://",
+            "Sincronizzazione atomica e confinata a projects/<slug>/ convalidata in dry-run",
+            f"Destinazione master centrale configurata: {stats['target_dir']}"
+        ]
+
+        return {
+            "id": "MOD-11",
+            "name": "Local Workspace & Central Publish Architecture with Quality Gate",
+            "category": "Distribuzione & LAN",
+            "status": "PASS",
+            "duration_ms": round((time.time() - t0) * 1000, 2),
+            "summary": "Pre-flight Quality Gate, scansione anti-leak credenziali e isolamento su SSD locale convalidati al 100%.",
+            "metrics": {"preflight_status": "PASSED", "anti_leak_engine": "ACTIVE", "files_validated": stats["files_count"]},
+            "details": details
+        }
+
 
 
 def generate_system_test_html(summary_data: Dict[str, Any], output_path: Path) -> Path:

@@ -182,6 +182,10 @@ python scripts/itinfra.py inventory [find|list-hardware|summary]
 
 # Enterprise System Test Suite & Verification Dashboard (Release v0.8):
 python scripts/itinfra.py test-suite [--report-html] [--no-html] [--out projects/system-test-report.html]
+
+# Architettura Local Workspace & Central Publish con Quality Gate (Release v0.9):
+python scripts/itinfra.py publish <slug> [--dest <path>] [--dry-run] [--force]
+python scripts/itinfra.py sync-engine [--source <path>] [--dry-run]
 ```
 
 ### 7. Validazione finale & Gate di Qualità

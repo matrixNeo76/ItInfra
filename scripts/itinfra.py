@@ -65,6 +65,8 @@ IT_DOCUMENT_TYPES = [
     ("09-Handover-Inventory", 7, "specification", "Handover & Asset Inventory"),
 ]
 
+DEFAULT_CENTRAL_SHARE = r"\\fileserv01\dati01\workaure"
+
 COLOR_GREEN = "\033[92m"
 COLOR_YELLOW = "\033[93m"
 COLOR_RED = "\033[91m"
@@ -2320,6 +2322,52 @@ def cmd_test_suite(args: argparse.Namespace) -> int:
 
     return 0 if results["failed_modules"] == 0 else 1
 
+def cmd_publish(args: argparse.Namespace) -> int:
+    """Pubblica in modo atomico il progetto locale su storage master centrale (Release v0.9)."""
+    try:
+        from itinfra_publish import ProjectPublisher
+    except ImportError:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from itinfra_publish import ProjectPublisher
+
+    repo_root = Path(__file__).resolve().parent.parent
+    publisher = ProjectPublisher(workspace_root=repo_root)
+    success, msg, stats = publisher.publish_project(
+        slug=args.slug,
+        target_share=args.dest,
+        dry_run=args.dry_run,
+        force=args.force
+    )
+    if success:
+        print(colorize(msg, COLOR_GREEN if not args.dry_run else COLOR_CYAN))
+        return 0
+    else:
+        print(colorize(msg, COLOR_RED))
+        return 1
+
+def cmd_sync_engine(args: argparse.Namespace) -> int:
+    """Sincronizza e aggiorna template, script e guide dalla share master (Release v0.9)."""
+    try:
+        from itinfra_publish import ProjectPublisher
+    except ImportError:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from itinfra_publish import ProjectPublisher
+
+    repo_root = Path(__file__).resolve().parent.parent
+    publisher = ProjectPublisher(workspace_root=repo_root)
+    success, msg, stats = publisher.sync_engine(
+        source_share=args.source,
+        dry_run=args.dry_run
+    )
+    if success:
+        print(colorize(msg, COLOR_GREEN if not args.dry_run else COLOR_CYAN))
+        return 0
+    else:
+        print(colorize(msg, COLOR_RED))
+        return 1
+
 def cmd_memory(args: argparse.Namespace) -> int:
     """Gestisce la Memoria Locale Ibrida a 3 Livelli e i Trust Signals (Release v0.6 e v0.8)."""
     try:
@@ -2730,6 +2778,18 @@ def main():
     p_hc.add_argument("project_slug", help="Slug del progetto")
     p_hc.add_argument("--timeout", type=float, default=1.0, help="Timeout socket in secondi (default: 1.0)")
 
+    # Comando publish (Release v0.9)
+    p_pub = subparsers.add_parser("publish", help="Pubblica in modo atomico il progetto locale su storage master centrale (Release v0.9)")
+    p_pub.add_argument("slug", help="Slug del progetto locale da pubblicare")
+    p_pub.add_argument("--dest", default=None, help=f"Percorso della share centrale (default: '{DEFAULT_CENTRAL_SHARE}')")
+    p_pub.add_argument("--dry-run", action="store_true", help="Simula il Quality Gate e la pubblicazione senza copiare file")
+    p_pub.add_argument("--force", action="store_true", help="Forza la sovrascrittura anche se il progetto remoto e' approvato")
+
+    # Comando sync-engine (Release v0.9)
+    p_sync = subparsers.add_parser("sync-engine", help="Sincronizza e aggiorna template, script e guide dalla share master (Release v0.9)")
+    p_sync.add_argument("--source", default=None, help=f"Percorso della share centrale (default: '{DEFAULT_CENTRAL_SHARE}')")
+    p_sync.add_argument("--dry-run", action="store_true", help="Mostra i file che verrebbero aggiornati senza eseguire la copia")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -2770,6 +2830,10 @@ def main():
         return cmd_inventory(args)
     elif args.command == "test-suite":
         return cmd_test_suite(args)
+    elif args.command == "publish":
+        return cmd_publish(args)
+    elif args.command == "sync-engine":
+        return cmd_sync_engine(args)
     else:
         parser.print_help()
         return 1
