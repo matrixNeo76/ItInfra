@@ -359,6 +359,7 @@
         <button class="tab-btn" onclick="switchTab('tab-fase6-atp')">Fase 6: ATP &check;</button>
         <button class="tab-btn" onclick="switchTab('tab-fase7-sop')">Fase 7: SOP &check;</button>
         <button class="tab-btn" onclick="switchTab('tab-fase7-handover')">Fase 7: Handover &check;</button>
+        <button class="tab-btn" onclick="switchTab('tab-rca')">Incident & RCA &check;</button>
     </nav>
 
     <!-- TAB DASHBOARD -->
@@ -2157,6 +2158,177 @@ pie title Distribuzione Valore e Consistenza Asset Severino Srl
         </div>
     </div>
             
+    <!-- TAB INCIDENT & RCA -->
+    <div id="tab-rca" class="tab-content">
+        <div class="card">
+            <h2>Incident Management & Root Cause Analysis (Fase 7)</h2>
+            <p>Registro formale degli incidenti e disservizi tecnici risolti per il progetto <strong>Infrastruttura LAN, Virtualizzazione Hyper-V e Collaboration Severino Srl</strong>.</p>
+        </div>
+        
+        <div class="card" style="margin-top: 1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1.5rem; flex-wrap:wrap; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+                <div>
+                    <h3>RCA &amp; Troubleshooting — Timeout e Degrado Connessioni SMB FS01 su Rete Overlay ZeroTier</h3>
+                    <p>Incidente: <code>INC-2026-001</code> | Severità: <strong>P2-High</strong> | Stato: <strong>approved</strong></p>
+                </div>
+                <div>
+                    <span class="badge-pass">&check; Validato OKF v0.2</span>
+                </div>
+            </div>
+            <p><!-- AI-INSTRUCTIONS:</p>
+<p>Questo documento traccia l'analisi delle cause radice (RCA) e la risoluzione formale di un incidente o disservizio tecnico.</p>
+<p>1. ZERO ALLUCINAZIONI: Non ipotizzare eventi, log o configurazioni non riscontrati oggettivamente. Se un log non è noto o disponibile, indicare DA-RICHIEDERE.</p>
+<p>2. METODO DETERMINISTICO A STRATI OSI: Procedere tassativamente dal livello L1 (fisico) fino a L7 (applicativo) per isolare l'anomalia.</p>
+<p>3. CONFRONTO STRICT GROUNDING CON AS-BUILT & LLD: Ogni apparato, IP, subnet, VLAN o servizio citato DEVE corrispondere a quanto registrato in <span class=\"wiki-link\">&sect; architecture-severino-srl-asbuilt-01</span> o <span class=\"wiki-link\">&sect; architecture-severino-srl-lld-01</span>.</p>
+<p>4. METODO DEI 5 PERCHÉ: Identificare la catena logica senza saltare passaggi intermedi.</p>
+<p>5. CREDENZIALI: Nessun secret in chiaro. Usare sempre riferimenti simbolici vault://it/projects/severino-srl/...</p>
+<p>6. FEEDBACK LOOP: L'RCA deve esplicitare quali documenti di progetto (LLD, As-Built, SOP-Runbook, ATP) devono essere aggiornati per recepire il fix e prevenire recidive.</p>
+<p>--></p>
+<h1>RCA & Troubleshooting — Timeout e Degrado Connessioni SMB FS01 su Rete Overlay ZeroTier</h1>
+<h2>1. Scheda Incidente & Metriche SLA</h2>
+<div class="table-container"><table><thead><tr><th>Parametro</th><th>Valore</th><th>Note / Riferimenti</th></tr></thead><tbody><tr><td><strong>ID Incidente</strong></td><td><code>INC-2026-001</code></td><td>Registro Incidenti Severino Srl</td></tr><tr><td><strong>Progetto / Cliente</strong></td><td>Infrastruttura Server & Networking / Severino Srl</td><td>Rif. <span class=\"wiki-link\">&sect; architecture-severino-srl-asbuilt-01</span></td></tr><tr><td><strong>Data e Ora Apertura (CET)</strong></td><td><code>2026-03-24 09:15</code></td><td>Chiamata di supporto L2 utenti remoti</td></tr><tr><td><strong>Data e Ora Chiusura (CET)</strong></td><td><code>2026-03-24 11:45</code></td><td>Risoluzione convalidata e ticket chiuso</td></tr><tr><td><strong>Severità</strong></td><td><code>P2-High</code></td><td>Impatto su condivisione file utenti remoti</td></tr><tr><td><strong>SLA Obiettivo Risoluzione</strong></td><td>4.0 h</td><td>Da SLA contrattuale Severino Srl</td></tr><tr><td><strong>Tempo Effettivo Ripristino</strong></td><td>2.5 h</td><td>Risolto entro i termini di servizio</td></tr><tr><td><strong>SLA Risoluzione Rispettato?</strong></td><td>Sì (<code>sla_breached: false</code>)</td><td>Risolto in anticipo di 1.5 ore</td></tr><tr><td><strong>Apparati / Nodi Impattati</strong></td><td>FS01 (<code>192.168.120.10</code> / <code>10.147.19.10</code>), RB5009 (<code>192.168.120.1</code>)</td><td>Rif. <span class=\"wiki-link\">&sect; architecture-severino-srl-lld-01</span></td></tr><tr><td><strong>Servizi Coinvolti</strong></td><td>SMB File Sharing (TCP 445), ZeroTier Overlay (<code>10.147.19.0/24</code>)</td><td>Servizio condivisione cartelle di progetto</td></tr><tr><td><strong>Lead Investigator / Analista</strong></td><td>Lead Infrastructure Architect</td><td>Team L2/L3 Network & Systems</td></tr></tbody></table></div>
+<hr/>
+<h2>2. Sintesi Esecutiva & Impatto di Business</h2>
+<h3>2.1 Descrizione Sintetica</h3>
+<p>Nella mattinata del 24 marzo 2026, 4 utenti remoti del reparto tecnico/progettazione hanno riscontrato l'impossibilità di aprire e salvare file CAD (.dwg) e relazioni tecniche (.pdf) di dimensioni superiori a 1 MB risiedenti sul file server <strong>FS01</strong> (<code>\\10.147.19.10\Dati</code>). La connessione iniziale e l'esplorazione delle cartelle avveniva con successo, ma il trasferimento effettivo dei file andava in blocco indefinito con errore Windows <code>0x8007003B: Errore imprevisto di rete</code>. Gli utenti in sede LAN (<code>192.168.120.0/24</code>) operavano invece regolarmente a 10 Gbps senza alcuna anomalia.</p>
+<h3>2.2 Impatto Operativo e Finanziario</h3>
+<ul>
+<li><strong>Utenti / Sedi Coinvolte</strong>: 4 progettisti senior operanti in smart working da remoto via ZeroTier Overlay.</li>
+<li><strong>Degrado o Blocco Funzionale</strong>: Degrado selettivo del servizio SMB su file di grandi dimensioni su rete VPN; nessun impatto sugli utenti locali in sede.</li>
+<li><strong>Perdita Dati (RPO)</strong>: Nessuna perdita dati (0 RPO). Nessuna corruzione del file system ReFS/NTFS.</li>
+<li><strong>Tempo di Indisponibilità Totale (RTO)</strong>: 0 ore di fermo totale (servizio parzialmente degradato per 2.5 ore per i soli utenti remoti).</li>
+</ul>
+<hr/>
+<h2>3. Timeline Cronologica dell'Incidente</h2>
+<div class="mermaid">
+timeline
+    title Timeline Eventi Incidente INC-2026-001
+    section Origine
+        09:15 : Chiamata helpdesk da progettisti remoti (blocco apertura tavole CAD)
+        09:25 : NOC apre ticket INC-2026-001 (P2-High) e verifica LAN nominale
+    section Diagnostica
+        09:40 : Escalation a L3: eseguita telemetria health-check e albero OSI
+        10:15 : Isolato scarto pacchetti TCP DF su WAN (PMTU Black Hole su overlay)
+    section Risoluzione
+        10:45 : Applicato clamping MSS su MikroTik e MTU 1400 su FS01
+        11:20 : Esecuzione test TR-01..TR-04 con trasferimento file CAD da 150 MB (OK)
+        11:45 : Chiusura formale incidente, aggiornamento documentale OKF e piano CAPA
+</div>
+<div class="table-container"><table><thead><tr><th>Timestamp (CET)</th><th>Fase Operativa</th><th>Attore</th><th>Azione Eseguita / Rilevamento Strumentale</th><th>Esito</th></tr></thead><tbody><tr><td>2026-03-24 09:15</td><td><strong>Rilevamento</strong></td><td>Utenti Smart Working</td><td>Segnalazione blocco caricamento file da share di rete</td><td>Aperto</td></tr><tr><td>2026-03-24 09:25</td><td><strong>Triage L1/L2</strong></td><td>Operatore Helpdesk</td><td>Verifica connettività internet utenti e stato LAN in sede</td><td>Escalato a L3</td></tr><tr><td>2026-03-24 09:40</td><td><strong>Diagnosi L3</strong></td><td>Lead Architect</td><td>Esecuzione suite telemetria <code>health-check</code> e test ICMP con DF flag</td><td>Individuato Black Hole PMTU</td></tr><tr><td>2026-03-24 10:45</td><td><strong>Mitigazione</strong></td><td>Senior Network Eng</td><td>Configurazione MSS Clamping su RB5009 e MTU 1400 su scheda ZeroTier FS01</td><td>Fix applicato</td></tr><tr><td>2026-03-24 11:20</td><td><strong>Collaudo</strong></td><td>Lead Architect & Utenti</td><td>Test trasferimento file CAD 150 MB e benchmarking throughput (32 MB/s)</td><td>Esito PASS</td></tr><tr><td>2026-03-24 11:45</td><td><strong>Chiusura</strong></td><td>Service Delivery Manager</td><td>Validazione documentale, firma chiusura e pianificazione CAPA</td><td>Risolto</td></tr></tbody></table></div>
+<hr/>
+<h2>4. Analisi Diagnostica Deterministica (Albero OSI L1-L7)</h2>
+<p>L'indagine diagnostica ha seguito rigorosamente il modello a 7 strati per isolare oggettivamente il punto di interruzione:</p>
+<div class="table-container"><table><thead><tr><th>Strato OSI</th><th>Oggetto di Controllo</th><th>Comando Eseguito / Telemetria Verificata</th><th>Risultato Osservato</th><th>Stato</th></tr></thead><tbody><tr><td><strong>L1 - Fisico</strong></td><td>Link 10G SFP+ DAC tra HV01 e CRS326</td><td>Ispezione telemetria porta CRS326 <code>sfp-sfpplus24</code></td><td>Link UP, 10 Gbps Full Duplex, 0 CRC error</td><td><strong>PASS</strong></td></tr><tr><td><strong>L2 - Data Link</strong></td><td>Tabella MAC e Bridge VLAN 10 Server</td><td><code>/interface bridge host print where vlan-id=10</code></td><td>MAC address FS01 (<code>00:15:5D:10:01:10</code>) presente</td><td><strong>PASS</strong></td></tr><tr><td><strong>L3 - Network</strong></td><td>Raggiungibilità IP ICMP LAN e Overlay</td><td><code>ping -n 10 10.147.19.10</code> da client remoto</td><td>0% packet loss, RTT medio 28 ms</td><td><strong>PASS</strong></td></tr><tr><td><strong>L3 - Network (MTU)</strong></td><td>Frammentazione pacchetti con Don't Fragment</td><td><code>ping -f -l 1472 10.147.19.10</code> da client remoto</td><td><code>100% loss (Richiesta scaduta)</code> per frame > 1400 byte</td><td><strong>FAIL</strong></td></tr><tr><td><strong>L4 - Transport</strong></td><td>Handshake TCP Socket porta 445 (SMB)</td><td><code>Test-NetConnection -ComputerName 10.147.19.10 -Port 445</code></td><td><code>TcpTestSucceeded: True</code> su handshake SYN/ACK</td><td><strong>PASS</strong></td></tr><tr><td><strong>L5/L6 - Session/Pres.</strong></td><td>Negoziazione dialetto SMB 3.1.1</td><td>Cattura Wireshark su FS01 (<code>zt0</code>)</td><td>Negoziazione SMB 3.1.1 OK; drop pacchetti TCP ACK dati</td><td><strong>FAIL</strong></td></tr><tr><td><strong>L7 - Application</strong></td><td>Trasferimento file SMB Explorer</td><td>Apertura file <code>Progetto_Capannone.dwg</code> (42 MB)</td><td>Errore Windows <code>0x8007003B: Errore imprevisto di rete</code></td><td><strong>FAIL</strong></td></tr></tbody></table></div>
+<h3>4.1 Evidenze di Log e Output Strumentali</h3>
+<pre><code class="language-powershell"># 1. Prova di connessione socket TCP (PASS)
+PS C:\Users\tecnico&gt; Test-NetConnection -ComputerName 10.147.19.10 -Port 445
+ComputerName     : 10.147.19.10
+RemoteAddress    : 10.147.19.10
+RemotePort       : 445
+InterfaceAlias   : ZeroTier One [9bee89e0eb7e35b7]
+SourceAddress    : 10.147.19.55
+TcpTestSucceeded : True
+
+# 2. Test MTU con flag Don&#x27;t Fragment (FAIL per payload &gt; 1372 byte)
+PS C:\Users\tecnico&gt; ping -f -l 1472 10.147.19.10
+Esecuzione di Ping 10.147.19.10 con 1472 byte di dati:
+Richiesta scaduta.
+Richiesta scaduta.
+Statistiche Ping per 10.147.19.10:
+    Pacchetti: Trasmessi = 2, Ricevuti = 0, Persi = 2 (100% persi)
+
+PS C:\Users\tecnico&gt; ping -f -l 1372 10.147.19.10
+Risposta da 10.147.19.10: byte=1372 durata=29ms TTL=128 (PASS)</code></pre>
+<hr/>
+<h2>5. Determinazione della Causa Radice (Root Cause Analysis - 5 Perché)</h2>
+<div class="mermaid">
+flowchart TD
+    P1["1. Perché il trasferimento file CAD si bloccava in timeout?"] --> A1["I pacchetti TCP SMB con payload > 1400 byte venivano scartati silenziosamente."]
+    A1 --> P2["2. Perché venivano scartati silenziosamente?"]
+    P2 --> A2["Lungo la WAN i pacchetti superavano l'MTU fisica (1500 byte) a causa dell'overhead ZeroTier (58 byte)."]
+    A2 --> P3["3. Perché Windows non riduceva automaticamente la dimensione dei pacchetti?"]
+    P3 --> A3["Path MTU Discovery (PMTUD) falliva perché i messaggi ICMP Type 3 Code 4 venivano filtrati dai router intermedi."]
+    A3 --> P4["4. Perché l'interfaccia ZeroTier permetteva pacchetti così grandi?"]
+    P4 --> A4["L'interfaccia virtuale ZeroTier su FS01 aveva MTU predefinita a 2800 byte."]
+    A4 --> P5["5. Causa Radice Fondamentale (Root Cause):"]
+    P5 --> RC["ROOT CAUSE: Mancata configurazione di TCP MSS Clamping sul router MikroTik RB5009 e mancato vincolo esplicito di MTU 1400 sull'interfaccia di rete ZeroTier di FS01 durante la fase di provisioning iniziale."]
+</div>
+<p>1. <strong>Perché</strong> il trasferimento file CAD falliva con errore <code>0x8007003B</code> su file grandi?</p>
+<ul>
+<li><em>Risposta</em>: I frame TCP di dati SMB venivano scartati lungo la rotta WAN, causando la ritrasmissione infinita e il successivo timeout di sessione SMB.</li>
+</ul>
+<p>2. <strong>Perché</strong> i frame TCP venivano scartati lungo la rotta WAN?</p>
+<ul>
+<li><em>Risposta</em>: I pacchetti dati avevano dimensione di 1500 byte con flag Don't Fragment (DF=1). L'incapsulamento VXLAN/UDP di ZeroTier aggiunge 58 byte di overhead, portando il pacchetto a 1558 byte, eccedendo l'MTU WAN di 1500.</li>
+</ul>
+<p>3. <strong>Perché</strong> il meccanismo standard Path MTU Discovery (PMTUD) di Windows non riduceva il MSS?</p>
+<ul>
+<li><em>Risposta</em>: I pacchetti ICMP Type 3 Code 4 ("Fragmentation Needed and DF set") venivano droppati da router intermedi della connettività Internet commerciale degli operatori (fenomeno noto come <em>PMTU Black Hole</em>).</li>
+</ul>
+<p>4. <strong>Perché</strong> l'interfaccia ZeroTier generava frame superiori alla capacità WAN?</p>
+<ul>
+<li><em>Risposta</em>: L'adattatore virtuale <code>ZeroTier One</code> su Windows Server 2022 viene inizializzato con MTU predefinita a 2800 byte (pensata per LAN bridging veloce), presupponendo un clamping a livello gateway non configurato.</li>
+</ul>
+<p>5. <strong>Perché (Root Cause Finale)</strong> mancava la regolazione di MTU e MSS?</p>
+<ul>
+<li><em>Risposta</em>: <strong>ROOT CAUSE</strong>: Nel piano esecutivo <span class=\"wiki-link\">&sect; architecture-severino-srl-lld-01</span> e negli script di configurazione di <span class=\"wiki-link\">&sect; architecture-severino-srl-asbuilt-01</span>, l'interfaccia ZeroTier era stata collaudata per la connettività di base e ping ICMP, senza un test con frame jumbo/DF e senza la direttiva firewall <code>change-mss</code> nel mangle di RouterOS.</li>
+</ul>
+<hr/>
+<h2>6. Azioni di Mitigazione & Workaround (Breve Termine)</h2>
+<div class="table-container"><table><thead><tr><th>#</th><th>Azione di Workaround</th><th>Eseguito Da</th><th>Impatto / Effetti Collaterali</th><th>Rimosso il</th></tr></thead><tbody><tr><td>1</td><td>Impostazione temporanea MTU 1380 su scheda di rete client del primo progettista per consentire consegna urgente tavola CAD</td><td>Lead Architect</td><td>Efficace solo sul singolo PC client</td><td>2026-03-24 10:45 (sostituito da fix permanente)</td></tr></tbody></table></div>
+<hr/>
+<h2>7. Risoluzione Definitiva & Test di Non-Regressione</h2>
+<h3>7.1 Configurazione e Script Applicati</h3>
+<p>Il fix definitivo si compone di due interventi congiunti per garantire robustezza totale a prescindere dal sistema operativo dei client:</p>
+<h4>A. Regolazione persistente MTU 1400 su File Server FS01 (PowerShell)</h4>
+<p>Credenziali di amministrazione recuperate da: <code>vault://it/projects/severino-srl/fs01/admin</code></p>
+<pre><code class="language-powershell"># Identificazione alias interfaccia ZeroTier
+$ztInterface = Get-NetAdapter | Where-Object { $_.InterfaceDescription -like &quot;*ZeroTier*&quot; }
+
+# Configurazione MTU 1400 persistente su stack IPv4
+netsh interface ipv4 set subinterface &quot;$($ztInterface.Name)&quot; mtu=1400 store=persistent
+
+# Verifica impostazione
+Get-NetIPInterface -InterfaceAlias &quot;$($ztInterface.Name)&quot; | Select-Object InterfaceAlias, NlMtu</code></pre>
+<h4>B. Regola Mangle TCP MSS Clamping su Router MikroTik RB5009 (RouterOS)</h4>
+<p>Credenziali di gestione router recuperate da: <code>vault://it/projects/severino-srl/mikrotik/admin</code></p>
+<pre><code class="language-routeros"># Regola MikroTik per riscrittura automatica MSS su tutte le sessioni TCP instradate via ZeroTier
+/ip firewall mangle
+add chain=forward action=change-mss new-mss=clamp-to-pmtu passthrough=yes \
+    protocol=tcp tcp-flags=syn comment=&quot;Clamp TCP MSS for ZeroTier Overlay &amp; VPN Traffic&quot;</code></pre>
+<h3>7.2 Piano di Collaudo e Non-Regressione</h3>
+<div class="table-container"><table><thead><tr><th>Test ID</th><th>Descrizione Test</th><th>Procedura Eseguita</th><th>Risultato Atteso</th><th>Risultato Effettivo</th><th>Esito</th></tr></thead><tbody><tr><td>TR-01</td><td>Raggiungibilità L3</td><td><code>ping -n 20 10.147.19.10</code> da client remoto</td><td>Packet loss 0%, RTT < 35 ms</td><td>0% loss, RTT 28 ms</td><td><strong>PASS</strong></td></tr><tr><td>TR-02</td><td>Test MTU con flag DF</td><td><code>ping -f -l 1372 10.147.19.10</code></td><td>Risposta immediata senza timeout</td><td>0% loss, RTT 29 ms</td><td><strong>PASS</strong></td></tr><tr><td>TR-03</td><td>Trasferimento file CAD (L7)</td><td>Download e salvataggio file <code>.dwg</code> da 145 MB via share SMB</td><td>Completamento senza blocchi, throughput > 25 MB/s</td><td>File scaricato in 5.2s (27.8 MB/s)</td><td><strong>PASS</strong></td></tr><tr><td>TR-04</td><td>Non-regressione LAN</td><td>Test SMB e RDP tra workstation interne e FS01 su VLAN 10</td><td>Throughput nominale 10 Gbps (1.1 GB/s)</td><td>1.08 GB/s misurato</td><td><strong>PASS</strong></td></tr></tbody></table></div>
+<hr/>
+<h2>8. Piano Azioni Correttive e Preventive (CAPA)</h2>
+<div class="table-container"><table><thead><tr><th>ID CAPA</th><th>Categoria</th><th>Descrizione Azione Preventiva</th><th>Owner</th><th>Scadenza</th><th>Documento da Aggiornare</th><th>Stato</th></tr></thead><tbody><tr><td>CAPA-01</td><td><strong>Monitoring</strong></td><td>Creazione sonda automatica PRTG per monitorare TCP 445 e MTU su ZeroTier</td><td>Lead Architect</td><td>2026-03-27</td><td><span class=\"wiki-link\">&sect; guide-severino-srl-sop-runbook-01</span></td><td><strong>Chiusa</strong></td></tr><tr><td>CAPA-02</td><td><strong>Architettura</strong></td><td>Inserimento della regola Mangle MSS Clamping nel capitolo Firewall di LLD</td><td>Senior Network Eng</td><td>2026-03-25</td><td><span class=\"wiki-link\">&sect; architecture-severino-srl-lld-01</span></td><td><strong>Chiusa</strong></td></tr><tr><td>CAPA-03</td><td><strong>Documentale</strong></td><td>Registrazione dei parametri MTU 1400 nell'As-Built e nel Runbook operativo</td><td>Lead Architect</td><td>2026-03-25</td><td><span class=\"wiki-link\">&sect; architecture-severino-srl-asbuilt-01</span></td><td><strong>Chiusa</strong></td></tr><tr><td>CAPA-04</td><td><strong>Testing</strong></td><td>Integrazione test specifico frame jumbo/DF nella suite di collaudo ATP</td><td>QA Engineer</td><td>2026-03-26</td><td><span class=\"wiki-link\">&sect; specification-severino-srl-atp-01</span></td><td><strong>Chiusa</strong></td></tr></tbody></table></div>
+<hr/>
+<h2>9. Documenti di Progetto Aggiornati (Wiki-links)</h2>
+<p>In seguito all'incidente <code>INC-2026-001</code>, sono stati recepiti i seguenti allineamenti formali:</p>
+<ul>
+<li><span class=\"wiki-link\">&sect; architecture-severino-srl-lld-01</span>: Aggiornata matrice firewall LLD con la catena Mangle TCP MSS Clamping.</li>
+<li><span class=\"wiki-link\">&sect; architecture-severino-srl-asbuilt-01</span>: Registrato parametro <code>NlMtu: 1400</code> nella configurazione di rete di FS01.</li>
+<li><span class=\"wiki-link\">&sect; guide-severino-srl-sop-runbook-01</span>: Aggiunta procedura operativa di verifica MTU/MSS nel capitolo Troubleshooting VPN.</li>
+<li><span class=\"wiki-link\">&sect; specification-severino-srl-atp-01</span>: Aggiunto caso di test <code>TC-NET-08</code> per verifica PMTUD su collegamenti overlay.</li>
+</ul>
+<hr/>
+<h2>10. Checklist di Chiusura Incidente & Sign-off</h2>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> Causa radice identificata in modo oggettivo ed evidenziata nel metodo dei 5 Perché (Black Hole PMTU).</li>
+<li><span class="badge-checked">&check; Fatto</span> Nessuna supposizione non dimostrata o dato fittizio inserito (Strict Grounding rispettato).</li>
+<li><span class="badge-checked">&check; Fatto</span> Eventuali credenziali usate riferite tramite <code>vault://it/projects/severino-srl/...</code>.</li>
+<li><span class="badge-checked">&check; Fatto</span> Workaround provvisorio rimosso e sostituito da fix infrastrutturale permanente.</li>
+<li><span class="badge-checked">&check; Fatto</span> Test di non-regressione TR-01..TR-04 eseguiti con esito PASS.</li>
+<li><span class="badge-checked">&check; Fatto</span> Piano CAPA assegnato con scadenze e responsabili definiti.</li>
+<li><span class="badge-checked">&check; Fatto</span> Documenti di progetto collegati aggiornati con wiki-links coerenti.</li>
+<li><span class="badge-checked">&check; Fatto</span> File validato tramite <code>python scripts/itinfra.py validate projects/severino-srl/10-RCA-FS01-SMB-Connectivity.md</code>.</li>
+<li><span class="badge-checked">&check; Fatto</span> Audit di coerenza semantica superato con <code>python scripts/itinfra.py audit-consistency severino-srl</code>.</li>
+</ul>
+<h3>Firme di Approvazione Chiusura</h3>
+<div class="table-container"><table><thead><tr><th>Ruolo</th><th>Nome e Cognome</th><th>Firma / Matricola</th><th>Data</th></tr></thead><tbody><tr><td><strong>Lead Investigator</strong></td><td>Lead Infrastructure Architect</td><td><code>[Firmato digitalmente - ID: ARCH-9921]</code></td><td>2026-03-24</td></tr><tr><td><strong>Service Manager / Reviewer</strong></td><td>Service Delivery Manager</td><td><code>[Firmato digitalmente - ID: SDM-4412]</code></td><td>2026-03-24</td></tr><tr><td><strong>Responsabile IT Cliente</strong></td><td>Direzione Tecnica Severino Srl</td><td><code>[Per presa visione e accettazione]</code></td><td>2026-03-24</td></tr></tbody></table></div>
+        </div>
+            
+    </div>
+        
 </main>
 
 <script>

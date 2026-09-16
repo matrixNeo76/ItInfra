@@ -181,26 +181,28 @@ timeline
 
 ---
 
-### 🚀 Release v0.5 — Client Incident Management, Deterministic Troubleshooting & AI RCA (Pianificato)
-- [ ] **Template OKF v0.2 `10-RCA-Troubleshooting.md` (Root Cause Analysis & Incident Resolution):**
+### ✅ Release v0.5 — Client Incident Management, Deterministic Troubleshooting & AI RCA (Completato)
+- [x] **Template OKF v0.2 `10-RCA-Troubleshooting.md` (Root Cause Analysis & Incident Resolution):**
   - Struttura formalizzata post-incidente per tracciare disservizi cliente:
-    - Sintomatologia riscontrata e impatto sul business (SLA breach, utenti impattati).
-    - Cronistoria degli eventi e timeline dell'incidente.
-    - Albero diagnostico deterministico a strati (Layer OSI 1-7).
+    - Sintomatologia riscontrata e impatto sul business (SLA breach, utenti impattati, calcolo RTO/RPO).
+    - Cronistoria degli eventi e timeline dell'incidente (Mermaid.js).
+    - Albero diagnostico deterministico a strati (Layer OSI L1-L7).
     - Causa radice accertata (Root Cause Analysis con tecnica dei 5 Perché).
-    - Azione correttiva immediata applicata (Workaround / Quick Fix).
-    - Soluzione strutturale e definitiva (con snippet di configurazione, test e rollback).
-    - Piano di prevenzione per impedire il ripetersi dell'anomalia.
+    - Azione correttiva immediata applicata (Workaround provvisorio).
+    - Soluzione strutturale e definitiva (PowerShell e RouterOS, test e non-regressione TR-01..TR-04).
+    - Piano di prevenzione e azioni correttive (CAPA a lungo termine).
     - Relazioni ontologiche OKF (`relations`) collegate all'LLD, all'As-Built e al Runbook del cliente.
-- [ ] **Subagent Specializzato `infra-troubleshooter` e Skill `itinfra-troubleshooter`:**
-  - Agente AI dedicato per la diagnosi e risoluzione guidata di problemi operativi del cliente.
-  - **Metodologia rigorosamente deterministica:**
-    - Guidato da una matrice di test a strati (L1 Fisico → L2 ARP/VLAN → L3 Routing/Subnet → L4 Firewall/Porte → L7 Servizi AD/DNS/SMB).
-    - Divieto assoluto di formulare diagnosi ipotetiche o inventare output di log; esige i comandi di verifica reali eseguiti dall'operatore.
-    - Produce automaticamente il documento risolutivo conforme a OKF v0.2.
-- [ ] **CLI Incident & Troubleshooting Assistant (`scripts/itinfra.py troubleshoot`):**
-  - `python scripts/itinfra.py troubleshoot init <slug> --incident "<Titolo Disservizio>"`: inizializza una nuova scheda di troubleshooting collegata al manifesto del cliente.
-  - `python scripts/itinfra.py troubleshoot export <slug>`: consolida i ticket e i post-mortem nella dashboard HTML del cliente.
+- [x] **Subagent Specializzato e Skill Standardizzata `itinfra-troubleshooter`:**
+  - Standardizzata in `.agents/skills/itinfra-troubleshooter/SKILL.md` (e `skills/itinfra-troubleshooter/`).
+  - Metodologia rigorosamente deterministica a 7 strati (Bottom-Up L1-L7) con Strict Grounding.
+- [x] **Suite CLI per Incidenti e Telemetria Live:**
+  - `python scripts/itinfra.py troubleshoot [init|list] <slug> <ticket_id>`: inizializza ed elenca i ticket collegati al manifesto e all'As-Built.
+  - `python scripts/itinfra.py health-check <slug> [--timeout 1.0]`: sonda live non distruttiva (ICMP ping, probe TCP su porte critiche 53/80/443/445/3389/8291).
+  - Aggiornamento stato documentale in `itinfra.py status <slug>` con riepilogo ticket RCA post-go-live.
+  - Integrazione completa in `itinfra.py export-html <slug>` con tab interattiva dedicata "Incident & RCA".
+- [x] **Caso Pilota Reale Severino Srl Risolto al 100%:**
+  - Redatto e validato `projects/severino-srl/10-RCA-FS01-SMB-Connectivity.md` (risoluzione timeout SMB su ZeroTier via TCP MSS Clamping e MTU 1400).
+  - Validazione formale OKF v0.2 superata con 0 errori e audit di coerenza semantica superato al 100%.
 
 ---
 

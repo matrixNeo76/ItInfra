@@ -10,7 +10,7 @@ Sei un agente AI chiamato a **compilare template documentali** per progetti di i
 
 Lo schema YAML combina **campi canonici OKF v0.2** (riconosciuti dal parser e visualizzati nel grafo D3) + **metadati estesi IT** (preservati in `rawFrontmatter` per uso futuro).
 
-Il ciclo lavorativo è composto da **7 fasi operative** che producono **9 tipologie documentali**, mappate in `00-INDEX.md`:
+Il ciclo lavorativo è composto da **7 fasi operative** che producono **10 tipologie documentali (inclusa gestione incidenti e RCA)**, mappate in `00-INDEX.md`:
 
 | Fase | Documenti |
 |------|-----------|
@@ -20,7 +20,7 @@ Il ciclo lavorativo è composto da **7 fasi operative** che producono **9 tipolo
 | 4. Racking & Cabling | (confluisce in As-Built) |
 | 5. Commissioning | (confluisce in As-Built) |
 | 6. Testing | ATP |
-| 7. Go-Live | As-Built, SOP/Runbook, Handover & Inventory |
+| 7. Go-Live | As-Built, SOP/Runbook, Handover & Inventory, RCA/Troubleshooting |
 
 ---
 
@@ -51,6 +51,7 @@ Il frontmatter DEVE contenere i **campi canonici OKF v0.2** (riconosciuti dal pa
   - ATP → `specification`
   - SOP/Runbook → `guide`
   - Handover & Inventory → `specification`
+  - RCA & Troubleshooting → `guide`
 - **`domain`**: ambito tematico (es. `"IT Infrastructure & Requirements Engineering"`)
 - **`tags`**: array di almeno 2 tag in lowercase. PRIMO tag DEVE essere `okf-v0.2` per tracciabilità.
 - **`entities`**: array di almeno 1 entità con struttura `{name, type, description}`. I `type` canonici entità sono: `concept`, `framework`, `technology`, `toolchain`, `pattern`, `organization`, `specification`.
@@ -164,6 +165,10 @@ python scripts/itinfra.py worktree [add|list|sync|cleanup]
 
 # Esportazione Configuration Playbooks (RouterOS .rsc e PowerShell .ps1):
 python scripts/itinfra.py export-configs <slug> --out projects/<slug>/configs
+
+# Gestione Incidenti, Root Cause Analysis (RCA) e Live Telemetry:
+python scripts/itinfra.py troubleshoot [init|list] <slug> <ticket_id>
+python scripts/itinfra.py health-check <slug> [--timeout 1.0]
 ```
 
 ### 7. Validazione finale & Gate di Qualità

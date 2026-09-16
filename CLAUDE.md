@@ -8,7 +8,7 @@
 
 Stai lavorando in un **knowledge vault di template documentali IT** basati sullo standard **OKF v0.2 (Open Knowledge Format)** nella sua forma nativa, compatibile col parser `src/lib/okfParser.ts` del Knowledge Vault di matrixNeo76. I template sono in `/download/templates/` e devono essere compilati a partire dai dati forniti in chat.
 
-Lo schema YAML combina **campi canonici OKF v0.2** (riconosciuti dal parser e visualizzati come archi nel grafo D3) + **metadati estesi IT** (preservati in `rawFrontmatter` per uso futuro). Il ciclo lavorativo è composto da 7 fasi che producono 9 tipologie documentali, mappate in `00-INDEX.md`.
+Lo schema YAML combina **campi canonici OKF v0.2** (riconosciuti dal parser e visualizzati come archi nel grafo D3) + **metadati estesi IT** (preservati in `rawFrontmatter` per uso futuro). Il ciclo lavorativo è composto da 7 fasi che producono 10 tipologie documentali (inclusa gestione incidenti e RCA), mappate in `00-INDEX.md`.
 
 Consulta `AGENTS.md` per le istruzioni operative complete (regole di compilazione del frontmatter OKF v0.2 nativo, gestione credenziali, validazione, workflow, mappatura 9 tipi IT → 6 tipi canonici OKF). Di seguito le note specifiche per Claude Code.
 

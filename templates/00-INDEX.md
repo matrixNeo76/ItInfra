@@ -72,6 +72,11 @@ relations:
     relationType: "documents"
     weight: 0.95
     description: "Indice la documentazione di handover della Fase 7"
+  - targetTitle: "RCA & Troubleshooting"
+    targetId: "10-RCA-Troubleshooting"
+    relationType: "documents"
+    weight: 0.95
+    description: "Indice la documentazione di analisi cause radice e incident management post-go-live"
 ---
 
 <!-- AI-INSTRUCTIONS:
@@ -109,6 +114,7 @@ La tabella seguente mappa ciascuna delle **7 fasi operative** ai **documenti** c
 | 5. Configurazione | Commissioning & Implementation | (log di configurazione → confluisce in As-Built) | [[06-As-Built]] |
 | 6. Collaudo | Testing & Validation | ATP / Rapporto di Collaudo | [[07-ATP]] |
 | 7. Rilascio | Go-Live / Handover | As-Built, SOP/Runbook, Handover & Inventory | [[06-As-Built]], [[08-SOP-Runbook]], [[09-Handover-Inventory]] |
+| 7. Post-Rilascio | Incident Troubleshooting & RCA | Root Cause Analysis, Mitigazione & CAPA | [[10-RCA-Troubleshooting]] |
 
 ## Classificazione Temporale
 
@@ -128,6 +134,7 @@ Redatti a conclusione dei lavori. Certificano quanto realizzato e garantiscono m
 - [[07-ATP]] — Verbale di collaudo con test eseguiti e esito Pass/Fail
 - [[08-SOP-Runbook]] — Manualistica operativa per sistemisti primo/secondo livello
 - [[09-Handover-Inventory]] — Registro inventariale e verbale formale di presa in carico
+- [[10-RCA-Troubleshooting]] — Analisi deterministica cause radice (OSI L1-L7, 5 Perché, CAPA) per ticket di incidente post-go-live
 
 ## Workflow di Compilazione Suggerito per Agenti AI
 
@@ -159,6 +166,9 @@ graph TD
     ASBUILT --> SOP
     ASBUILT --> HAND[09-Handover-Inventory]
     SOP --> HAND
+    ASBUILT --> RCA[10-RCA-Troubleshooting]
+    LLD --> RCA
+    RCA -.-> SOP
 ```
 
 Legenda:
@@ -185,6 +195,7 @@ examples/NN-prompt-CODICE.md  (esempi di prompt per agenti AI)
 | 07 | ATP | `07-ATP.md` |
 | 08 | SOP/Runbook | `08-SOP-Runbook.md` |
 | 09 | Handover & Inventory | `09-Handover-Inventory.md` |
+| 10 | RCA & Troubleshooting | `10-RCA-Troubleshooting.md` |
 
 ### File di orientamento (non compilabili)
 

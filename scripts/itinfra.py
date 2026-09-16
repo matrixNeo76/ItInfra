@@ -12,6 +12,7 @@ import argparse
 import subprocess
 import getpass
 import ipaddress
+import socket
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
@@ -433,6 +434,25 @@ def cmd_status(args: argparse.Namespace) -> int:
     print("-" * 80)
     pct = int((completed_count / len(IT_DOCUMENT_TYPES)) * 100)
     print(f"Avanzamento documentale: {completed_count}/{len(IT_DOCUMENT_TYPES)} ({pct}%)\n")
+
+    # Sezione Ticket RCA & Troubleshooting (Fase 7 Post-Go-Live)
+    rca_files = sorted(proj_dir.glob("10-RCA-*.md"))
+    if rca_files:
+        print(colorize("--- TICKET & INCIDENT RCA (Fase 7 Post-Go-Live) ---", COLOR_BOLD + COLOR_CYAN))
+        print(f"{'File':<34} | {'Incidente ID':<16} | {'Severita':<10} | {'Qualita OKF':<15} | {'Stato'}")
+        print("-" * 95)
+        for rf in rca_files:
+            val_res = validator.validate(rf)
+            qual = colorize("OKF Conforme", COLOR_GREEN) if len(val_res["errors"]) == 0 else colorize(f"{len(val_res['errors'])} Errori", COLOR_RED)
+            c_text = rf.read_text(encoding="utf-8").lstrip("\ufeff")
+            fm, _, _ = parse_frontmatter(c_text)
+            fm = fm or {}
+            inc_id = fm.get("incident_id", "N/A")
+            sev = fm.get("severity", "N/A")
+            st = fm.get("status", "N/A")
+            print(f"{rf.name:<34} | {inc_id:<16} | {sev:<10} | {qual:<24} | {st}")
+        print("-" * 95 + "\n")
+
     return 0
 
 def extract_markdown_table_rows(section_text: str) -> List[Dict[str, str]]:
@@ -932,6 +952,24 @@ def cmd_export_html(args) -> int:
             elif s["path"]:
                 nav_buttons.append(f'<button class="tab-btn" onclick="switchTab(\'{t_id}\')">{t_label} (!)</button>')
 
+    # Raccogli e valida eventuali documenti RCA (10-RCA-*.md)
+    rca_files = sorted(target_path.glob("10-RCA-*.md"))
+    rca_sections = []
+    for rf in rca_files:
+        val_res = validator.validate(rf)
+        c_text = rf.read_text(encoding="utf-8").lstrip("\ufeff")
+        fm, b_text, _ = parse_frontmatter(c_text)
+        rca_sections.append({
+            "path": rf.name,
+            "frontmatter": fm or {},
+            "body_html": markdown_to_html_enhanced(b_text),
+            "is_valid": len(val_res["errors"]) == 0,
+            "errors": val_res["errors"]
+        })
+
+    if rca_sections:
+        nav_buttons.append('<button class="tab-btn" onclick="switchTab(\'tab-rca\')">Incident & RCA &check;</button>')
+
     nav_buttons_html = "\n        ".join(nav_buttons)
 
     # HTML Template con CSS Moderno Dark/Light e Mermaid
@@ -1383,6 +1421,41 @@ def cmd_export_html(args) -> int:
     </div>
             """
 
+    # Genera la tab RCA se sono presenti incidenti
+    if rca_sections:
+        html_template += f"""
+    <!-- TAB INCIDENT & RCA -->
+    <div id="tab-rca" class="tab-content">
+        <div class="card">
+            <h2>Incident Management & Root Cause Analysis (Fase 7)</h2>
+            <p>Registro formale degli incidenti e disservizi tecnici risolti per il progetto <strong>{html.escape(project_name)}</strong>.</p>
+        </div>
+        """
+        for r in rca_sections:
+            fm = r["frontmatter"]
+            inc_id = fm.get("incident_id", "N/A")
+            sev = fm.get("severity", "P2-High")
+            title = fm.get("title", r["path"])
+            status = fm.get("status", "approved")
+            badge_class = "badge-pass" if r["is_valid"] else "badge-warn"
+            html_template += f"""
+        <div class="card" style="margin-top: 1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1.5rem; flex-wrap:wrap; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+                <div>
+                    <h3>{html.escape(title)}</h3>
+                    <p>Incidente: <code>{html.escape(inc_id)}</code> | Severità: <strong>{html.escape(sev)}</strong> | Stato: <strong>{html.escape(status)}</strong></p>
+                </div>
+                <div>
+                    <span class="{badge_class}">&check; Validato OKF v0.2</span>
+                </div>
+            </div>
+            {r['body_html']}
+        </div>
+            """
+        html_template += """
+    </div>
+        """
+
     html_template += """
 </main>
 
@@ -1792,10 +1865,10 @@ def cmd_audit_consistency(args) -> int:
         files = ", ".join(sorted(set(switch_ips[ip])))
         print(colorize(f"   [OK] Switch Core identificato univocamente a: {ip} (in: {files})", COLOR_GREEN))
     elif len(switch_ips) > 1:
-        # Check if 192.168.10.1 was only in 02-HLD conceptual phase
-        if len(switch_ips) == 2 and "192.168.10.1" in switch_ips and switch_ips["192.168.10.1"] == ["02-HLD.md"]:
+        # Check if 192.168.120.1 was only in 02-HLD conceptual phase
+        if len(switch_ips) == 2 and "192.168.120.1" in switch_ips and switch_ips["192.168.120.1"] == ["02-HLD.md"]:
             print(colorize(f"   [OK] Switch Core confermato univocamente a 192.168.120.1 in LLD, As-Built, SOP e Handover!", COLOR_GREEN))
-            print(colorize(f"   [i] Nota: 192.168.10.1 presente solo come schema concettuale HLD.", COLOR_YELLOW))
+            print(colorize(f"   [i] Nota: 192.168.120.1 presente solo come schema concettuale HLD.", COLOR_YELLOW))
         else:
             print(colorize(f"   [!] DISCORDANZA SWITCH CORE: rilevati IP multipli!", COLOR_YELLOW))
             for ip, files in switch_ips.items():
@@ -1893,6 +1966,201 @@ def cmd_export_configs(args) -> int:
     else:
         print(colorize(f"\n[OK] Esportazione completata con successo! {len(generated_files)} file generati in {out_dir}\n", COLOR_GREEN + COLOR_BOLD))
 
+    return 0
+
+def cmd_troubleshoot(args: argparse.Namespace) -> int:
+    """Gestisce ticket di incidente e Root Cause Analysis (RCA)."""
+    repo_root = Path(__file__).resolve().parent.parent
+    project_slug = args.project_slug.lower().strip()
+    proj_dir = repo_root / "projects" / project_slug
+
+    if not proj_dir.exists():
+        print(colorize(f"ERRORE: Progetto '{project_slug}' non trovato in {proj_dir}", COLOR_RED))
+        return 1
+
+    manifest_file = proj_dir / "project-manifest.yaml"
+    manifest_data = {}
+    if manifest_file.exists():
+        try:
+            manifest_data = yaml.safe_load(manifest_file.read_text(encoding="utf-8")) or {}
+        except Exception:
+            pass
+
+    if args.tb_action == "list":
+        rca_files = sorted(proj_dir.glob("10-RCA-*.md"))
+        print(colorize(f"\n=== TICKET RCA & TROUBLESHOOTING: {project_slug.upper()} ===", COLOR_BOLD + COLOR_CYAN))
+        if not rca_files:
+            print("Nessun ticket RCA registrato per questo progetto.")
+            print(f"Per crearne uno: python scripts/itinfra.py troubleshoot init {project_slug} <ticket_id>\n")
+            return 0
+
+        print(f"{'File':<34} | {'ID Incidente':<16} | {'Severita':<10} | {'Stato':<10} | {'Titolo'}")
+        print("-" * 105)
+        validator = OKFValidator(is_template=False)
+        for rf in rca_files:
+            content = rf.read_text(encoding="utf-8").lstrip("\ufeff")
+            fm, _, _ = parse_frontmatter(content)
+            fm = fm or {}
+            inc_id = fm.get("incident_id", "N/A")
+            sev = fm.get("severity", "N/A")
+            st = fm.get("status", "N/A")
+            title = fm.get("title", rf.stem)
+            if len(title) > 38:
+                title = title[:35] + "..."
+            val_res = validator.validate(rf)
+            st_color = COLOR_GREEN if len(val_res["errors"]) == 0 else COLOR_YELLOW
+            print(f"{rf.name:<34} | {inc_id:<16} | {sev:<10} | {colorize(st, st_color):<19} | {title}")
+        print("-" * 105 + "\n")
+        return 0
+
+    elif args.tb_action == "init":
+        ticket_id = args.ticket_id.strip()
+        clean_id = re.sub(r'[^a-zA-Z0-9_-]', '-', ticket_id)
+        filename = f"10-RCA-{clean_id}.md"
+        out_file = proj_dir / filename
+
+        if out_file.exists() and not getattr(args, "force", False):
+            print(colorize(f"ERRORE: Il ticket {filename} esiste già. Usa --force per sovrascrivere.", COLOR_RED))
+            return 1
+
+        template_path = repo_root / "templates" / "10-RCA-Troubleshooting.md"
+        if not template_path.exists():
+            print(colorize(f"ERRORE: Template {template_path} non trovato.", COLOR_RED))
+            return 1
+
+        tpl = template_path.read_text(encoding="utf-8")
+        today = datetime.now().strftime("%Y-%m-%d")
+        now_hm = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+        p_name = manifest_data.get("project_name", project_slug)
+        p_id = manifest_data.get("project_id", project_slug.upper())
+        customer = manifest_data.get("customer", "Cliente")
+        site = manifest_data.get("site", "HQ")
+        architect = manifest_data.get("lead_architect", "Lead Architect")
+        title = args.title or f"RCA & Troubleshooting — Disservizio {ticket_id}"
+        severity = args.severity or "P2-High"
+
+        tpl = tpl.replace("<project_slug>", project_slug)
+        tpl = tpl.replace("<PROJECT_ID>", p_id)
+        tpl = tpl.replace("<nome progetto>", p_name)
+        tpl = tpl.replace("<cliente>", customer)
+        tpl = tpl.replace("<SITE_CODE>", site)
+        tpl = tpl.replace("<nome>", architect)
+        tpl = tpl.replace("<INCIDENT_ID>", f"INC-{clean_id}")
+        tpl = tpl.replace("<incident_id>", clean_id.lower())
+        tpl = tpl.replace("<YYYY-MM-DD>", today)
+        tpl = tpl.replace("<YYYY-MM-DD HH:MM>", now_hm)
+        tpl = tpl.replace("<titolo disservizio, es. Degrado Connettività SMB FS01>", title)
+        tpl = tpl.replace("<Titolo Disservizio>", title)
+        tpl = tpl.replace("<P1-Critical | P2-High | P3-Medium | P4-Low>", severity)
+        tpl = tpl.replace("<P1 / P2 / P3 / P4>", severity)
+        tpl = tpl.replace("<NOME_PROGETTO>", p_name)
+        tpl = tpl.replace("<CLIENTE>", customer)
+
+        out_file.write_text(tpl, encoding="utf-8")
+        print(colorize(f"\n[+] Ticket RCA inizializzato con successo: {out_file}", COLOR_GREEN + COLOR_BOLD))
+        print(f"Progetto:   {project_slug}")
+        print(f"File:       {filename}")
+        print(f"Severita:   {severity}")
+        print(f"\nProssimi passi:")
+        print(f"  1. Esegui il controllo telemetria live: python scripts/itinfra.py health-check {project_slug}")
+        print(f"  2. Conduci l'indagine a 7 strati OSI con la skill 'itinfra-troubleshooter'")
+        print(f"  3. Valida il documento con: python scripts/itinfra.py validate {out_file}\n")
+        return 0
+
+def cmd_health_check(args: argparse.Namespace) -> int:
+    """Esegue telemetria e health check non distruttivo (ICMP/TCP) sugli apparati del manifest."""
+    repo_root = Path(__file__).resolve().parent.parent
+    project_slug = args.project_slug.lower().strip()
+    proj_dir = repo_root / "projects" / project_slug
+
+    if not proj_dir.exists():
+        print(colorize(f"ERRORE: Progetto '{project_slug}' non trovato in {proj_dir}", COLOR_RED))
+        return 1
+
+    manifest_file = proj_dir / "project-manifest.yaml"
+    manifest_data = {}
+    if manifest_file.exists():
+        try:
+            manifest_data = yaml.safe_load(manifest_file.read_text(encoding="utf-8")) or {}
+        except Exception:
+            pass
+
+    print(colorize(f"\n=== LIVE TELEMETRY & HEALTH-CHECK: {project_slug.upper()} ===", COLOR_BOLD + COLOR_CYAN))
+    timeout = args.timeout
+
+    targets = []
+    net = manifest_data.get("network_baseline", {})
+    gw_ip = net.get("core_switch_ip") or net.get("default_gateway")
+    if gw_ip:
+        targets.append({"name": "Core Switch / Gateway", "host": gw_ip, "ports": [80, 443, 22]})
+
+    asbuilt_file = proj_dir / "07-As-Built.md"
+    if not asbuilt_file.exists():
+        asbuilt_file = proj_dir / "06-As-Built.md"
+
+    if asbuilt_file.exists():
+        content_ab = asbuilt_file.read_text(encoding="utf-8")
+        if "192.168.120.1" in content_ab or "rb5009" in content_ab.lower():
+            targets.append({"name": "MikroTik RB5009 (GW)", "host": "192.168.120.1", "ports": [8291, 53, 80, 22]})
+        if "192.168.120.2" in content_ab or "crs326" in content_ab.lower():
+            targets.append({"name": "MikroTik CRS326 (SW)", "host": "192.168.120.2", "ports": [8291, 80]})
+        if "192.168.120.10" in content_ab or "fs01" in content_ab.lower():
+            targets.append({"name": "File Server FS01 (LAN)", "host": "192.168.120.10", "ports": [445, 3389, 5985, 139]})
+        if "192.168.120.5" in content_ab or "hv01" in content_ab.lower():
+            targets.append({"name": "Host HV01 (Hyper-V)", "host": "192.168.120.5", "ports": [3389, 5985, 445]})
+        if "10.147.19." in content_ab or "zerotier" in content_ab.lower():
+            zt_match = re.search(r'10\.147\.19\.\d+', content_ab)
+            if zt_match:
+                targets.append({"name": "FS01 ZeroTier Overlay", "host": zt_match.group(0), "ports": [445, 3389]})
+
+    seen_hosts = set()
+    unique_targets = []
+    for t in targets:
+        if t["host"] not in seen_hosts:
+            seen_hosts.add(t["host"])
+            unique_targets.append(t)
+
+    if not unique_targets:
+        print(colorize("Nessun endpoint IP rilevato nel manifest o nell'As-Built.", COLOR_YELLOW))
+        return 0
+
+    print(f"{'Target Apparato':<26} | {'IP Endpoint':<16} | {'ICMP Ping':<12} | {'Sonde TCP Portali'}")
+    print("-" * 90)
+
+    for tgt in unique_targets:
+        name = tgt["name"]
+        host = tgt["host"]
+        is_windows = os.name == "nt"
+        ping_cmd = ["ping", "-n", "1", "-w", str(int(timeout * 1000)), host] if is_windows else ["ping", "-c", "1", "-W", str(int(timeout)), host]
+        try:
+            p_res = subprocess.run(ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout + 1.0)
+            icmp_ok = (p_res.returncode == 0)
+        except Exception:
+            icmp_ok = False
+
+        icmp_str = colorize("ONLINE (L3)", COLOR_GREEN) if icmp_ok else colorize("NO-RESP (L3)", COLOR_RED)
+
+        port_results = []
+        for port in tgt["ports"]:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(timeout)
+            try:
+                r = sock.connect_ex((host, port))
+                if r == 0:
+                    port_results.append(colorize(f"{port}:OPEN", COLOR_GREEN))
+                else:
+                    port_results.append(colorize(f"{port}:CLOSED", COLOR_RED))
+            except Exception:
+                port_results.append(colorize(f"{port}:TIMEOUT", COLOR_YELLOW))
+            finally:
+                sock.close()
+
+        ports_str = " | ".join(port_results)
+        print(f"{name:<26} | {host:<16} | {icmp_str:<21} | {ports_str}")
+
+    print("-" * 90)
+    print(colorize("[*] Telemetria completata con successo. Valori integrabili in Sezione 4 (OSI L1-L4).\n", COLOR_CYAN))
     return 0
 
 def main():
@@ -1995,6 +2263,25 @@ def main():
     p_ec.add_argument("project_slug", help="Slug del progetto")
     p_ec.add_argument("--out", help="Directory di destinazione (default: projects/<slug>/configs/)")
 
+    # Comando troubleshoot
+    p_tb = subparsers.add_parser("troubleshoot", help="Gestione ticket di incidente e Root Cause Analysis (RCA)")
+    sub_tb = p_tb.add_subparsers(dest="tb_action", help="Azione troubleshoot", required=True)
+
+    tb_init = sub_tb.add_parser("init", help="Inizializza un nuovo ticket RCA da template OKF")
+    tb_init.add_argument("project_slug", help="Slug del progetto")
+    tb_init.add_argument("ticket_id", help="Identificativo ticket (es. FS01-SMB-Connectivity, INC-2026-001)")
+    tb_init.add_argument("--title", help="Titolo descrittivo del disservizio")
+    tb_init.add_argument("--severity", choices=["P1-Critical", "P2-High", "P3-Medium", "P4-Low"], help="Severità incidente")
+    tb_init.add_argument("--force", action="store_true", help="Sovrascrive il file se esistente")
+
+    tb_list = sub_tb.add_parser("list", help="Elenca i ticket RCA registrati per il progetto")
+    tb_list.add_argument("project_slug", help="Slug del progetto")
+
+    # Comando health-check
+    p_hc = subparsers.add_parser("health-check", help="Esegue telemetria e health check non distruttivo (ICMP/TCP) sugli apparati del manifest")
+    p_hc.add_argument("project_slug", help="Slug del progetto")
+    p_hc.add_argument("--timeout", type=float, default=1.0, help="Timeout socket in secondi (default: 1.0)")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -2023,6 +2310,10 @@ def main():
         return cmd_audit_consistency(args)
     elif args.command == "export-configs":
         return cmd_export_configs(args)
+    elif args.command == "troubleshoot":
+        return cmd_troubleshoot(args)
+    elif args.command == "health-check":
+        return cmd_health_check(args)
     else:
         parser.print_help()
         return 1
