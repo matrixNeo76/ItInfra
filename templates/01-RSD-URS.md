@@ -154,19 +154,29 @@ relations:
 - Capacità: `<n. rack, kW, link>`
 - Modalità di replica: `<sync / async / snapshot>`
 
-## 6. Vincoli di Compiance e Normativi
+## 6. Vincoli di Compliance e Normativi
 
 <!-- Elencare tutti gli obblighi legislativi, regolatori e contrattuali. -->
 
-- [ ] GDPR (Regolamento UE 2016/679) — tutela dati personali
-- [ ] ISO/IEC 27001 — Information Security Management
-- [ ] ISO/IEC 20000 — IT Service Management
-- [ ] PCI-DSS (se trattamento pagamenti)
-- [ ] HIPAA (se dati sanitari)
-- [ ] Normative nazionali: `<specificarle>`
-- [ ] Vincoli contrattuali con clienti specifici: `<elencare>`
+- [ ] **GDPR (Regolamento UE 2016/679)** — Tutela e riservatezza dei dati personali, registro trattamenti, data breach notification
+- [ ] **NIS2 (Direttiva UE 2022/2555)** — Sicurezza delle reti e sistemi informativi per soggetti essenziali/importanti:
+  - Misure di gestione dei rischi di cibersicurezza (analisi rischi, sicurezza supply chain)
+  - Notifica tempestiva degli incidenti significativi (early warning entro 24h, notifica entro 72h)
+  - Business continuity e gestione delle crisi (backup, disaster recovery, gestione emergenze)
+- [ ] **ISO/IEC 27001:2022** — Information Security Management System (ISMS):
+  - Controlli organizzativi (A.5), del personale (A.6), fisici (A.7) e tecnologici (A.8)
+  - Gestione delle vulnerabilità e segregazione delle reti
+- [ ] **DORA (Regolamento UE 2022/2554)** — Resilienza operativa digitale (settore finanziario & fornitori terzi ICT):
+  - ICT Risk Management Framework e tolleranza all'interruzione dei servizi critici
+  - Test periodici di resilienza operativa digitale (TLPT - Threat-Led Penetration Testing)
+  - Gestione del rischio correlato ai fornitori terzi di servizi ICT
+- [ ] **ISO/IEC 20000** — IT Service Management
+- [ ] **PCI-DSS v4.0** (se trattamento dati carte di pagamento)
+- [ ] **HIPAA** (se dati sanitari statunitensi o internazionali)
+- [ ] **Normative nazionali di settore:** `<specificare, es. ACN/CSIRT Italia, Circolari Banca d'Italia>`
+- [ ] **Vincoli contrattuali con clienti/partner:** `<elencare SLA specifici, penali, data residency>`
 
-**Note di compliance:** `<eventuali clausole specifiche da rispettare, es. "data residency IT", "no trasferimento extra-UE">`
+**Note di compliance:** `<eventuali clausole specifiche da rispettare, es. "data residency IT", "no trasferimento extra-UE", "segregazione logica multi-tenant">`
 
 ## 7. Capacità Stimate
 

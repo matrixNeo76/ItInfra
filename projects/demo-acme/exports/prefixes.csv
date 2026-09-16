@@ -1,0 +1,7 @@
+prefix,status,vrf,tenant,vlan,description
+10.10.10.0/24,active,DMZ,Default,10,Servizi esposti
+10.10.20.0/24,active,PROD,Default,20,VM applicative
+10.10.30.0/24,active,PROD,Default,30,Database tier
+10.10.50.0/24,active,MGMT,Default,50,Management apparati
+10.10.70.0/24,active,STORAGE,Default,70,Traffico iSCSI
+10.10.80.0/24,active,BACKUP,Default,80,Traffico backup

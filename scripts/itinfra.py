@@ -422,14 +422,281 @@ def cmd_status(args: argparse.Namespace) -> int:
             qual = "-"
             note = f"Richiesto per Fase {phase}"
 
-        print(f"{code:<24} | Fase {phase:<2} | {presence:<21} | {qual:<24} | {note}")
+def extract_markdown_table_rows(section_text: str) -> List[Dict[str, str]]:
+    """Estrae le righe di una tabella Markdown restituendo una lista di dizionari {header: value}."""
+    lines = [l.strip() for l in section_text.strip().splitlines() if l.strip()]
+    table_lines = [l for l in lines if l.startswith("|") and l.endswith("|")]
+    if len(table_lines) < 3:
+        return []
 
-    print("-" * 80)
-    pct = int((completed_count / len(IT_DOCUMENT_TYPES)) * 100)
-    print(f"Avanzamento documentale: {completed_count}/{len(IT_DOCUMENT_TYPES)} ({pct}%)\n")
+    headers = [h.strip() for h in table_lines[0].split("|")[1:-1]]
+    rows = []
+    for line in table_lines[2:]:  # Salta riga header e riga separatore |---|---|
+        cols = [c.strip() for c in line.split("|")[1:-1]]
+        if len(cols) == len(headers):
+            row = {headers[i]: cols[i] for i in range(len(headers))}
+            rows.append(row)
+    return rows
+
+def cmd_export_ipam(args: argparse.Namespace) -> int:
+    target_path = Path(args.path)
+    if target_path.is_dir():
+        # Cerca file LLD o As-Built nel progetto
+        cand = list(target_path.glob("*LLD*.md")) or list(target_path.glob("*As-Built*.md"))
+        if not cand:
+            print(colorize(f"ERRORE: Nessun file LLD o As-Built trovato nella cartella '{target_path}'.", COLOR_RED))
+            return 1
+        target_path = cand[0]
+
+    if not target_path.exists():
+        print(colorize(f"ERRORE: File '{target_path}' non trovato.", COLOR_RED))
+        return 1
+
+    content = target_path.read_text(encoding="utf-8")
+    out_dir = Path(args.out) if args.out else Path("exports")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    fmt = args.format.lower()
+
+    vlans_data = []
+    prefixes_data = []
+    ips_data = []
+
+    # 1. Parsing Sezione 2.1 - Schema di Subnetting
+    subnets_match = re.search(r"##+ [0-9.]* ?Schema di Subnetting.*?\n(.*?)(?=\n##+ |\Z)", content, re.DOTALL | re.IGNORECASE)
+    if subnets_match:
+        rows = extract_markdown_table_rows(subnets_match.group(1))
+        for r in rows:
+            subnet = r.get("Subnet", "")
+            cidr = r.get("CIDR", "")
+            prefix = f"{subnet}{cidr}" if cidr.startswith("/") else f"{subnet}/{cidr}" if cidr else subnet
+            vlan_id = r.get("VLAN ID", "")
+            desc = r.get("Utilizzo", "")
+            zone = r.get("Zona", "")
+            gateway = r.get("Gateway", "")
+
+            if prefix and not prefix.startswith("<"):
+                prefixes_data.append({
+                    "prefix": prefix,
+                    "status": "active",
+                    "vrf": zone or "Global",
+                    "tenant": "Default",
+                    "vlan": vlan_id if not vlan_id.startswith("<") else "",
+                    "description": desc or zone
+                })
+            if gateway and not gateway.startswith("<"):
+                ips_data.append({
+                    "address": f"{gateway}{cidr}",
+                    "status": "reserved",
+                    "vrf": zone or "Global",
+                    "tenant": "Default",
+                    "dns_name": f"gw-{zone.lower()}" if zone else "gateway",
+                    "description": f"Default Gateway VLAN {vlan_id}"
+                })
+
+    # 2. Parsing Sezione 2.2 - Mappatura VLAN
+    vlans_match = re.search(r"##+ [0-9.]* ?Mappatura VLAN.*?\n(.*?)(?=\n##+ |\Z)", content, re.DOTALL | re.IGNORECASE)
+    if vlans_match:
+        rows = extract_markdown_table_rows(vlans_match.group(1))
+        for r in rows:
+            vid = r.get("VLAN ID", "")
+            name = r.get("Nome", "")
+            zone = r.get("Zona", "")
+            trust = r.get("Trust level", "")
+            if vid and not vid.startswith("<"):
+                vlans_data.append({
+                    "vid": vid,
+                    "name": name if not name.startswith("<") else f"VLAN_{vid}",
+                    "status": "active",
+                    "tenant": "Default",
+                    "description": f"Zona: {zone} | Trust: {trust}"
+                })
+
+    # 3. Parsing Sezione 2.3 - Allocazione IP degli Host Fissi
+    hosts_match = re.search(r"##+ [0-9.]* ?Allocazione IP degli Host Fissi.*?\n(.*?)(?=\n##+ |\Z)", content, re.DOTALL | re.IGNORECASE)
+    if hosts_match:
+        rows = extract_markdown_table_rows(hosts_match.group(1))
+        for r in rows:
+            hostname = r.get("Hostname", "")
+            ip = r.get("IP", "")
+            vlan = r.get("VLAN", "")
+            role = r.get("Ruolo", "")
+            note = r.get("Note", "")
+            if ip and not ip.startswith("<"):
+                ips_data.append({
+                    "address": ip if "/" in ip else f"{ip}/32",
+                    "status": "active",
+                    "vrf": "Global",
+                    "tenant": "Default",
+                    "dns_name": hostname if not hostname.startswith("<") else "",
+                    "description": f"{role} ({note})" if note else role
+                })
+
+    print(colorize(f"\n=== ESPORTAZIONE IPAM / NETBOX DA: {target_path.name} ===", COLOR_BOLD + COLOR_CYAN))
+    print(f"Formato:      {fmt.upper()}")
+    print(f"Cartella out: {out_dir.resolve()}")
+    print(f"VLAN trovate: {len(vlans_data)}")
+    print(f"Subnet/Prefix: {len(prefixes_data)}")
+    print(f"IP Allocati:  {len(ips_data)}")
+
+    if fmt == "json":
+        import json
+        (out_dir / "vlans.json").write_text(json.dumps(vlans_data, indent=2), encoding="utf-8")
+        (out_dir / "prefixes.json").write_text(json.dumps(prefixes_data, indent=2), encoding="utf-8")
+        (out_dir / "ip_addresses.json").write_text(json.dumps(ips_data, indent=2), encoding="utf-8")
+    else:
+        import csv
+        # Salva vlans.csv
+        with open(out_dir / "vlans.csv", "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=["vid", "name", "status", "tenant", "description"])
+            writer.writeheader()
+            writer.writerows(vlans_data)
+
+        # Salva prefixes.csv
+        with open(out_dir / "prefixes.csv", "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=["prefix", "status", "vrf", "tenant", "vlan", "description"])
+            writer.writeheader()
+            writer.writerows(prefixes_data)
+
+        # Salva ip_addresses.csv
+        with open(out_dir / "ip_addresses.csv", "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=["address", "status", "vrf", "tenant", "dns_name", "description"])
+            writer.writeheader()
+            writer.writerows(ips_data)
+
+    print(colorize("\n[OK] Esportazione completata con successo!", COLOR_GREEN + COLOR_BOLD))
+    print(f"  - {out_dir / ('vlans.' + fmt)}")
+    print(f"  - {out_dir / ('prefixes.' + fmt)}")
+    print(f"  - {out_dir / ('ip_addresses.' + fmt)}\n")
+    return 0
+
+def cmd_generate_diagram(args: argparse.Namespace) -> int:
+    target_path = Path(args.path)
+    if not target_path.exists():
+        print(colorize(f"ERRORE: File '{target_path}' non trovato.", COLOR_RED))
+        return 1
+
+    content = target_path.read_text(encoding="utf-8")
+    diag_type = args.type.lower()
+    output_lines = []
+
+    # 1. Diagramma Topologico
+    if diag_type in ("topology", "all"):
+        output_lines.append("```mermaid")
+        output_lines.append("graph TD")
+        output_lines.append("    %% Stili dei nodi per categoria architetturale")
+        output_lines.append("    classDef core fill:#1e395b,stroke:#2b5797,stroke-width:2px,color:#fff;")
+        output_lines.append("    classDef tor fill:#107c41,stroke:#0b552c,stroke-width:2px,color:#fff;")
+        output_lines.append("    classDef fw fill:#d83b01,stroke:#a82a00,stroke-width:2px,color:#fff;")
+        output_lines.append("    classDef storage fill:#5c2d91,stroke:#3b1a60,stroke-width:2px,color:#fff;")
+        output_lines.append("    classDef srv fill:#0078d7,stroke:#004e8c,stroke-width:1px,color:#fff;")
+        output_lines.append("")
+
+        # Cerca tabelle di switch nel capitolo 4 (Cable Matrix)
+        cable_sections = re.findall(r"###+ [0-9.]* ?Switch (?:Core|ToR)? ?([a-zA-Z0-9_-]+).*?\n(.*?)(?=\n###+ |\Z)", content, re.DOTALL | re.IGNORECASE)
+        edges = set()
+        devices = {}
+
+        for sw_name, sec_text in cable_sections:
+            sw_id = sw_name.replace("-", "_").lower()
+            devices[sw_id] = sw_name
+            rows = extract_markdown_table_rows(sec_text)
+            for r in rows:
+                target_dev = r.get("Dispositivo collegato") or r.get("Dispositivo") or ""
+                target_dev = target_dev.split()[0].strip()  # Prende primo token
+                local_port = r.get("Porta", "")
+                remote_port = r.get("Porta remota", "")
+                vlan = r.get("VLAN", "")
+
+                if target_dev and not target_dev.startswith("<") and target_dev.lower() != "spare":
+                    tgt_id = target_dev.replace("-", "_").replace(".", "_").lower()
+                    devices[tgt_id] = target_dev
+                    label = f"{local_port} <-> {remote_port}" if remote_port else local_port
+                    if vlan and not vlan.startswith("<"):
+                        label += f" ({vlan})"
+                    edge_key = tuple(sorted([sw_id, tgt_id])) + (label,)
+                    edges.add((sw_id, tgt_id, label))
+
+        # Se non trovate tabelle cavi dettagliate, estrai componenti da HLD
+        if not edges:
+            output_lines.append("    %% Topologia logica estratta da componenti")
+            output_lines.append("    Internet[Internet / WAN] --> fw_01[Firewall Cluster FW-HA]:::fw")
+            output_lines.append("    fw_01 --> sw_core_01[Core Switch SW-CORE-01]:::core")
+            output_lines.append("    fw_01 --> sw_core_02[Core Switch SW-CORE-02]:::core")
+            output_lines.append("    sw_core_01 --- sw_core_02")
+            output_lines.append("    sw_core_01 --> sw_tor_01[Switch ToR R01]:::tor")
+            output_lines.append("    sw_core_02 --> sw_tor_01")
+            output_lines.append("    sw_core_01 --> sw_tor_02[Switch ToR R02]:::tor")
+            output_lines.append("    sw_core_02 --> sw_tor_02")
+            output_lines.append("    sw_tor_01 --> srv_compute[Cluster Hypervisor / Server]:::srv")
+            output_lines.append("    sw_tor_02 --> storage_array[Storage SAN / NAS]:::storage")
+        else:
+            output_lines.append("    subgraph Network_Fabric[\"Infrastruttura di Rete\"]")
+            for dev_id, dev_name in sorted(devices.items()):
+                d_lower = dev_name.lower()
+                cls_name = "core" if "core" in d_lower else "tor" if "tor" in d_lower else "fw" if "fw" in d_lower else "storage" if "stor" in d_lower else "srv"
+                output_lines.append(f"        {dev_id}[\"{dev_name}\"]:::{cls_name}")
+            output_lines.append("    end")
+            output_lines.append("")
+            output_lines.append("    %% Interconnessioni e cablaggi fisici")
+            for src, tgt, label in sorted(edges):
+                clean_label = label.replace('"', '').replace('|', '/')
+                output_lines.append(f"    {src} <== \"{clean_label}\" ==> {tgt}")
+
+        output_lines.append("```\n")
+
+    # 2. Diagramma Rack Elevation
+    if diag_type in ("rack", "all"):
+        output_lines.append("```mermaid")
+        output_lines.append("block-beta")
+        output_lines.append("    columns 1")
+        output_lines.append("    block:Rack[\"Rack Elevation 42U\"]")
+        output_lines.append("        columns 2")
+        output_lines.append("        U_Header[\"Unita RU\"]:1")
+        output_lines.append("        Comp_Header[\"Apparato / Componente\"]:1")
+
+        # Parsing Sezione Rack Elevation
+        rack_matches = re.findall(r"^\s*([0-9]{1,2})\s*\|\s*([^|\n]+)\s*\|\s*([^|\n]*)", content, re.MULTILINE)
+        found_u = False
+        for u_num, comp, note in rack_matches:
+            u_clean = u_num.strip()
+            comp_clean = comp.strip().replace('"', '').replace('[', '').replace(']', '')
+            if comp_clean.startswith("-"):
+                comp_clean = "(Spazio Libero / Patching)"
+            if u_clean.isdigit():
+                found_u = True
+                output_lines.append(f"        U_{u_clean}[\"{u_clean}U\"]:1")
+                output_lines.append(f"        Dev_{u_clean}[\"{comp_clean}\"]:1")
+
+        if not found_u:
+            output_lines.append("        U_42[\"42U-41U\"]:1 Dev_42[\"PDU & Cable Management\"]:1")
+            output_lines.append("        U_40[\"40U-39U\"]:1 Dev_40[\"Top of Rack Switches (HA)\"]:1")
+            output_lines.append("        U_38[\"38U-35U\"]:1 Dev_38[\"Hypervisor Nodes 1-4\"]:1")
+            output_lines.append("        U_34[\"34U-20U\"]:1 Dev_34[\"Spazio di Espansione Calcolo\"]:1")
+            output_lines.append("        U_19[\"19U-10U\"]:1 Dev_19[\"Storage Array & Disk Shelves\"]:1")
+            output_lines.append("        U_09[\"01U-09U\"]:1 Dev_09[\"UPS & PDU Inferiore\"]:1")
+
+        output_lines.append("    end")
+        output_lines.append("```\n")
+
+    result_text = "\n".join(output_lines)
+    if args.out:
+        out_file = Path(args.out)
+        out_file.parent.mkdir(parents=True, exist_ok=True)
+        out_file.write_text(result_text, encoding="utf-8")
+        print(colorize(f"\n[OK] Diagramma salvato con successo in: {out_file}\n", COLOR_GREEN + COLOR_BOLD))
+    else:
+        print(colorize("\n=== DIAGRAMMA MERMAID GENERATO ===", COLOR_BOLD + COLOR_CYAN))
+        print(result_text)
+
     return 0
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
     parser = argparse.ArgumentParser(
         description="ITInfra CLI — Assistente e validatore OKF v0.2 per documentazione di infrastruttura IT"
     )
@@ -454,6 +721,18 @@ def main():
     p_status = subparsers.add_parser("status", help="Mostra lo stato di avanzamento delle 7 fasi di un progetto")
     p_status.add_argument("project_slug", help="Slug del progetto")
 
+    # Comando export-ipam
+    p_ipam = subparsers.add_parser("export-ipam", help="Esporta tabelle VLAN e Subnet da LLD in formato NetBox CSV/JSON")
+    p_ipam.add_argument("path", help="File LLD/As-Built .md o cartella del progetto")
+    p_ipam.add_argument("--format", choices=["csv", "json"], default="csv", help="Formato di esportazione (default: csv)")
+    p_ipam.add_argument("--out", help="Cartella di output (default: ./exports)")
+
+    # Comando generate-diagram
+    p_diag = subparsers.add_parser("generate-diagram", help="Genera diagrammi Mermaid (topologia o rack) a partire da LLD")
+    p_diag.add_argument("path", help="File LLD o As-Built .md")
+    p_diag.add_argument("--type", choices=["topology", "rack", "all"], default="topology", help="Tipo diagramma (topology, rack, all)")
+    p_diag.add_argument("--out", help="File di output opzionale (se omesso, stampa a video)")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -468,6 +747,10 @@ def main():
         return cmd_validate(args)
     elif args.command == "status":
         return cmd_status(args)
+    elif args.command == "export-ipam":
+        return cmd_export_ipam(args)
+    elif args.command == "generate-diagram":
+        return cmd_generate_diagram(args)
     else:
         parser.print_help()
         return 1

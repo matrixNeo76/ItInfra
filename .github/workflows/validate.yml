@@ -1,0 +1,51 @@
+name: OKF v0.2 CI & Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-okf:
+    name: Validate OKF v0.2 Documents & Templates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Validate Official IT Templates (templates/)
+        run: |
+          python scripts/itinfra.py validate templates/
+
+      - name: Validate Technical Documentation (docs/)
+        run: |
+          python scripts/itinfra.py validate docs/
+
+      - name: Validate Demo Project (projects/demo-acme/)
+        run: |
+          python scripts/itinfra.py validate projects/demo-acme/
+
+      - name: Test IPAM / NetBox Export
+        run: |
+          python scripts/itinfra.py export-ipam templates/03-LLD.md --format csv --out ./ci-exports/
+          python scripts/itinfra.py export-ipam templates/03-LLD.md --format json --out ./ci-exports/
+          test -f ./ci-exports/vlans.csv
+          test -f ./ci-exports/prefixes.csv
+          test -f ./ci-exports/ip_addresses.csv
+
+      - name: Test Mermaid Diagram Generation
+        run: |
+          python scripts/itinfra.py generate-diagram templates/03-LLD.md --type all --out ./ci-exports/diagram.md
+          test -f ./ci-exports/diagram.md

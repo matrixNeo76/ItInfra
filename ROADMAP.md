@@ -127,21 +127,20 @@ timeline
 
 ---
 
-### 🚀 Release v0.3 — Compliance, Visualizzazioni & IPAM Export (Prossimo Traguardo)
-- [ ] **Integrazione Framework di Compliance:**
-  - Estensione di `01-RSD-URS.md` e `02-HLD.md` con checklist specifiche per **NIS2**, **ISO 27001:2022** e **DORA** (Digital Operational Resilience Act).
-- [ ] **Generatore Automatico Topologie Mermaid:**
-  - Comando CLI `python scripts/itinfra.py generate-diagram <lld_file>` per estrarre la tabella delle connessioni inter-switch e generare automaticamente il diagramma topologico Mermaid Spine-Leaf.
-  - Generatore di diagrammi rack front/rear in formato Mermaid o ASCII/SVG da tabella Unità Rack (RU).
-- [ ] **Esportazione Matrici IPAM verso NetBox / CSV:**
-  - Script CLI per estrarre tabelle VLAN e Subnet da `03-LLD.md` o `06-As-Built.md` ed esportarle in formato CSV pronto per l'import bulk in **NetBox** o fogli di calcolo.
+### ✅ Release v0.3 — Compliance, Visualizzazioni, IPAM Export & CI/CD (Completato)
+- [x] **Integrazione Framework di Compliance:**
+  - Estensione di `01-RSD-URS.md` e `02-HLD.md` con checklist specifiche per **NIS2** (gestione rischi e early warning), **ISO 27001:2022** (domini A.5-A.8) e **DORA** (resilienza digitale e test TLPT).
+- [x] **Generatore Automatico Topologie Mermaid:**
+  - Comando CLI `python scripts/itinfra.py generate-diagram <file> --type [topology|rack|all]` per estrarre la tabella delle connessioni inter-switch e generare il diagramma topologico Mermaid Spine-Leaf e il rack elevation 42U.
+- [x] **Esportazione Matrici IPAM verso NetBox / CSV / JSON:**
+  - Comando CLI `python scripts/itinfra.py export-ipam <file> --format [csv|json] --out <dir>` per estrarre VLAN, Subnet e IP host da `03-LLD.md` ed esportarle per l'import bulk in NetBox.
+- [x] **GitHub Actions per Validazione Continua:**
+  - Workflow `.github/workflows/validate.yml` che esegue su ogni push e PR la validazione completa dei template, la documentazione e i test di export e diagrammi.
 
 ---
 
-### ⚙️ Release v0.4 — CI/CD & Integrazioni Esterne
-- [ ] **GitHub Actions per Validazione Continua:**
-  - Workflow `.github/workflows/validate.yml` che esegue `python scripts/itinfra.py validate` su ogni pull request, bloccando merge se vi sono errori OKF o credenziali in chiaro.
-- [ ] **Server MCP (Model Context Protocol) Opzionale:**
+### 🚀 Release v0.4 — Framework Agentici Esterni & Automation (Prossimo Traguardo)
+- [ ] **Server MCP (Model Context Protocol) Standalone:**
   - Wrapper FastMCP o Node.js che espone i tool di `itinfra.py` per Claude Desktop senza shell diretta.
 - [ ] **Generatore di Script di Esecuzione Operativa:**
   - Estrazione dei comandi di staging e collaudo da `04-MOP.md` e `07-ATP.md` in playbook Ansible o script PowerShell/Bash pronti per l'esecuzione in staging.

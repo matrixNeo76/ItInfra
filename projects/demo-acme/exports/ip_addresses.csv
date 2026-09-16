@@ -1,0 +1,13 @@
+address,status,vrf,tenant,dns_name,description
+10.10.10.1/24,reserved,DMZ,Default,gw-dmz,Default Gateway VLAN 10
+10.10.20.1/24,reserved,PROD,Default,gw-prod,Default Gateway VLAN 20
+10.10.30.1/24,reserved,PROD,Default,gw-prod,Default Gateway VLAN 30
+10.10.50.1/24,reserved,MGMT,Default,gw-mgmt,Default Gateway VLAN 50
+10.10.70.1/24,reserved,STORAGE,Default,gw-storage,Default Gateway VLAN 70
+10.10.80.1/24,reserved,BACKUP,Default,gw-backup,Default Gateway VLAN 80
+10.10.10.2/32,active,Global,Default,fw-01,Firewall primary (Active node)
+10.10.10.3/32,active,Global,Default,fw-02,Firewall secondary (Standby)
+10.10.50.11/32,active,Global,Default,sw-core-01,Core switch 1 (Management IP)
+10.10.50.12/32,active,Global,Default,sw-core-02,Core switch 2 (Management IP)
+10.10.70.10/32,active,Global,Default,stor-01-a,Controller A (iSCSI target)
+10.10.70.11/32,active,Global,Default,stor-01-b,Controller B (iSCSI target)

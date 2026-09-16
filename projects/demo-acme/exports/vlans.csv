@@ -1,0 +1,7 @@
+vid,name,status,tenant,description
+10,VLAN-DMZ,active,Default,Zona: DMZ | Trust: Low
+20,VLAN-PROD-APP,active,Default,Zona: PROD | Trust: Medium
+30,VLAN-PROD-DB,active,Default,Zona: PROD | Trust: Medium (isolata)
+50,VLAN-MGMT,active,Default,Zona: MGMT | Trust: Restricted
+70,VLAN-STORAGE,active,Default,Zona: STORAGE | Trust: Restricted
+80,VLAN-BACKUP,active,Default,Zona: BACKUP | Trust: Restricted

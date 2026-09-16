@@ -205,10 +205,20 @@ flowchart LR
 
 ### 5.5 Sicurezza
 - Firewall: `<vendor/modello>`
-- SIEM: `<piattaforma>`
+- SIEM / SOC: `<piattaforma>`
 - EDR/antimalware: `<prodotto>`
-- Identity: `<AD on-prem / Entra ID / IGA>`
+- Identity & Access Management: `<AD on-prem / Entra ID / IGA / PAM>`
 - Razionale: `<perché questa scelta>`
+
+### 5.6 Conformità Normativa e Resilienza (NIS2, ISO 27001:2022, DORA)
+- **Segregazione Reti e Accessi (NIS2 Art. 21 / ISO 27001 A.8.20-A.8.22):**
+  - `<Strategia di micro-segmentazione, DMZ, zero-trust network access e gestione accessi privilegiati PAM>`
+- **Resilienza e Rilevamento Incidenti (NIS2 Art. 23 / DORA Art. 9-11):**
+  - `<Piattaforma centralizzata di logging immutabile, detection early warning entro 24h e continuous monitoring>`
+- **Test di Resilienza Operativa Digitale (DORA Art. 24-27):**
+  - `<Pianificazione vulnerability assessment, threat-led penetration testing (TLPT) e simulazioni periodiche di disaster recovery>`
+- **Gestione del Rischio della Catena di Fornitura (NIS2 / DORA Cap. V):**
+  - `<Tracciabilità vendor hardware/software, conformità contrattuale e piani di uscita (exit strategy)>`
 
 ## 6. Alta Disponibilità e Ridondanza
 
