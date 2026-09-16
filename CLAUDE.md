@@ -28,13 +28,17 @@ Questo è l'ambiente di lavoro per la documentazione tecnica, governance, automa
 | **Inizializzare Nuovo Cliente** | `inizializza <slug>` | `it init <slug> --client "Nome" --name "Titolo"` |
 | **Verificare Stato 7 Fasi** | `stato <slug>` | `it status <slug>` |
 | **Validare Documento Attivo** | `valida` *(o tasto `Ctrl+Shift+B`)* | `it validate <percorso_file>` |
+| **Cruscotto Grafico Esecutivo** | `ui` *(o `dashboard`)* | `it ui` |
 | **Collaudo Completo Sistema** | `test-suite` | `it test-suite` |
 | **Avvio Quotidiano "1-Clic"** | *Doppio clic sull'icona Desktop:*<br>**`ITInfra - Aggiorna e Avvia`** | `it start` |
+
+🖥️ *Per visualizzare il Cruscotto Esecutivo grafico con telemetria e azioni rapide, digita semplicemente **`ui`**.*
 
 ---
 
 ### ⚡ Esecuzione Deterministica dei Comandi a 1 Parola (Zero-Hesitation)
 Se l'utente digita uno di questi trigger rapidi, **NON fare domande, NON chiedere conferme preliminari e NON cercare file**: esegui immediatamente il relativo comando:
+- **`"ui"`** o **`"dashboard"`** $\rightarrow$ Genera ed incorpora all'istante l'Enterprise Dashboard HTML nella chat.
 - **`"aggiorna"`** o **`"update"`** $\rightarrow$ Esegui subito: `python scripts/itinfra_sync.py`.
 - **`"controlla"`** o **`"check"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py check-share`.
 - **`"pubblica <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py publish <slug>`.

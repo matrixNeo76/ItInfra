@@ -380,6 +380,22 @@ timeline
 - [x] **Espansione Scope Skill `itinfra-assistant`:**
   - Frontmatter `description` universale per catturare assistenza, orientamento e comandi rapidi su qualsiasi editor (Antigravity, Cursor, Claude Code).
 
+---
+
+### ✅ Release v0.9.9 — Enterprise Generative UI Dashboard & Smart Hybrid Activation (Completato)
+- [x] **Enterprise Generative UI Cockpit (`scripts/itinfra_ui.py`):**
+  - Cruscotto esecutivo professionale integrato con design dark/enterprise, palette cyan/amber/emerald, telemetria live di sistema (RAM, CPU, storage, connettività SMB a 1ms).
+  - 4 KPI cards interattive: Progetti Totali, Template OKF v0.2, Moduli Test Suite (100%), Stato Rete Share Server.
+  - Stepper visivo a 7 fasi del ciclo lavorativo IT (Assessment, Design, Staging, Cabling, Commissioning, Testing, Go-Live).
+  - Centro di controllo a 2 colonne: Operazioni Rapide (Aggiorna, Controlla Rete, Test Suite, Nuova Scheda) e Quality Gate Progetti con status badge e pubblicazione.
+- [x] **Smart Hybrid Activation Pattern:**
+  - Fast-Path testuale istantaneo (0s) per saluti, richieste comandi e orientamento.
+  - Trigger esplicito a 1 parola (`"ui"` o `"dashboard"`) via chat Antigravity e CLI (`it ui` / `it dashboard`) per il caricamento del cruscotto grafico via tag `<agent-embed>`.
+  - Attivazione automatica contestuale durante il Quality Gate di pubblicazione (`pubblica <slug>`).
+- [x] **Sincronizzazione Deterministica SHA-256 (`scripts/itinfra_sync.py`):**
+  - Risoluzione del disallineamento basato su timestamp file system: confronto combinato dimensione + SHA-256 con flag `--force` per garantire l'allineamento infallibile di tutti i workstation locali.
+- [x] **Regole di Sistema e Assistenti Unificati:**
+  - Sincronizzazione omnicanale tra `AGENTS.md`, `GEMINI.md`, `CLAUDE.md` e `.agents/rules/00-fastpath.md` con trigger `always_on`.
 
 ---
 

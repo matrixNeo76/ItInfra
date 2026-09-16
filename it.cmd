@@ -26,6 +26,9 @@ if /I "%~1"=="publish" (
     exit /b %ERRORLEVEL%
 )
 
+if /I "%~1"=="ui" goto open_ui
+if /I "%~1"=="dashboard" goto open_ui
+
 if /I "%~1"=="start" (
     echo [ITINFRA] Verifica rapida aggiornamenti...
     python "%BASEDIR%scripts\itinfra_sync.py"
@@ -53,9 +56,13 @@ if /I "%~1"=="start" (
 python "%BASEDIR%scripts\itinfra.py" %*
 exit /b %ERRORLEVEL%
 
+:open_ui
+python -c "from pathlib import Path; import sys; sys.path.insert(0, r'%BASEDIR%scripts'); from itinfra_ui import render_enterprise_dashboard; out = Path(r'%BASEDIR%projects\enterprise_dashboard.html'); out.parent.mkdir(parents=True, exist_ok=True); out.write_text(render_enterprise_dashboard(), encoding='utf-8'); print('[OK] Enterprise Dashboard generata in:', str(out)); import webbrowser; webbrowser.open(out.as_uri())"
+exit /b 0
+
 :help
 echo ===============================================================================
-echo   ITINFRA — CLI RAPIDA A ZERO ATTRITO (v0.9.6)
+echo   ITINFRA — CLI RAPIDA A ZERO ATTRITO (v0.9.9)
 echo ===============================================================================
 echo   Uso: it ^<comando^> [opzioni]
 echo.
@@ -64,6 +71,7 @@ echo     it start            Aggiorna il workspace e avvia l'IDE (Antigravity/Cu
 echo     it update           Sincronizza template, script e guide dalla share centrale
 echo     it check            Verifica la connessione e i permessi della share master
 echo     it publish ^<slug^>   Esegue il Quality Gate e pubblica il progetto sul server
+echo     it ui               Genera e apre l'Enterprise Generative UI Dashboard
 echo.
 echo   Comandi Documentali (delegati a itinfra.py):
 echo     it init ^<slug^>      Inizializza un nuovo progetto IT
