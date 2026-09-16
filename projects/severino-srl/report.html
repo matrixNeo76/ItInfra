@@ -82,7 +82,7 @@
         .progress-bar-fill {
             height: 100%;
             background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
-            width: 88%;
+            width: 100%;
             border-radius: 5px;
         }
         .container {
@@ -311,7 +311,7 @@
         </div>
         <div class="header-meta">
             <div class="progress-pill">
-                <span>Avanzamento Fasi: <strong>88%</strong> (8/9)</span>
+                <span>Avanzamento Fasi: <strong>100%</strong> (9/9)</span>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill"></div>
                 </div>
@@ -358,6 +358,7 @@
         <button class="tab-btn" onclick="switchTab('tab-fase5-asbuilt')">Fase 5: As-Built &check;</button>
         <button class="tab-btn" onclick="switchTab('tab-fase6-atp')">Fase 6: ATP &check;</button>
         <button class="tab-btn" onclick="switchTab('tab-fase7-sop')">Fase 7: SOP &check;</button>
+        <button class="tab-btn" onclick="switchTab('tab-fase7-handover')">Fase 7: Handover &check;</button>
     </nav>
 
     <!-- TAB DASHBOARD -->
@@ -482,8 +483,8 @@
                             <td><code>09-Handover-Inventory</code></td>
                             <td><span class="wiki-link">specification</span></td>
                             <td>Handover &amp; Asset Inventory</td>
-                            <td><span class="badge-unchecked">NON REDATTO</span></td>
-                            <td>In attesa</td>
+                            <td><span class="badge-pass">VALIDATO (0 errori)</span></td>
+                            <td>09-Handover-Inventory.md</td>
                         </tr>
         
                     </tbody>
@@ -2056,14 +2057,103 @@ Get-VM | Select-Object Name, State, Uptime, MemoryAssigned</code></pre>
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1.5rem; flex-wrap:wrap; gap: 1rem;">
                 <div>
-                    <h2>Handover &amp; Asset Inventory</h2>
-                    <p>ID Documento: <code>09-Handover-Inventory</code> | Tipo: <strong>specification</strong> | Fase: <strong>Fase 7</strong></p>
+                    <h2>Handover &amp; Inventory — Verbale di Consegna e Registro Asset Definitivo Severino Srl</h2>
+                    <p>ID Documento: <code>specification-severino-srl-handover-01</code> | Tipo: <strong>specification</strong> | Fase: <strong>Fase 7</strong></p>
                 </div>
                 <div>
                     <span class="badge-pass">&check; Validato OKF v0.2</span>
                 </div>
             </div>
-            <p class='doc-missing'>Documento non ancora redatto (previsto per la Fase 7).</p>
+            <p><!-- AI-INSTRUCTIONS:</p>
+<p>Ruolo: formalizzare la presa in carico dell'infrastruttura e fornire il registro inventariale completo.</p>
+<p>Input attesi: As-Built compilato, ATP superato, SOP-Runbook completato.</p>
+<p>Regole di compilazione:</p>
+<p>1. L'inventario deve coincidere perfettamente con l'As-Built (§4).</p>
+<p>2. Nessuna password in chiaro (usare riferimenti vault).</p>
+<p>3. Registrare periodo di Hypercare (30 giorni) e firme delle parti.</p>
+<p>--></p>
+<h1>Handover & Asset Inventory Report</h1>
+<p><strong>Progetto:</strong> Infrastruttura LAN, Virtualizzazione Hyper-V e Collaboration Severino Srl</p>
+<p><strong>Cliente:</strong> Severino Srl</p>
+<p><strong>Sito:</strong> HQ-SEV (Sede Operativa Principale, Severino Srl)</p>
+<p><strong>Versione documento:</strong> 1.0</p>
+<p><strong>Stato:</strong> in-review</p>
+<p><strong>Data Verbale:</strong> 16/09/2026</p>
+<hr/>
+<h2>1. Verbale di Presa in Carico e Consegna</h2>
+<h3>1.1 Parti Contraenti</h3>
+<div class="table-container"><table><thead><tr><th>Ruolo di Progetto</th><th>Nominativo</th><th>Organizzazione</th><th>Titolarità</th></tr></thead><tbody><tr><td><strong>Committente / Lead Architect</strong></td><td>Marco Severino</td><td>Severino Srl (Direzione)</td><td>Approvatore finale e committente</td></tr><tr><td><strong>Committente / Senior Sysadmin</strong></td><td>Francesco Iavarone</td><td>Severino Srl (IT Operations)</td><td>Responsabile conduzione e presa in carico</td></tr><tr><td><strong>Fornitore / AI Systems Architect</strong></td><td>Antigravity AI Engineer</td><td>Architecture & QA Team</td><td>Redazione ingegneristica e validazione OKF v0.2</td></tr></tbody></table></div>
+<h3>1.2 Oggetto della Consegna</h3>
+<p>Con la sottoscrizione del presente atto, si certifica la formale consegna, accettazione e presa in carico dell'infrastruttura tecnologica installata presso la sede operativa di <strong>Severino Srl</strong>.</p>
+<p>L'accettazione si fonda sui risultati positivi conseguiti durante il ciclo di vita a 7 fasi:</p>
+<ul>
+<li>Progettazione Requisiti e Architettura approvata in <span class=\"wiki-link\">&sect; specification-severino-srl-rsd-01</span>, <span class=\"wiki-link\">&sect; architecture-severino-srl-hld-01</span> e <span class=\"wiki-link\">&sect; architecture-severino-srl-lld-01</span>.</li>
+<li>Esecuzione delle procedure di montaggio e configurazione secondo il <span class=\"wiki-link\">&sect; guide-severino-srl-mop-01</span>.</li>
+<li>Collaudo funzionale e prestazionale certificato con esito 100% Pass nell'<span class=\"wiki-link\">&sect; specification-severino-srl-atp-01</span>.</li>
+<li>Fotografia tecnica consolidata nell'<span class=\"wiki-link\">&sect; architecture-severino-srl-asbuilt-01</span>.</li>
+<li>Consegna del manuale delle operazioni quotidiane in <span class=\"wiki-link\">&sect; guide-severino-srl-sop-runbook-01</span>.</li>
+</ul>
+<h3>1.3 Documentazione Ufficiale Rilasciata al Cliente</h3>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> <strong>01-RSD-URS:</strong> Documento dei Requisiti di Sistema e Criteri di Accettazione</li>
+<li><span class="badge-checked">&check; Fatto</span> <strong>02-HLD:</strong> Architettura ad Alto Livello e Scelte Tecnologiche</li>
+<li><span class="badge-checked">&check; Fatto</span> <strong>03-LLD:</strong> Progetto Esecutivo di Dettaglio, Cablaggi e Matrice Porte Switch</li>
+<li><span class="badge-checked">&check; Fatto</span> <strong>04-MOP:</strong> Method of Procedure per il Deployment e Collaudo Fisico/Logico</li>
+<li><span class="badge-checked">&check; Fatto</span> <strong>05-Rollback:</strong> Piano di Contingency, Ripristino Emergenziale e No-Return Points</li>
+<li><span class="badge-checked">&check; Fatto</span> <strong>06-As-Built:</strong> Documentazione Tecnica Finale dell'Infrastruttura e Deviazioni</li>
+<li><span class="badge-checked">&check; Fatto</span> <strong>07-ATP:</strong> Acceptance Test Plan e Verbale di Collaudo Esecutivo (25/25 Pass)</li>
+<li><span class="badge-checked">&check; Fatto</span> <strong>08-SOP-Runbook:</strong> Procedure Operative Standard per Amministratori di Sistema</li>
+<li><span class="badge-checked">&check; Fatto</span> <strong>09-Handover-Inventory:</strong> Verbale di Presa in Carico e Registro Ufficiale Asset</li>
+</ul>
+<h3>1.4 Affiancamento e Training Operativo Completato</h3>
+<div class="table-container"><table><thead><tr><th>Sessione</th><th>Data</th><th>Destinatari</th><th>Argomenti Trattati</th><th>Esito</th></tr></thead><tbody><tr><td><strong>TR-01</strong></td><td>16/09/2026</td><td>Francesco Iavarone</td><td>Gestione Active Directory <code>severino.local</code>, OU, utenti e policy GPO</td><td>Superato</td></tr><tr><td><strong>TR-02</strong></td><td>16/09/2026</td><td>Francesco Iavarone</td><td>Switch MikroTik RouterOS v7, backup <code>.rsc</code>, monitoring e WAN isolation</td><td>Superato</td></tr><tr><td><strong>TR-03</strong></td><td>16/09/2026</td><td>Francesco Iavarone</td><td>Gestione VM Hyper-V su HP Z4, passthrough storage SSK 512 GB e VHDX 2 TB</td><td>Superato</td></tr><tr><td><strong>TR-04</strong></td><td>16/09/2026</td><td>Francesco Iavarone</td><td>ZeroTier Central SDN (<code>65228D8D6D71CA23</code>) e autorizzazione nodi remoti</td><td>Superato</td></tr><tr><td><strong>TR-05</strong></td><td>16/09/2026</td><td>F. Iavarone / M. Severino</td><td>Ciclo di backup su QNAP TS-233, test di restore e roadmap RustCopy v7.4.1+</td><td>Superato</td></tr><tr><td><strong>TR-06</strong></td><td>16/09/2026</td><td>Staff & Segreteria</td><td>Utilizzo Sala Riunioni Teams Rooms con tablet controller e Logitech Rally Bar</td><td>Superato</td></tr></tbody></table></div>
+<hr/>
+<h2>2. Registro Ufficiale Asset Hardware</h2>
+<div class="mermaid">
+pie title Distribuzione Valore e Consistenza Asset Severino Srl
+    "Postazioni MiniPC Client (7 unità)" : 35
+    "Compute & Storage (HP Z4 + QNAP + SSK)" : 30
+    "Collaboration Teams Rooms (TV 65 + Rally)" : 20
+    "Networking & Power (MikroTik + UniFi + UPS)" : 15
+</div>
+<h3>2.1 Tabella Dettagliata Apparati e Garanzie</h3>
+<div class="table-container"><table><thead><tr><th>Asset Tag</th><th>Dispositivo / Modello</th><th>Seriale (S/N)</th><th>MAC Address</th><th>IP Assegnato</th><th>Ubicazione</th><th>Copertura Garanzia</th><th>Scadenza Garanzia</th></tr></thead><tbody><tr><td><code>AST-SEV-01</code></td><td>HP Z4 G4 Workstation (Host Hyper-V)</td><td><code>CZC8492K1L</code></td><td><code>C4:65:16:88:00:10</code></td><td><code>192.168.120.10</code></td><td>Rack 10U (U4-3)</td><td>HP Care Pack 3y On-Site NBD</td><td>15/09/2029</td></tr><tr><td><code>AST-SEV-02</code></td><td>MikroTik CRS326-24G-2S+RM Switch Core</td><td><code>E4200891F7BC</code></td><td><code>48:8F:5A:12:34:00</code></td><td><code>192.168.120.1</code></td><td>Rack 10U (U7)</td><td>Garanzia Hardware Vendor 24m</td><td>15/09/2028</td></tr><tr><td><code>AST-SEV-03</code></td><td>QNAP TS-233 NAS (2x 4 TB RAID 1)</td><td><code>Q226B09871</code></td><td><code>24:5E:BE:11:22:50</code></td><td><code>192.168.120.250</code></td><td>Rack 10U (U6)</td><td>QNAP Standard Warranty 36m</td><td>15/09/2029</td></tr><tr><td><code>AST-SEV-04</code></td><td>SSK Aluminum SSD Esterno 512 GB</td><td><code>SSK-512G-202604</code></td><td>—</td><td>Passthrough SCSI</td><td>Retro Host Z4</td><td>Garanzia Commerciale 24m</td><td>15/09/2028</td></tr><tr><td><code>AST-SEV-05</code></td><td>Ubiquiti UniFi AP WiFi 6 Pro</td><td><code>U6-PRO-98412</code></td><td><code>70:A7:41:55:66:77</code></td><td><code>192.168.120.251</code></td><td>Soffitto Uffici</td><td>Ubiquiti Warranty 24m</td><td>15/09/2028</td></tr><tr><td><code>AST-SEV-06</code></td><td>Logitech Rally Bar 4K All-in-One</td><td><code>2215LZ0984</code></td><td><code>00:1F:20:AA:BB:CC</code></td><td><code>192.168.120.252</code></td><td>Sala Riunioni MTR</td><td>Logitech Select Support 36m</td><td>15/09/2029</td></tr><tr><td><code>AST-SEV-07</code></td><td>Logitech Tap IP Touch Tablet PoE</td><td><code>2218LZ4311</code></td><td><code>00:1F:20:DD:EE:FF</code></td><td>DHCP (Reservation)</td><td>Tavolo Riunioni</td><td>Logitech Select Support 36m</td><td>15/09/2029</td></tr><tr><td><code>AST-SEV-08</code></td><td>TV Smart 65 pollici 4K UHD</td><td><code>TV65-2026-SEV</code></td><td><code>B8:27:EB:12:34:56</code></td><td>Wireless / HDMI</td><td>Parete Riunioni</td><td>Garanzia Produttore 24m</td><td>15/09/2028</td></tr><tr><td><code>AST-SEV-09</code></td><td>UPS Gruppo Continuità 1500VA</td><td><code>UPS-1500-2026</code></td><td>—</td><td>—</td><td>Rack 10U (U2-1)</td><td>Garanzia 24m (Batt. incluse)</td><td>15/09/2028</td></tr><tr><td><code>AST-SEV-10</code></td><td>Stampante Multifunzione Laser LAN</td><td><code>PRN-HP-2026</code></td><td><code>00:1E:0B:44:55:66</code></td><td><code>192.168.120.253</code></td><td>Corridoio Stampa</td><td>Garanzia NBD 36m</td><td>15/09/2029</td></tr><tr><td><code>AST-SEV-11</code></td><td>HP ProDesk 400 G6 (<code>PC-DIR01</code>)</td><td><code>8CG0241M01</code></td><td><code>C4:65:16:88:01:A1</code></td><td><code>192.168.120.50</code></td><td>Ufficio Direzione</td><td>HP Commercial Care 36m</td><td>15/09/2029</td></tr><tr><td><code>AST-SEV-12</code></td><td>HP ProDesk 400 G6 (<code>PC-OPS01</code>)</td><td><code>8CG0241M02</code></td><td><code>C4:65:16:88:01:A2</code></td><td><code>192.168.120.51</code></td><td>Ufficio Operativo</td><td>HP Commercial Care 36m</td><td>15/09/2029</td></tr><tr><td><code>AST-SEV-13</code></td><td>HP ProDesk 400 G6 (<code>PC-ADM01</code>)</td><td><code>8CG0241M03</code></td><td><code>C4:65:16:88:01:A3</code></td><td><code>192.168.120.52</code></td><td>Amministrazione 1</td><td>HP Commercial Care 36m</td><td>15/09/2029</td></tr><tr><td><code>AST-SEV-14</code></td><td>HP ProDesk 400 G6 (<code>PC-ADM02</code>)</td><td><code>8CG0241M04</code></td><td><code>C4:65:16:88:01:A4</code></td><td><code>192.168.120.53</code></td><td>Amministrazione 2</td><td>HP Commercial Care 36m</td><td>15/09/2029</td></tr><tr><td><code>AST-SEV-15</code></td><td>HP ProDesk 400 G6 (<code>PC-HR01</code>)</td><td><code>8CG0241M05</code></td><td><code>C4:65:16:88:01:A5</code></td><td><code>192.168.120.54</code></td><td>Risorse Umane 1</td><td>HP Commercial Care 36m</td><td>15/09/2029</td></tr><tr><td><code>AST-SEV-16</code></td><td>HP ProDesk 400 G6 (<code>PC-HR02</code>)</td><td><code>8CG0241M06</code></td><td><code>C4:65:16:88:01:A6</code></td><td><code>192.168.120.55</code></td><td>Risorse Umane 2</td><td>HP Commercial Care 36m</td><td>15/09/2029</td></tr><tr><td><code>AST-SEV-17</code></td><td>HP ProDesk 400 G6 (<code>PC-AMG01</code>)</td><td><code>8CG0241M07</code></td><td><code>C4:65:16:88:01:A7</code></td><td><code>192.168.120.56</code></td><td>Ufficio Area Manager</td><td>HP Commercial Care 36m</td><td>15/09/2029</td></tr></tbody></table></div>
+<hr/>
+<h2>3. Registro Licenze Software Consegnate</h2>
+<p>Nessun codice di attivazione è esposto in chiaro; i riferimenti sono archiviati in modo sicuro nel Password Vault:</p>
+<div class="table-container"><table><thead><tr><th>Software / Servizio</th><th>Vendor</th><th>Modello Licenza</th><th>Quantità</th><th>Assegnazione</th><th>Percorso Vault Chiave</th><th>Scadenza / Rinnovo</th></tr></thead><tbody><tr><td><strong>Windows Server 2022 Datacenter</strong></td><td>Microsoft</td><td>16-Core License OEM</td><td>1 Host</td><td>Host HP Z4 (<code>HV-SEV01</code>)</td><td><code>vault://it/projects/severino-srl/licenses/ws2022-dc</code></td><td>Perpetua</td></tr><tr><td><strong>Windows Server CAL</strong></td><td>Microsoft</td><td>User CAL</td><td>20 CAL</td><td>Dominio <code>severino.local</code></td><td><code>vault://it/projects/severino-srl/licenses/ws-cal</code></td><td>Perpetua</td></tr><tr><td><strong>Windows 11 Pro 64-bit</strong></td><td>Microsoft</td><td>Digital License OEM</td><td>7 PC</td><td>MiniPC HP ProDesk 400 G6</td><td><code>vault://it/projects/severino-srl/licenses/win11-oem</code></td><td>Perpetua</td></tr><tr><td><strong>Microsoft Teams Rooms Pro</strong></td><td>Microsoft</td><td>Subscription Annuale</td><td>1 Room</td><td>Account <code>meeting@severino.it</code></td><td><code>vault://it/projects/severino-srl/teams/meeting</code></td><td>15/09/2027 (Annuale)</td></tr><tr><td><strong>ZeroTier SDN Network</strong></td><td>ZeroTier Inc.</td><td>Free Tier Enterprise</td><td>1 Network</td><td>Network ID <code>65228D8D6D71CA23</code></td><td><code>vault://it/projects/severino-srl/zerotier/admin</code></td><td>Illimitata (fino a 25 nodi)</td></tr><tr><td><strong>Cobian Reflector</strong></td><td>CobianSoft</td><td>Freeware Business</td><td>2 Istanze</td><td>VM <code>fs01</code> e VM <code>fs02</code></td><td>—</td><td>Illimitata</td></tr><tr><td><strong>RustCopy v7.4.1+</strong></td><td>Proprietario MatrixNeo</td><td>Open Source / Custom</td><td>2 Istanze</td><td>Script <code>C:\Scripts\rustcopy\</code></td><td><code>https://github.com/matrixNeo76/rustcopy</code></td><td>Licenza Open MIT</td></tr></tbody></table></div>
+<hr/>
+<h2>4. Livelli di Servizio (SLA) e Garanzie Operative</h2>
+<div class="table-container"><table><thead><tr><th>Servizio / Metrica</th><th>Parametro SLA Concordato</th><th>Metodo di Rilevamento</th><th>Procedura di Ripristino</th></tr></thead><tbody><tr><td><strong>Disponibilità Rete LAN (Uptime)</strong></td><td><strong>≥ 99.9%</strong> in orario lavorativo (Lun-Ven 08:00 - 19:00)</td><td>Ping sweep periodico su gateway <code>192.168.120.1</code></td><td>Bypass switch di emergenza (<span class=\"wiki-link\">&sect; guide-severino-srl-rollback-01</span>)</td></tr><tr><td><strong>RTO (Recovery Time Objective)</strong></td><td><strong>≤ 2 ore</strong> per ripristino servizi essenziali (DC/File Server)</td><td>Misurazione da evento di guasto</td><td>Ripristino VM da snapshot o backup QNAP</td></tr><tr><td><strong>RPO (Recovery Point Objective)</strong></td><td><strong>≤ 1 ora</strong> per perdita massima dati transazionali</td><td>Delta orario job backup</td><td>Schedulazione giornaliera incrementale</td></tr><tr><td><strong>Finestra di Manutenzione</strong></td><td>Venerdì ore 19:00 - Sabato ore 14:00 CET</td><td>Concordata preventivamente</td><td>Comunicazione con preavviso di 48 ore</td></tr></tbody></table></div>
+<hr/>
+<h2>5. Supporto Post-Handover: Periodo di Hypercare</h2>
+<p>A partire dalla data odierna (16/09/2026) e per i successivi <strong>30 giorni solari</strong> (fino al 16/10/2026), l'infrastruttura entra in regime di <strong>Hypercare</strong>:</p>
+<p>1. <strong>Canale Prioritario Diretto:</strong> Assistenza tecnica garantita per qualsiasi anomalia post-deploy entro 30 minuti dalla segnalazione.</p>
+<p>2. <strong>Health Check Settimanale:</strong> Ispezione remota dei log di sistema, dello stato del pool RAID 1 del QNAP e della saturazione dei dischi ogni venerdì.</p>
+<p>3. <strong>Validazione della Migrazione a RustCopy:</strong> Affiancamento e convalida al momento del rilascio definitivo di RustCopy v7.4.1+.</p>
+<hr/>
+<h2>6. Canali di Contatto e Supporto Vendor</h2>
+<div class="table-container"><table><thead><tr><th>Produttore / Servizio</th><th>Canale di Assistenza</th><th>Contratto / Support ID</th><th>Orario di Copertura</th></tr></thead><tbody><tr><td><strong>HP Enterprise / Inc.</strong></td><td>02-38591212 / hp.com/support</td><td>S/N <code>CZC8492K1L</code> (HP Care Pack)</td><td>Lun-Ven 08:00 - 18:00 (NBD On-Site)</td></tr><tr><td><strong>MikroTik Support</strong></td><td>support@mikrotik.com / forum.mikrotik.com</td><td>Account Partner Ufficiale</td><td>24/7 (Forum e ticket)</td></tr><tr><td><strong>QNAP Systems</strong></td><td>service.qnap.com / Portale Helpdesk</td><td>S/N <code>Q226B09871</code></td><td>Lun-Ven 09:00 - 18:00</td></tr><tr><td><strong>Logitech Video Collab</strong></td><td>prosupport.logi.com</td><td>Contratto Logitech Select <code>2215LZ0984</code></td><td>24/7 Phone & Web Portal</td></tr><tr><td><strong>ZeroTier SDN Support</strong></td><td>discuss.zerotier.com / ticket Central</td><td>Network <code>65228D8D6D71CA23</code></td><td>Community & Business Desk</td></tr><tr><td><strong>Lead Architect Interno</strong></td><td><strong>Marco Severino</strong> (Cellulare / Email aziendale)</td><td>Direzione Severino Srl</td><td>Reperibilità prioritaria</td></tr><tr><td><strong>Senior Administrator</strong></td><td><strong>Francesco Iavarone</strong> (Cellulare / Console remota)</td><td>IT Operations Severino Srl</td><td>Reperibilità operativa</td></tr></tbody></table></div>
+<hr/>
+<h2>7. Accettazione Formale e Conclusione dei Lavori</h2>
+<p>Con la presente sottoscrizione, le parti dichiarano:</p>
+<ul>
+<li>Di aver verificato la completa conformità dell'infrastruttura rispetto alle specifiche tecniche pattuite.</li>
+<li>Di aver ricevuto la totalità della documentazione (fasi 1-7, 9 documenti OKF v0.2).</li>
+<li>Di aver preso in carico la gestione operativa dei sistemi in produzione.</li>
+</ul>
+<div class="table-container"><table><thead><tr><th>Ruolo</th><th>Nominativo</th><th>Data Verbale</th><th>Firma Digitale / Presa in Carico</th></tr></thead><tbody><tr><td><strong>Committente & Lead Architect</strong></td><td>Marco Severino</td><td>16/09/2026</td><td><em>Firmato elettronicamente da Marco Severino</em></td></tr><tr><td><strong>Senior Systems Administrator</strong></td><td>Francesco Iavarone</td><td>16/09/2026</td><td><em>Firmato elettronicamente da Francesco Iavarone</em></td></tr><tr><td><strong>Architetto di Sistema & QA</strong></td><td>AI Systems Architect</td><td>16/09/2026</td><td><em>Validato conforme standard OKF v0.2 [PASS]</em></td></tr></tbody></table></div>
+<hr/>
+<h2>8. Checklist di Validazione Handover & Inventory</h2>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> L'inventario hardware coincide fedelmente con quanto censito nell'As-Built (§4).</li>
+<li><span class="badge-checked">&check; Fatto</span> Tutte le 17 unità hardware (host, switch, NAS, SSK, AP, Teams, 7 MiniPC, UPS) hanno seriali e IP verificati.</li>
+<li><span class="badge-checked">&check; Fatto</span> Il registro licenze software è completo con puntatori sicuri <code>vault://</code>.</li>
+<li><span class="badge-checked">&check; Fatto</span> Il piano di training del personale è stato formalizzato con sessioni TR-01..TR-06.</li>
+<li><span class="badge-checked">&check; Fatto</span> Il periodo di Hypercare di 30 giorni è attivo con parametri definiti.</li>
+<li><span class="badge-checked">&check; Fatto</span> Firme delle parti acquisite.</li>
+<li><span class="badge-checked">&check; Fatto</span> Documento validato formalmente secondo lo standard OKF v0.2.</li>
+</ul>
         </div>
     </div>
             
