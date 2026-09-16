@@ -1,0 +1,128 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "[ITInfra] 1. Diagnostica Connessione e Permessi Share (check-share)",
+      "type": "shell",
+      "command": "python",
+      "args": ["scripts/itinfra.py", "check-share"],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "[ITInfra] 2. Aggiorna Motore e Template da Server (sync-engine)",
+      "type": "shell",
+      "command": "python",
+      "args": ["scripts/itinfra.py", "sync-engine"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "[ITInfra] 3. Valida Documento OKF v0.2 Attivo (Ctrl+Shift+B)",
+      "type": "shell",
+      "command": "python",
+      "args": ["scripts/itinfra.py", "validate", "${file}"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "[ITInfra] 4. Inizializza Nuovo Progetto Cliente (init)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "scripts/itinfra.py",
+        "init",
+        "${input:projectSlug}",
+        "--client",
+        "${input:clientName}",
+        "--name",
+        "${input:projectTitle}"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "[ITInfra] 5. Audit Coerenza e Zero-Hallucination (audit-consistency)",
+      "type": "shell",
+      "command": "python",
+      "args": ["scripts/itinfra.py", "audit-consistency", "${input:projectSlug}"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "[ITInfra] 6. Pubblica Progetto su Storage Master (publish)",
+      "type": "shell",
+      "command": "python",
+      "args": ["scripts/itinfra.py", "publish", "${input:projectSlug}"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "[ITInfra] 7. Esegui Enterprise System Test Suite (12 Moduli)",
+      "type": "shell",
+      "command": "python",
+      "args": ["scripts/itinfra.py", "test-suite", "--no-html"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "[ITInfra] 8. Genera e Apri Knowledge Graph D3.js",
+      "type": "shell",
+      "command": "python",
+      "args": ["scripts/itinfra.py", "export-graph", "all"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "projectSlug",
+      "type": "promptString",
+      "description": "Inserisci lo slug del progetto (es. banca-del-nord):",
+      "default": "severino-srl"
+    },
+    {
+      "id": "clientName",
+      "type": "promptString",
+      "description": "Inserisci il nome del cliente:",
+      "default": "Nuovo Cliente"
+    },
+    {
+      "id": "projectTitle",
+      "type": "promptString",
+      "description": "Inserisci il titolo del progetto:",
+      "default": "Rinnovo Infrastruttura di Rete"
+    }
+  ]
+}

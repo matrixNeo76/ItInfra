@@ -2393,6 +2393,28 @@ def cmd_check_share(args: argparse.Namespace) -> int:
         print(colorize(msg, COLOR_RED if not report.get("reachable") else COLOR_YELLOW))
         return 1
 
+def cmd_deploy_share(args: argparse.Namespace) -> int:
+    """Distribuisce in modo differenziale e atomico template e script sulla share master (Release v0.9.5)."""
+    try:
+        from itinfra_deploy import CentralDeployer
+    except ImportError:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from itinfra_deploy import CentralDeployer
+
+    deployer = CentralDeployer()
+    ok, msg, stats = deployer.deploy(
+        target_share=args.dest,
+        dry_run=args.dry_run,
+        quiet=False
+    )
+    if ok:
+        print(colorize(msg, COLOR_GREEN if not args.dry_run else COLOR_CYAN))
+        return 0
+    else:
+        print(colorize(msg, COLOR_RED))
+        return 1
+
 def cmd_memory(args: argparse.Namespace) -> int:
     """Gestisce la Memoria Locale Ibrida a 3 Livelli e i Trust Signals (Release v0.6 e v0.8)."""
     try:
@@ -2821,6 +2843,11 @@ def main():
     p_chk.add_argument("--user", default=None, help="Nome utente SMB per simulare un profilo tecnico (opzionale)")
     p_chk.add_argument("--password", default=None, help="Password SMB per simulare un profilo tecnico (opzionale)")
 
+    # Comando deploy-share (Release v0.9.5)
+    p_dep = subparsers.add_parser("deploy-share", help="Distribuisce in modo differenziale template e script sulla share centrale (Release v0.9.5)")
+    p_dep.add_argument("--dest", default=None, help=f"Percorso della share centrale (default: '{DEFAULT_CENTRAL_SHARE}')")
+    p_dep.add_argument("--dry-run", action="store_true", help="Simula il deploy differenziale senza copiare file")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -2867,6 +2894,8 @@ def main():
         return cmd_sync_engine(args)
     elif args.command == "check-share":
         return cmd_check_share(args)
+    elif args.command == "deploy-share":
+        return cmd_deploy_share(args)
     else:
         parser.print_help()
         return 1

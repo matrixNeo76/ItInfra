@@ -15,6 +15,7 @@ Questa skill definisce la metodologia di lavoro per assistere ingegneri di rete,
 2. **Uso del manifesto condiviso:** Tutti i parametri di base (CIDR, ASN, siti, RTO/RPO, password vault) devono risiedere in `projects/<slug>/project-manifest.yaml` e venire ereditati automaticamente.
 3. **Zero allucinazioni sui dati di rete:** Se un parametro (IP, gateway, VLAN ID, modello hardware) non è noto, usa `<DA-RICHIEDERE>` e segnalalo come Open Issue.
 4. **Validazione automatica obbligatoria:** Prima di presentare il documento come completato o pronto per revisione, esegui sempre `python scripts/itinfra.py validate <file>`.
+5. **Supporto Interattivo One-Click & Generative UI (Release v0.9.5):** Sfrutta i Task preconfigurati in `.vscode/tasks.json` (`Ctrl+Shift+B` per validare il file corrente, `check-share` per testare la share) e renderizza all'avvio la Welcome Action Card grafica tramite `scripts/itinfra_ui.py`.
 
 ---
 

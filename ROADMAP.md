@@ -15,9 +15,9 @@ reviewer: "Community & System Architects"
 approver: "Project Maintainer"
 owner_team: "Infrastructure Architecture & Knowledge Engineering"
 status: "approved"
-version: "1.0.0"
+version: "1.1.0"
 created_at: "2026-09-15"
-updated_at: "2026-09-15"
+updated_at: "2026-09-16"
 related_docs:
   - "specification-itinfra-assistant-v02"
   - "guide-itinfra-development-plan-v02"
@@ -310,22 +310,50 @@ timeline
 
 ---
 
-### 🚀 Release v0.9 — Local Workspace & Central Publish Architecture (`itinfra.py publish`) (In Pianificazione / Sviluppo)
-- [ ] **Disaccoppiamento Local Workspace su SSD & Central Hub (`\\fileserv01\dati01\workaure`):**
+### ✅ Release v0.9 — Local Workspace, Central Publish Architecture & Diagnostics (Completato)
+- [x] **Disaccoppiamento Local Workspace su SSD & Central Hub (`\\fileserv01\dati01\workaure`):**
   - I tecnici LAN lavorano sulla propria cartella locale (`C:\itinfra\`) beneficiando della massima velocità SSD per Antigravity.
   - Eliminazione alla radice di problemi di latenza SMB, lock Git concorrenti e blocchi di file watcher su percorsi UNC.
-- [ ] **Modulo Central Publisher & Quality Gate (`scripts/itinfra_publish.py`):**
+- [x] **Modulo Central Publisher & Quality Gate (`scripts/itinfra_publish.py`):**
   - Comando CLI `python scripts/itinfra.py publish <slug> [--dest <path>] [--dry-run] [--force]`.
   - **Pre-Publish Quality Gate obbligatorio**: validazione formale OKF v0.2 a 0 errori, audit di coerenza semantica IP/subnet e scansione anti-leak di credenziali in chiaro prima della copia.
   - **Copia Atomica Confinata**: sincronizzazione esclusiva dei file di `projects/<slug>/`, garantendo l'inviolabilità di `scripts/`, `templates/` e dei progetti altrui.
   - Protezione automatica dei progetti in stato `approved` contro sovrascritture accidentali.
-- [ ] **Sincronizzazione Unidirezionale del Motore Locale (`itinfra.py sync-engine`):**
+- [x] **Sincronizzazione Unidirezionale del Motore Locale (`itinfra.py sync-engine`):**
   - Comando CLI per aggiornare template e script scaricando le ultime release consolidate dal server master centrale.
-- [ ] **Setup One-Click per Client Windows 11 & Condivisione Master:**
+- [x] **Diagnostica di Rete e Matrice Permessi (`itinfra.py check-share`):**
+  - Comando CLI diagnostico con simulazione utente (--user/--password) o sessione Windows per verificare raggiungibilità SMB, lettura core, scrittura su projects/ e protezione da manomissione cartelle core.
+- [x] **Setup One-Click per Client Windows 11 & Condivisione Master:**
   - Script `scripts/init_central_share.ps1` per allestire e manutenere la share centrale.
-  - Script `scripts/setup_client_workspace.ps1` per configurare istantaneamente il workspace locale del tecnico.
-- [ ] **Nuova Guida Operativa:**
-  - Manuale OKF v0.2 `docs/11-GUIDA-LOCAL-WORKSPACE-CENTRAL-PUBLISH.md`.
+  - Script `scripts/setup_client_workspace.ps1` con installazione automatica di Python via `winget` e librerie minime.
+- [x] **Skill Dedicata Antigravity `itinfra-setup`:**
+  - Bootstrapper autonomo in 5 fasi in `.agents/skills/itinfra-setup/SKILL.md` e `skills/itinfra-setup/`.
+- [x] **Nuove Guide Operative OKF v0.2:**
+  - Manuale `docs/11-GUIDA-LOCAL-WORKSPACE-CENTRAL-PUBLISH.md`.
+  - Manuale `docs/12-GUIDA-ONBOARDING-TECNICI-ANTIGRAVITY.md`.
+- [x] **Enterprise System Test Suite (MOD-11):**
+  - Modulo 11/11 collaudato con successo al 100% (Pre-flight, Anti-leak, dry-run e diagnostica check-share).
+
+---
+
+### 🚀 Release v0.9.5 — Client Interactive Experience & Automated Distribution Workflow (In Pianificazione / Prossimo Step)
+- [ ] **Automated Continuous Delivery su Share Master (Git Post-Commit Hook / Auto-Deploy):**
+  - Hook automatico che, al momento del commit/push dal repository di sviluppo, sincronizza in background e in modo differenziale la share centrale `\\fileserv01\dati01\workaure` senza interventi manuali.
+- [ ] **Client Startup Auto-Sync Hook (Controllo di Versione Trasparente):**
+  - Controllo automatico della versione/timestamp del motore all'apertura del workspace in Antigravity con notifica o allineamento silenzioso dei template.
+- [ ] **Suite di Attività GUI One-Click (`.vscode/tasks.json`):**
+  - Task preconfigurati visuali richiamabili con `Ctrl+Shift+B` o dalla Status Bar di Antigravity:
+    - `[ITInfra] Diagnostica Share (check-share)`
+    - `[ITInfra] Aggiorna Template (sync-engine)`
+    - `[ITInfra] Valida Documento OKF v0.2`
+    - `[ITInfra] Pubblica Progetto su Server`
+    - `[ITInfra] Genera Diagramma D3 / Topologia`
+- [ ] **Cruscotto Interattivo Generative UI (Card Cliccabili in Chat):**
+  - Card grafiche con pulsanti di azione all'avvio della chat e schede visuali per il Pre-Flight Quality Gate prima del publish.
+- [ ] **Slash Commands Dedicati per i Tecnici:**
+  - Scorciatoie rapide `/check`, `/publish`, `/sync`, `/new-project` per velocizzare le operazioni ricorrenti.
+- [ ] **Automated Anti-Tamper & Pre-Commit Audit Hook:**
+  - Controllo preventivo anti-leak sul client prima del salvataggio dei file di progetto.
 
 
 ---

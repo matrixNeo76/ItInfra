@@ -187,6 +187,7 @@ python scripts/itinfra.py test-suite [--report-html] [--no-html] [--out projects
 python scripts/itinfra.py publish <slug> [--dest <path>] [--dry-run] [--force]
 python scripts/itinfra.py sync-engine [--source <path>] [--dry-run]
 python scripts/itinfra.py check-share [--path <path>] [--user <user>] [--password <pass>]
+python scripts/itinfra.py deploy-share [--dest <path>] [--dry-run]
 ```
 
 ### 7. Validazione finale & Gate di Qualità
