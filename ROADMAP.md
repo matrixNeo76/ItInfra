@@ -426,28 +426,27 @@ timeline
 
 ---
 
-### 🔮 Release v0.10 — Advanced Topology Engine, MCP Server & Automated CI/CD (Pianificato Q1 2027)
-- [ ] **Server MCP Nativo (Model Context Protocol):**
-  - Implementazione del server standalone `scripts/itinfra_mcp.py` basato sullo standard open-source MCP.
-  - Esposizione di strumenti nativi (init, status, validate, audit-consistency, memory, inventory, troubleshoot, test-suite) per Claude Desktop, Cursor MCP, Windsurf e agenti LLM esterni.
+### 🔮 Release v0.10 — Advanced Topology Engine, Offline Exporters & Automated CI/CD (Pianificato Q1 2027)
+- [ ] **Architettura 100% Offline-First & Zero-Dipendenze (Design Philosophy Confermato):**
+  - Mantenimento dell'infrastruttura snella basata su filesystem locale, Python standard e Git/SMB. Nessuna dipendenza da server MCP esterni, demoni o microservizi REST API da manutenere.
 - [ ] **Advanced Topology & Cabling Generator:**
   - Generazione automatica di schemi topologici Spine-Leaf ad alta definizione con raggruppamento per rack/ruolo e mappatura colori per VLAN.
   - Generazione di diagrammi di cablaggio e patch-panel (SFP28, QSFP28, Cat.6A) direttamente dal documento LLD.
-- [ ] **Automated CI/CD Quality Gates (GitHub Actions):**
-  - Workflow `.github/workflows/quality-gate.yml` per la validazione automatica di tutte le Pull Request.
+- [ ] **Automated CI/CD Quality Gates (GitHub Actions & Pre-Commit):**
+  - Workflow `.github/workflows/quality-gate.yml` e hook di pre-commit per la validazione automatica di tutti i documenti.
   - Esecuzione obbligatoria del linter OKF v0.2, dell'audit di coerenza semantica incrociata e della suite di test unificata con blocco merge in caso di warning o secret leaks.
-- [ ] **Direct IPAM REST API Integration:**
-  - Connettore client REST per sincronizzazione diretta e provisioning di subnet, pool IP e VLAN verso le API di NetBox e Nautobot.
+- [ ] **Enterprise IPAM & Asset Offline Converters:**
+  - Script autonomi di export/import per esportare tabelle IPAM e inventari da Markdown verso formati CSV, XLSX e JSON standard (compatibili con import massivo su NetBox e Nautobot).
 
 ---
 
-### 🌐 Release v1.0 — Enterprise Ecosystem & Sincronizzazione Live (Pianificato Q2 2027)
-- [ ] **Sincronizzazione Bidirezionale NetBox / Nautobot:**
-  - Connettore API per popolare automaticamente il `project-manifest.yaml` e l'As-Built a partire dai dati live dell'infrastruttura.
+### 🌐 Release v1.0 — Enterprise Ecosystem & Ciclo di Vita Contrattuale (Pianificato Q2 2027)
+- [ ] **Import/Export Strutturato per Sistemi IPAM (NetBox / Nautobot Offline Dumps):**
+  - Generazione di bundle pronti per il caricamento su strumenti IPAM aziendali a partire dal manifesto e da `03-LLD.md`.
 - [ ] **Knowledge Graph 3D per Infrastrutture:**
   - Integrazione col visualizzatore D3/Three.js del Knowledge Vault per navigare graficamente rack, switch, server e relative relazioni contrattuali.
-- [ ] **Gestione Ciclo di Vita Contrattuale (Handover):**
-  - Generazione di alert calendario (ICS / Webhook) per le date di rinnovo garanzie hardware e licenze software documentate in `09-Handover-Inventory.md`.
+- [ ] **Gestione Ciclo di Vita Contrattuale (Handover & Warranty Alerts):**
+  - Generazione di report periodici e calendari (file standard `.ics` / promemoria locali) per le date di rinnovo garanzie hardware e licenze software documentate in `09-Handover-Inventory.md`.
 
 
 

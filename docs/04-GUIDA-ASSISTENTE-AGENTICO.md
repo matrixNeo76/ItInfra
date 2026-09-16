@@ -231,5 +231,36 @@ Prima di consegnare la documentazione approvata o procedere alla chiusura di fas
 ```bash
 python scripts/itinfra.py test-suite --report-html
 ```
-L'agente verifica che tutti i 10 moduli di collaudo superino il test con Pass Rate 100%, attestando l'integrità formale e l'assenza di secret leaks.
+L'agente verifica che tutti i 13 moduli di collaudo superino il test con Pass Rate 100%, attestando l'integrità formale e l'assenza di secret leaks.
+
+---
+
+## 7. La Sinergia Operativa: Cruscotto Visivo (Generative UI) vs Assistente AI (Chat)
+
+Per evitare confusione sui ruoli dei diversi strumenti, ITInfra stabilisce una netta ed efficiente separazione delle responsabilità tra il Cruscotto Esecutivo grafico e l'Assistente Conversazionale:
+
+### 7.1 La Generative UI (`ui` / `dashboard`): La Cabina di Regia Visiva
+- **A cosa risponde:** *"Cosa c'è e cosa manca? Qual è lo stato di salute generale?"*
+- **Ruolo:** Non è un editor di testo né un form web. È un sinottico di telemetria progettato per eliminare lo scorrimento infinito della chat:
+  - Mostra la **Matrice a 10 Documenti** con badge di stato colorati (`Approved`, `In-Review`, `Draft`, `Missing`) per tutti i progetti.
+  - Riporta la diagnostica in tempo reale della share centrale SMB (`\\fileserv01\dati01\workaure`).
+  - Fornisce pulsanti **Click-to-Action** con copia immediata negli appunti, sollevando l'ingegnere dal dover ricordare i parametri dei comandi CLI.
+
+### 7.2 L'Assistente AI in Chat: Il Braccio Esecutivo e l'Architetto
+- **A cosa risponde:** *"Come progettare la topologia? Come redigere i documenti?"*
+- **Ruolo:** È il motore cognitivo che gestisce le attività ad alto valore intellettuale:
+  - Conduce l'**intervista a blocchi tematici** (Scope, Rete, Compute, Sicurezza, ATP).
+  - Impone la politica **Zero-Hallucination**: calcola le subnet e non inventa parametri (`<DA-RICHIEDERE>`).
+  - Scrive e valida direttamente i file Markdown OKF v0.2 sul filesystem.
+
+### 7.3 Workflow Integrato: Il Ciclo a 3 Passi
+1. **Verifica Visiva:** L'ingegnere apre il cruscotto (`ui` in chat o doppio clic sull'icona) e individua le priorità (es. documento mancante o in bozza).
+2. **Progettazione in Chat:** Inizia il dialogo con l'assistente per compilare il documento specifico.
+3. **Aggiornamento Automatico:** Al salvataggio del file, il cruscotto riflette istantaneamente il nuovo stato approvato e l'avanzamento della fase.
+
+### 7.4 Filosofia 100% Offline-First (Zero-Dipendenze & No-Server)
+ITInfra **non richiede né adotta architetture a microservizi, demoni REST API o server MCP esterni**:
+- Tutto il software funziona come un kit di strumenti desktop autonomo.
+- I dati risiedono esclusivamente su file Markdown locali, versionati su Git e sincronizzati su share SMB aziendale.
+- Massima velocità, sicurezza a prova di audit e zero overhead di manutenzione server.
 

@@ -244,6 +244,7 @@ version: "0.1.0"
             (r'author:\s*"<nome>"', f'author: "{lead_architect}"'),
             (r'owner_team:\s*"<team>"', f'owner_team: "{owner_team}"'),
             (r"<team responsabile>", owner_team),
+            (r"<incident_id>", "01"),
             (r"<YYYY-MM-DD>", created_at),
             (r'title:\s*"([^"]*)<titolo progetto[^>]*>([^"]*)"', rf'title: "\1{project_name}\2"'),
             (r'title:\s*"([^"]*)<nome progetto>([^"]*)"', rf'title: "\1{project_name}\2"'),

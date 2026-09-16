@@ -104,10 +104,19 @@ python scripts/itinfra.py <comando> [opzioni]
 ```
 
 I comandi disponibili sono:
-- **`list-templates`**: Elenca tutti gli 11 template documentali OKF v0.2 e le relative fasi del ciclo IT.
+- **`start`**: Avvio all-in-one del workflow: inizializza, genera con auto-scaffold i 10 documenti OKF v0.2 e apre la UI (Release v0.9.11).
+- **`scaffold`**: Propaga automaticamente i dati del manifesto nei 10 documenti OKF v0.2, con auto-inizializzazione trasparente (Release v0.9.10).
+- **`ui`** / **`dashboard`**: Genera il cruscotto esecutivo Enterprise Generative UI per chat Antigravity e browser (Release v0.9.9).
 - **`init`**: Inizializza un nuovo progetto creando la cartella e il manifesto precompilato.
 - **`status`**: Visualizza la dashboard dell'avanzamento documentale, qualità OKF e stato dei ticket RCA.
 - **`validate`**: Esegue il linter formale OKF v0.2, verifica i link, le dipendenze e controlla la sicurezza.
+- **`publish`**: Esegue il Quality Gate OKF v0.2 e pubblica il progetto sullo storage master centrale (Release v0.9).
+- **`sync-engine`**: Sincronizza template, script e guide locali con la share master centrale.
+- **`check-share`**: Esegue il test diagnostico di raggiungibilità, permessi e integrità della share master.
+- **`deploy-share`**: Distribuisce l'intero repository aggiornato verso lo storage master centrale.
+- **`test-suite`**: Esegue l'Enterprise Test Suite (13 moduli) per il collaudo formale offline (Release v0.8 / v0.9.10).
+- **`memory`**: Gestione della Memoria Locale Ibrida a 3 Livelli, Global Scratchpad e Trust Signals (Release v0.6 e v0.8).
+- **`inventory`**: Interrogazione e inventario enterprise degli asset hardware e nodi ponte cross-cliente (Release v0.7).
 - **`export-ipam`**: Estrae le tabelle di indirizzamento da documenti LLD/As-Built in formati CSV/JSON per NetBox.
 - **`generate-diagram`**: Produce diagrammi Mermaid (topologia di rete o elevazione rack) a partire dai file LLD.
 - **`export-html`**: Genera il report consolidato interattivo del progetto con dashboard KPI e tab dedicate.
@@ -118,11 +127,6 @@ I comandi disponibili sono:
 - **`troubleshoot`**: Inizializza ed elenca i ticket di incidente collegati ad As-Built e manifesto per generare la scheda 10-RCA.
 - **`health-check`**: Esegue telemetria passiva non distruttiva (ICMP ping, probe porte TCP critiche) sui nodi del manifest.
 - **`export-graph`**: Genera la mappa interattiva D3.js Knowledge Graph con nodi tipizzati e relazioni ontologiche.
-- **`export-html`**: Genera un report consolidato completo in formato HTML per il progetto con grafici interattivi.
-- **`vault`**: Gestione del Local Encrypted Secret Vault (AES-256-GCM) con file locking atomico.
-- **`worktree`**: Orchestrazione di Git Worktrees isolati per agenti AI concorrenti.
-- **`audit-consistency`**: Linter semantico di coerenza incrociata e motore Strict Grounding (Zero-Hallucination).
-- **`export-configs`**: Estrazione di script di configurazione operativi RouterOS (`.rsc`) e PowerShell (`.ps1`).
 
 ---
 
@@ -534,6 +538,63 @@ python scripts/itinfra.py sync-engine --source "\\fileserv01\dati01\workaure"
 [SUCCESSO SYNC-ENGINE] Motore locale allineato con successo!
   Sorgente centrale: \\fileserv01\dati01\workaure
   File aggiornati: 0 su 37 scansionati.
+```
+
+---
+
+### 3.20 `start` — Onboarding All-in-One del Progetto (Release v0.9.11)
+Esegue l'intero ciclo di onboarding a passaggio singolo: inizializza il manifesto di progetto, propaga le variabili con auto-scaffold nei 10 documenti OKF v0.2 e apre il Cruscotto Esecutivo Generative UI:
+
+```bash
+# Avvio rapido con cliente e nome standard:
+python scripts/itinfra.py start <slug>
+
+# Avvio con metadati espliciti:
+python scripts/itinfra.py start acme-dc --client "Acme S.p.A." --name "Modernizzazione Data Center"
+
+# Avvio aprendo direttamente la dashboard nel browser predefinito:
+python scripts/itinfra.py start acme-dc --open
+
+# Da terminale rapido Windows:
+it start acme-dc
+```
+
+---
+
+### 3.21 `scaffold` — Propagazione Automatica e Auto-Healing (Release v0.9.10 / v0.9.11)
+Analizza `project-manifest.yaml` e propaga in modo atomico tutti i parametri certi (CIDR, VLAN, hostname, apparati hardware, prefissi vault) all'interno dei 10 documenti OKF v0.2. Se il progetto non è ancora presente, lo inizializza automaticamente senza generare errori (Auto-Healing trasparente):
+
+```bash
+# Esecuzione dello scaffolding su un progetto:
+python scripts/itinfra.py scaffold <slug>
+
+# Simulazione preflight senza scrittura su disco:
+python scripts/itinfra.py scaffold <slug> --dry-run
+
+# Forzatura riscrittura template esistenti:
+python scripts/itinfra.py scaffold <slug> --force
+
+# Da terminale rapido:
+it scaffold <slug>
+```
+
+---
+
+### 3.22 `ui` / `dashboard` — Cruscotto Esecutivo Generative UI (Release v0.9.9)
+Genera e visualizza l'Enterprise Cockpit Generative UI con design token scuri e visualizzazione sinottica della matrice a 10 documenti per tutti i progetti:
+
+```bash
+# Genera la dashboard e stampa il tag <agent-embed> per la chat Antigravity:
+python scripts/itinfra.py ui
+
+# Genera e apre la dashboard nel browser web:
+python scripts/itinfra.py ui --open
+
+# Salvataggio in un percorso personalizzato:
+python scripts/itinfra.py ui --out "C:/Users/tecnico/dashboard.html"
+
+# Da terminale rapido:
+it ui
 ```
 
 

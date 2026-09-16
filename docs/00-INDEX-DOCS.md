@@ -172,8 +172,8 @@ graph TD
 |-----------|----------|-------------------|
 | [`01-SPEC-ITINFRA-ASSISTANT.md`](./01-SPEC-ITINFRA-ASSISTANT.md) | `specification` | Architettura dei componenti della suite: Project Registry, Linter CLI, Wizard a turni e Skill. |
 | [`02-ROADMAP-PIANO-SVILUPPO.md`](./02-ROADMAP-PIANO-SVILUPPO.md) | `guide` | Tabella di marcia esecutiva a 5 fasi, criteri di accettazione e tracciabilità. |
-| [`03-GUIDA-CLI-ITINFRA.md`](./03-GUIDA-CLI-ITINFRA.md) | `guide` | Guida passo-passo a tutti i comandi di `scripts/itinfra.py` (`init`, `status`, `validate`, `publish`, `sync-engine`). |
-| [`04-GUIDA-ASSISTENTE-AGENTICO.md`](./04-GUIDA-ASSISTENTE-AGENTICO.md) | `guide` | Come utilizzare Google Antigravity, Claude Code e Cursor per condurre l'intervista guidata per blocchi. |
+| [`03-GUIDA-CLI-ITINFRA.md`](./03-GUIDA-CLI-ITINFRA.md) | `guide` | Guida completa a tutti i comandi di `scripts/itinfra.py` (`start`, `scaffold`, `ui`, `init`, `status`, `validate`, `publish`, `sync-engine`). |
+| [`04-GUIDA-ASSISTENTE-AGENTICO.md`](./04-GUIDA-ASSISTENTE-AGENTICO.md) | `guide` | Come utilizzare Google Antigravity, Claude Code e Cursor per condurre l'intervista guidata per blocchi e la sinergia tra UI e Chat. |
 | [`05-MANIFEST-E-PROGETTI.md`](./05-MANIFEST-E-PROGETTI.md) | `specification` | Gestione della cartella `projects/`, ereditarietà parametri di rete e schema `project-manifest.yaml`. |
 | [`06-COMPLIANCE-E-SICUREZZA.md`](./06-COMPLIANCE-E-SICUREZZA.md) | `specification` | Approfondimento normativo: integrazione e checklist per NIS2, ISO/IEC 27001:2022 e regolamento DORA. |
 | [`07-GUIDA-RISOLUZIONE-PROBLEMATICHE-AI.md`](./07-GUIDA-RISOLUZIONE-PROBLEMATICHE-AI.md) | `guide` | Metodologia operativa per richiedere a Antigravity, Claude Code o Cursor la risoluzione di disservizi IT (OSI L1-L7, 5 Perché, CAPA e template 10-RCA). |
@@ -189,7 +189,8 @@ graph TD
 ## 🔗 Collegamenti Rapidi Esterni
 
 - **Visione Strategica:** [`ROADMAP.md`](../ROADMAP.md)
-- **Regole per Agenti AI:** [`AGENTS.md`](../AGENTS.md)
+- **Istruzioni per Google Antigravity & Gemini:** [`GEMINI.md`](../GEMINI.md)
+- **Regole Generali per Agenti AI:** [`AGENTS.md`](../AGENTS.md)
 - **Istruzioni per Claude Code:** [`CLAUDE.md`](../CLAUDE.md)
 - **Catalogo dei 10 Template:** [`templates/00-INDEX.md`](../templates/00-INDEX.md)
 - **Integrazione con Knowledge Vault:** [`INTEGRAZIONE-REPO.md`](../INTEGRAZIONE-REPO.md)
