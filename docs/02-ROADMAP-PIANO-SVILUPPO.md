@@ -15,7 +15,7 @@ reviewer: "Tech Lead"
 approver: "Project Sponsor"
 owner_team: "DevOps & Infrastructure Architecture"
 status: "approved"
-version: "1.2.0"
+version: "1.4.0"
 created_at: "2026-09-15"
 updated_at: "2026-09-16"
 related_docs:
@@ -80,9 +80,17 @@ gantt
     Anti-Hallucination Consistency Linter:done, p9, 2026-09-16, 1d
     Multi-Framework Skills (.agents/)  :done, p10, 2026-09-16, 1d
     section Fase 5: v0.5 Troubleshooting & RCA
-    Template 10-RCA-Troubleshooting.md :active, p11, 2026-09-17, 1d
-    Agent & Skill itinfra-troubleshooter:active, p12, 2026-09-17, 1d
-    CLI Troubleshooting Command        :active, p13, 2026-09-17, 1d
+    Template 10-RCA-Troubleshooting.md :done, p11, 2026-09-16, 1d
+    Agent & Skill itinfra-troubleshooter:done, p12, 2026-09-16, 1d
+    CLI Troubleshooting Command        :done, p13, 2026-09-16, 1d
+    section Fase 6: v0.6 Memoria Ibrida & Trust
+    Staging Scratchpad & Trust Signals :done, p14, 2026-09-16, 1d
+    section Fase 7: v0.7 Enterprise Graph & Inventory
+    Shared Entity Bridges & Inventory  :done, p15, 2026-09-16, 1d
+    section Fase 8: v0.8 Global Staging & Test Suite
+    Global Pool & System Test Suite    :done, p16, 2026-09-16, 1d
+    section Fase 9: v0.9 MCP & Topology Engine
+    MCP Server & Advanced Topologies   :active, p17, 2026-09-17, 1d
 ```
 
 ---
@@ -103,14 +111,38 @@ gantt
 - **Multi-Framework Skills:** cartella standard `.agents/skills/` con `itinfra-assistant` e `itinfra-vault`, allineate a `AGENTS.md` e `CLAUDE.md`.
 - **Esportazione Script Operativi:** comando `export-configs` per estrarre script RouterOS `.rsc` e PowerShell `.ps1`.
 
-### Release v0.5 — Client Incident Management & Deterministic RCA (Pianificato)
+### Release v0.5 — Incident Management & Deterministic RCA (Completato)
 - **Template OKF v0.2 `10-RCA-Troubleshooting.md`:** modello formale post-incidente con sintomatologia, impatto, albero diagnostico Layer OSI 1-7, root cause, risoluzione verificata e piano di prevenzione.
 - **Subagent & Skill `itinfra-troubleshooter`:** agente AI specializzato con albero diagnostico deterministico e zero allucinazioni sui log e test di rete.
 - **CLI Assistant (`scripts/itinfra.py troubleshoot`):** inizializzazione guidata delle schede incidente e consolidamento report.
+- **Live Health-Check (`scripts/itinfra.py health-check`):** test automatici ICMP, TCP e DNS live.
 
-### Release v0.6 — Live Telemetry & Semantic Search (Prospettiva)
-- **CLI Health-Check (`scripts/itinfra.py health-check`):** test automatici ICMP, TCP e DNS live.
-- **Local Semantic Querying:** motore RAG su nodi e relazioni del knowledge graph OKF.
-- **Modulo RFC:** gestione formale delle Request For Change con approvazioni e rollback plan.
+### Release v0.6 — Memoria Locale Ibrida a 3 Livelli & Trust Signals (Completato)
+- **Staging Memory L2 (`_scratchpad.md`):** isolamento delle decisioni volatili di chat prima del commit su Git.
+- **Modulo Core `scripts/itinfra_memory.py`:** gestione atomica log, show, merge per worktree e consolidate.
+- **Trust Signals & Certificazione Tecnica:** metadati `verified`, `last_vetted`, `stale_after` per contrastare l'allucinazione e l'obsolescenza documentale.
+
+### Release v0.7 — Global Enterprise Asset & Entity Knowledge Graph (Completato)
+- **Motore Global Inventory (`scripts/itinfra_inventory.py`):** scansione cross-progetto di hardware, modelli e vendor con comandi `inventory find/list-hardware/summary`.
+- **Nodi Ponte Shared Entity Bridges:** proiezione D3.js interattiva delle entità condivise tra clienti diversi con comando `export-graph all`.
+- **Cross-Client Incident Intelligence:** correlazione immediata tra apparati in uso e ticket RCA pregressi del portfolio per prevenzione proattiva dei disservizi.
+
+### Release v0.8 — Global Enterprise Staging Memory & Unified Verification Dashboard (Completato)
+- **Global Staging Memory Pool (`projects/_global_scratchpad.md`):** estensione del modulo memoria con scope `--global` per raccogliere best practice, lezioni apprese e regole hardware condivise con protezione preventiva da secret leaks (`validate_global_entry_safety`).
+- **Cross-Platform Atomic Lock:** classe `AtomicFileLock` a tutela delle scritture concorrenti.
+- **Enterprise System Test Suite (`scripts/itinfra.py test-suite`):** collaudo end-to-end automatizzato di tutti i 10 moduli del framework con output a terminale e Pass Rate 100%.
+- **Unified Verification Dashboard (`projects/system-test-report.html`):** report HTML consolidato offline 100% Zero-CDN con KPI esecutive, tab interattivi e log diagnostico di collaudo.
+
+### Release v0.9 — Advanced Topology Engine, MCP Server & Automated CI/CD (Pianificato Q1 2027)
+- **Server MCP Standalone (`scripts/itinfra_mcp.py`):** protocollo aperto per esporre tool e risorse a Claude Desktop, Cursor MCP e agenti LLM esterni.
+- **Advanced Topology & Cabling Generator:** generazione automatica di schemi Spine-Leaf complessi, patch panel e layout rack con codifica colori VLAN.
+- **Automated CI/CD Quality Gates (GitHub Actions):** validazione automatica obbligatoria su PR con verifica linter, audit coerenza e test-suite.
+- **Direct IPAM REST API Integration:** esportazione diretta verso le API REST di NetBox e Nautobot.
+
+### Release v1.0 — Enterprise Ecosystem & Sincronizzazione Live (Pianificato Q2 2027)
+- **Sincronizzazione Bidirezionale NetBox / Nautobot:** connettore API live per allineamento continuo dell'infrastruttura con il manifesto di progetto.
+- **Knowledge Graph 3D:** navigazione visiva tridimensionale interattiva dei datacenter e apparati.
+- **Lifecycle & Contract Automation:** scadenziario automatico e alert su garanzie hardware e contratti di supporto.
+
 
 

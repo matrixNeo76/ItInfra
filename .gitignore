@@ -38,6 +38,8 @@ credentials.json
 **/.vault.lock
 vault-keys/
 .worktrees/
+.memory/
+**/.memory/
 
 # File di sistema
 .directory

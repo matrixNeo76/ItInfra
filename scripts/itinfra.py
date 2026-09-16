@@ -254,6 +254,30 @@ class OKFValidator:
             if code_placeholders:
                 result["warnings"].append(f"Presenti {len(code_placeholders)} placeholder residui da compilare (es. <{code_placeholders[0]}>).")
 
+        # 12. Controllo Trust Signals (Release v0.6)
+        if frontmatter:
+            verified = frontmatter.get("verified")
+            if verified is not None:
+                if not isinstance(verified, bool):
+                    result["errors"].append("Campo 'verified' deve essere un booleano (true/false).")
+                elif verified is True:
+                    if not frontmatter.get("verified_by"):
+                        result["warnings"].append("Documento marcato come verified: true ma privo di 'verified_by'.")
+                    if not frontmatter.get("last_vetted"):
+                        result["warnings"].append("Documento marcato come verified: true ma privo di data 'last_vetted'.")
+
+            stale_after = frontmatter.get("stale_after")
+            if stale_after:
+                try:
+                    stale_str = str(stale_after).strip()
+                    stale_date = datetime.strptime(stale_str, "%Y-%m-%d").date()
+                    if stale_date < datetime.now().date():
+                        result["warnings"].append(
+                            f"[STALE-WARNING] Documento scaduto il {stale_date} (stale_after superato). Richiede ricertificazione tecnica prima dell'uso."
+                        )
+                except ValueError:
+                    result["warnings"].append(f"Formato data 'stale_after' non valido ('{stale_after}'). Atteso YYYY-MM-DD.")
+
         return result
 
 def cmd_list_templates(args: argparse.Namespace) -> int:
@@ -313,6 +337,14 @@ status: "in-planning"
 version: "0.1.0"
 """, encoding="utf-8")
 
+    # Inizializza scratchpad Staging Memory (Release v0.6)
+    try:
+        from itinfra_memory import MemoryManager
+        mem_mgr = MemoryManager(repo_root=repo_root)
+        mem_mgr.init_scratchpad(project_slug)
+    except Exception:
+        pass
+
     print(colorize(f"\n[OK] Progetto '{project_slug}' inizializzato con successo!", COLOR_GREEN + COLOR_BOLD))
     print(f"Cartella: {target_dir}")
     print(f"Manifest: {manifest_target}")
@@ -332,7 +364,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
 
     files_to_check = []
     if is_dir:
-        files_to_check = [f for f in sorted(list(target_path.rglob("*.md"))) if f.name.lower() != "readme.md"]
+        files_to_check = [f for f in sorted(list(target_path.rglob("*.md"))) if f.name.lower() != "readme.md" and not f.name.startswith("_")]
     else:
         files_to_check = [target_path]
 
@@ -1897,6 +1929,37 @@ def cmd_audit_consistency(args) -> int:
     else:
         print(colorize("   [OK] Nessun placeholder grezzo non conforme rilevato.", COLOR_GREEN))
 
+    print(colorize("\n4. Controllo Trust Signals & Obsolescenza Tecnica (Release v0.6):", COLOR_BOLD))
+    stale_docs = []
+    verified_docs = 0
+    today_date = datetime.now().date()
+    for md_file in md_files:
+        try:
+            c_text = md_file.read_text(encoding="utf-8")
+            fm_data, _, _ = parse_frontmatter(c_text)
+            if fm_data:
+                if fm_data.get("verified") is True:
+                    verified_docs += 1
+                s_after = fm_data.get("stale_after")
+                if s_after:
+                    try:
+                        s_date = datetime.strptime(str(s_after).strip(), "%Y-%m-%d").date()
+                        if s_date < today_date:
+                            stale_docs.append((md_file.name, s_date))
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+    print(f"   Documenti con certificazione Trust Signals (verified: true): {verified_docs}/{len(md_files)}")
+    if stale_docs:
+        print(colorize(f"   [!] Documenti scaduti rilevati ({len(stale_docs)}):", COLOR_YELLOW))
+        for fname, s_date in stale_docs:
+            print(f"       - {fname} (scaduto il {s_date})")
+        warnings.append(f"{len(stale_docs)} documenti con certificazione tecnica scaduta (stale_after)")
+    else:
+        print(colorize("   [OK] Nessun documento con data validita' scaduta rilevato.", COLOR_GREEN))
+
     print(colorize("\n------------------------------------------------------------------", COLOR_BOLD))
     if anomalies:
         print(colorize(f"ESITO AUDIT COERENZA: FALLITO ({len(anomalies)} anomalie critiche, {len(warnings)} avvisi)", COLOR_RED + COLOR_BOLD))
@@ -2188,8 +2251,14 @@ def cmd_export_graph(args: argparse.Namespace) -> int:
     repo_root = Path(__file__).resolve().parent.parent
     target_arg = args.target.strip()
 
-    # Risolvi target: slug progetto, 'templates' o path
-    if target_arg.lower() in ["templates", "template"]:
+    # Risolvi target: 'all'/'global', 'templates', slug progetto o path
+    is_global = False
+    if target_arg.lower() in ["all", "global", "enterprise"]:
+        folder_path = repo_root / "projects"
+        default_title = "ITInfra Global Enterprise Knowledge Graph OKF v0.2 (Multi-Tenant)"
+        default_out = folder_path / "global-graph.html"
+        is_global = True
+    elif target_arg.lower() in ["templates", "template"]:
         folder_path = repo_root / "templates"
         default_title = "ITInfra Knowledge Graph OKF v0.2 — Template Ciclo IT"
         default_out = folder_path / "graph.html"
@@ -2210,7 +2279,7 @@ def cmd_export_graph(args: argparse.Namespace) -> int:
     print(colorize(f"\n=== GENERAZIONE KNOWLEDGE GRAPH D3.JS OKF v0.2 ===", COLOR_BOLD + COLOR_CYAN))
     print(f"Sorgente:  {folder_path}")
 
-    graph_data = build_graph_data(folder_path)
+    graph_data = build_graph_data(folder_path, is_global=is_global)
     nodes_count = len(graph_data["nodes"])
     links_count = len(graph_data["links"])
 
@@ -2228,6 +2297,259 @@ def cmd_export_graph(args: argparse.Namespace) -> int:
     print(colorize(f"[+] Nodi estratti:   {nodes_count}", COLOR_GREEN))
     print(colorize(f"[+] Archi semantici: {links_count}", COLOR_GREEN))
     print(colorize(f"[OK] Knowledge Graph interattivo salvato in: {out_file.resolve()}\n", COLOR_GREEN + COLOR_BOLD))
+    return 0
+
+def cmd_test_suite(args: argparse.Namespace) -> int:
+    """Esegue la suite di collaudo end-to-end e genera il report HTML (Release v0.8)."""
+    try:
+        from itinfra_test_suite import SystemTestSuiteRunner, generate_system_test_html
+    except ImportError:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from itinfra_test_suite import SystemTestSuiteRunner, generate_system_test_html
+
+    repo_root = Path(__file__).resolve().parent.parent
+    runner = SystemTestSuiteRunner(repo_root=repo_root)
+    results = runner.run_all_tests()
+
+    if getattr(args, "report_html", True):
+        out_file = Path(args.out) if args.out else repo_root / "projects" / "system-test-report.html"
+        out_file.parent.mkdir(parents=True, exist_ok=True)
+        generate_system_test_html(results, out_file)
+        print(colorize(f"[OK] Dashboard HTML di collaudo salvata in: {out_file.resolve()}", COLOR_GREEN + COLOR_BOLD))
+
+    return 0 if results["failed_modules"] == 0 else 1
+
+def cmd_memory(args: argparse.Namespace) -> int:
+    """Gestisce la Memoria Locale Ibrida a 3 Livelli e i Trust Signals (Release v0.6 e v0.8)."""
+    try:
+        from itinfra_memory import MemoryManager
+    except ImportError:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from itinfra_memory import MemoryManager
+
+    repo_root = Path(__file__).resolve().parent.parent
+    mgr = MemoryManager(repo_root=repo_root)
+
+    # Riconoscimento target globale
+    raw_slug = getattr(args, "project_slug", "") or ""
+    slug = raw_slug.lower().strip()
+    is_global = getattr(args, "is_global", False) or slug in ("global", "__global__", "all")
+
+    if not is_global and not slug:
+        print(colorize("ERRORE: Specificare lo slug del progetto o usare il flag --global.", COLOR_RED))
+        return 1
+
+    if not is_global:
+        try:
+            p_dir = mgr.get_project_dir(slug)
+        except FileNotFoundError as e:
+            print(colorize(f"ERRORE: {e}", COLOR_RED))
+            return 1
+
+    action = args.mem_action
+
+    if action == "init":
+        if is_global:
+            sp = mgr.init_scratchpad(is_global=True)
+            print(colorize(f"[OK] Staging Scratchpad Globale Enterprise inizializzato: {sp}", COLOR_GREEN + COLOR_BOLD))
+        else:
+            sp = mgr.init_scratchpad(slug)
+            print(colorize(f"[OK] Scratchpad inizializzato per '{slug}': {sp}", COLOR_GREEN + COLOR_BOLD))
+        return 0
+
+    elif action == "log":
+        sec = args.section
+        text = args.text
+        role = getattr(args, "role", None)
+        author = getattr(args, "author", None) or getpass.getuser()
+        try:
+            if is_global:
+                target_file, entry_id = mgr.log_entry(None, sec, text, role=role, author=author, is_global=True)
+                print(colorize(f"[OK] Voce registrata nella Memoria Globale ({target_file.name}) con ID: {entry_id}", COLOR_GREEN + COLOR_BOLD))
+            else:
+                target_file, entry_id = mgr.log_entry(slug, sec, text, role=role, author=author)
+                print(colorize(f"[OK] Voce registrata in '{target_file.name}' con ID: {entry_id}", COLOR_GREEN))
+            print(f"Sezione: {sec} | Ruolo: {role or 'agent'} | Autore: {author}")
+            return 0
+        except Exception as ex:
+            print(colorize(f"ERRORE: {ex}", COLOR_RED))
+            return 1
+
+    elif action == "show":
+        if is_global:
+            data = mgr.show_scratchpad(is_global=True)
+            print(colorize(f"\n=== GLOBAL ENTERPRISE STAGING MEMORY (OKF v0.2) ===", COLOR_BOLD + COLOR_CYAN))
+            print(f"File: {data['file']}")
+            if not data["exists"]:
+                print(colorize("Scratchpad globale non presente. Inizializzalo con: python scripts/itinfra.py memory init --global", COLOR_YELLOW))
+                return 0
+            stats = data["stats"]
+            print(f"Best Practices: {stats['best_practices']} | Known Issues: {stats['known_issues']} | Hardware Rules: {stats['hardware_rules']} | Open Questions: {stats['open_questions']}")
+            for sec_name, items in data["sections"].items():
+                print(colorize(f"\n[{sec_name.upper().replace('_', ' ')}]:", COLOR_BOLD))
+                if items:
+                    for it in items:
+                        print(f" {it}")
+                else:
+                    print("  (Nessuna voce registrata)")
+            print()
+            return 0
+        else:
+            data = mgr.show_scratchpad(slug)
+            print(colorize(f"\n=== STAGING MEMORY (SCRATCHPAD): {slug.upper()} ===", COLOR_BOLD + COLOR_CYAN))
+            print(f"File: {data['file']}")
+            if not data["exists"]:
+                print(colorize("Scratchpad non presente. Inizializzalo con: python scripts/itinfra.py memory init <slug>", COLOR_YELLOW))
+                return 0
+            stats = data["stats"]
+            print(f"Decisioni Confermate: {stats['confirmed']} | Requisiti Sospesi: {stats['open']} | Note: {stats['notes']} | Consolidamenti: {stats['consolidated']}")
+            if stats.get("worktrees_pending", 0) > 0:
+                print(colorize(f"Avviso: presenti {stats['worktrees_pending']} file scratchpad da worktree. Esegui 'itinfra.py memory merge {slug}' per sincronizzarli.", COLOR_YELLOW))
+            for sec_name, items in data["sections"].items():
+                print(colorize(f"\n[{sec_name.upper()}]:", COLOR_BOLD))
+                if items:
+                    for it in items:
+                        print(f" {it}")
+                else:
+                    print("  (Nessuna voce)")
+            print()
+            return 0
+
+    elif action == "merge":
+        if is_global:
+            print(colorize("AVVISO: L'azione 'merge' non e' applicabile allo scratchpad globale (opera solo su worktrees di progetto).", COLOR_YELLOW))
+            return 0
+        res = mgr.merge_worktrees(slug)
+        print(colorize(f"\n=== MERGE WORKTREES MEMORY: {slug.upper()} ===", COLOR_BOLD + COLOR_CYAN))
+        print(f"Voci sincronizzate nello scratchpad master: {res['merged_count']}")
+        print(colorize("[OK] Sincronizzazione worktree completata!", COLOR_GREEN))
+        return 0
+
+    elif action == "consolidate":
+        if is_global:
+            print(colorize("AVVISO: La memoria globale non supporta consolidate diretto verso singolo documento cliente.", COLOR_YELLOW))
+            return 0
+        target = args.target
+        reviewer = args.reviewer or "Lead Architect"
+        stale_days = args.stale_days
+        try:
+            res = mgr.consolidate(slug, target, reviewer=reviewer, stale_days=stale_days)
+            if res.get("status") == "noop":
+                print(colorize(f"AVVISO: {res['message']}", COLOR_YELLOW))
+                return 0
+            print(colorize(f"\n[OK] {res['message']}", COLOR_GREEN + COLOR_BOLD))
+            print(f"Target:      {res['target_file']}")
+            print(f"Reviewer:    {res['reviewer']}")
+            print(f"Last Vetted: {res['last_vetted']}")
+            print(f"Stale After: {res['stale_after'] or 'N/A'}")
+            return 0
+        except Exception as ex:
+            print(colorize(f"ERRORE: {ex}", COLOR_RED))
+            return 1
+
+    elif action == "prune":
+        archive = not args.no_archive
+        if is_global:
+            res = mgr.prune(is_global=True, archive=archive)
+        else:
+            res = mgr.prune(slug, archive=archive)
+        print(colorize(f"[OK] {res['message']}", COLOR_GREEN))
+        return 0
+
+    return 0
+
+
+def cmd_inventory(args: argparse.Namespace) -> int:
+    """Interroga l'inventario tecnologico e le entità cross-progetto (Release v0.7)."""
+    try:
+        from itinfra_inventory import GlobalInventoryEngine
+    except ImportError:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from itinfra_inventory import GlobalInventoryEngine
+
+    repo_root = Path(__file__).resolve().parent.parent
+    engine = GlobalInventoryEngine(repo_root=repo_root)
+
+    action = args.inv_action
+
+    if action == "find":
+        term = args.term
+        res = engine.find(term, entity_type=getattr(args, "type", None))
+        print(colorize(f"\n=== RICERCA ASSET & ENTITÀ CROSS-PROGETTO: '{term}' ===", COLOR_BOLD + COLOR_CYAN))
+        print(f"Occorrenze totali: {res['total_matches']}")
+        print(f"Progetti coinvolti: {', '.join(res['projects_involved']) if res['projects_involved'] else 'Nessuno'}\n")
+
+        if res["rca_alerts"]:
+            print(colorize(f"⚠️  CROSS-CLIENT INCIDENT ALERT ({len(res['rca_alerts'])} ticket RCA collegati a questo termine):", COLOR_YELLOW + COLOR_BOLD))
+            for r in res["rca_alerts"]:
+                print(f"   - [{r['incident_id']}] {r['customer']} ({r['severity']}): {r['title']} [file: {r['file']}]")
+            print()
+
+        if res["entities"]:
+            print(colorize("--- Entità Ontologiche Riconosciute ---", COLOR_BOLD))
+            for e in res["entities"][:15]:
+                print(f" • {colorize(e['name'], COLOR_GREEN)} ({e['type']})")
+                print(f"   Cliente: {e['customer']} ({e['project_slug']}) | Doc: {e['doc_file']}")
+                print(f"   Descrizione: {e['description'][:90]}...")
+            if len(res["entities"]) > 15:
+                print(f"   ... e altre {len(res['entities']) - 15} entità")
+            print()
+
+        if res["devices"]:
+            print(colorize("--- Apparati Hardware & Device Mappati ---", COLOR_BOLD))
+            for d in res["devices"][:15]:
+                ip_str = f" [IP: {d['ip']}]" if d["ip"] else ""
+                print(f" • [{colorize(d['vendor'], COLOR_CYAN)}] {d['category']}: {d['context'][:75]}...{ip_str}")
+                print(f"   Progetto: {d['customer']} ({d['project_slug']}) -> {d['doc_file']}")
+            if len(res["devices"]) > 15:
+                print(f"   ... e altri {len(res['devices']) - 15} apparati")
+            print()
+
+        return 0
+
+    elif action == "list-hardware":
+        vendor = getattr(args, "vendor", None)
+        devices = engine.list_hardware(vendor_filter=vendor)
+        title = "INVENTARIO HARDWARE GLOBALE" + (f" (Filtro Vendor: {vendor})" if vendor else "")
+        print(colorize(f"\n=== {title} ===", COLOR_BOLD + COLOR_CYAN))
+        print(f"Apparati censiti: {len(devices)}\n")
+
+        print(f"{'Vendor':<12} | {'Categoria':<18} | {'Cliente / Progetto':<24} | {'IP':<15} | {'Dettaglio / Modello'}")
+        print("-" * 105)
+        for d in devices:
+            ip_str = d["ip"] or "-"
+            cust_str = f"{d['customer'][:15]} ({d['project_slug']})"[:23]
+            print(f"{d['vendor']:<12} | {d['category']:<18} | {cust_str:<24} | {ip_str:<15} | {d['context'][:40]}")
+        print("-" * 105 + "\n")
+        return 0
+
+    elif action == "summary":
+        s = engine.summary()
+        stats = s["stats"]
+        print(colorize(f"\n=== DASHBOARD ASSET & ENTITÀ ENTERPRISE ITINFRA ===", COLOR_BOLD + COLOR_CYAN))
+        print(f"Progetti attivi:     {stats['total_projects']}")
+        print(f"Documenti OKF v0.2:  {stats['total_docs']}")
+        print(f"Entità ontologiche:  {stats['total_entities']}")
+        print(f"Apparati mappati:    {stats['total_devices']}")
+        print(f"Ticket RCA censiti:  {stats['total_rcas']}\n")
+
+        print(colorize("Ripartizione per Vendor:", COLOR_BOLD))
+        for v, cnt in s["vendors_breakdown"].items():
+            print(f" • {v:<15}: {cnt} apparati")
+
+        print(colorize("\nRipartizione per Categoria:", COLOR_BOLD))
+        for c, cnt in s["categories_breakdown"].items():
+            print(f" • {c:<20}: {cnt} apparati")
+
+        print(colorize("\nProgetti e Clienti nel Portfolio:", COLOR_BOLD))
+        for p in s["projects_list"]:
+            print(f" • {p['customer']} (slug: {p['slug']}) - {p['docs_count']} documenti")
+        print()
+        return 0
+
     return 0
 
 def main():
@@ -2345,10 +2667,63 @@ def main():
     tb_list.add_argument("project_slug", help="Slug del progetto")
 
     # Comando export-graph
-    p_eg = subparsers.add_parser("export-graph", help="Genera una mappa interattiva D3.js del Knowledge Graph OKF v0.2")
-    p_eg.add_argument("target", help="Slug del progetto (es. severino-srl) oppure 'templates' o percorso cartella")
+    p_eg = subparsers.add_parser("export-graph", help="Genera una mappa interattiva D3.js del Knowledge Graph OKF v0.2 (supporta 'all' per vista globale)")
+    p_eg.add_argument("target", help="Slug del progetto (es. severino-srl), 'templates', oppure 'all' / 'global'")
     p_eg.add_argument("--out", help="Percorso file HTML di output (default: <target>/graph.html)")
     p_eg.add_argument("--title", help="Titolo personalizzato della vista grafo")
+
+    # Comando memory (Release v0.6 e v0.8)
+    p_mem = subparsers.add_parser("memory", help="Gestione Memoria Locale Ibrida a 3 Livelli e Global Enterprise Pool (Release v0.8)")
+    sub_mem = p_mem.add_subparsers(dest="mem_action", help="Azione memory", required=True)
+
+    mem_init = sub_mem.add_parser("init", help="Inizializza lo scratchpad di staging (_scratchpad.md o globale)")
+    mem_init.add_argument("project_slug", nargs="?", default="", help="Slug del progetto (o ometti con --global)")
+    mem_init.add_argument("--global", dest="is_global", action="store_true", help="Opera sullo Staging Scratchpad Globale Enterprise")
+
+    mem_log = sub_mem.add_parser("log", help="Registra una nota, decisione o best practice nello scratchpad")
+    mem_log.add_argument("project_slug", nargs="?", default="", help="Slug del progetto (o ometti con --global)")
+    mem_log.add_argument("--global", dest="is_global", action="store_true", help="Registra nella Memoria Globale Enterprise")
+    mem_log.add_argument("--section", default="decisioni", help="Sezione (decisioni, sospesi, note, best-practices, known-issues, hardware-rules, open-architectural)")
+    mem_log.add_argument("--text", required=True, help="Testo della nota o decisione")
+    mem_log.add_argument("--role", help="Ruolo dell'agente (es. infra-architect, infra-security)")
+    mem_log.add_argument("--author", help="Nome o identificativo autore (default: utente corrente)")
+
+    mem_show = sub_mem.add_parser("show", help="Mostra il contenuto e le statistiche dello scratchpad")
+    mem_show.add_argument("project_slug", nargs="?", default="", help="Slug del progetto (o ometti con --global)")
+    mem_show.add_argument("--global", dest="is_global", action="store_true", help="Visualizza la Memoria Globale Enterprise")
+
+    mem_merge = sub_mem.add_parser("merge", help="Fonde gli scratchpad temporanei dei worktree (.memory/) nello scratchpad master")
+    mem_merge.add_argument("project_slug", help="Slug del progetto")
+
+    mem_cons = sub_mem.add_parser("consolidate", help="Consolida le decisioni confermate nel documento target OKF v0.2 con Trust Signals")
+    mem_cons.add_argument("project_slug", help="Slug del progetto")
+    mem_cons.add_argument("--target", required=True, help="Identificativo documento target (es. 01-RSD-URS, 02-HLD, 03-LLD)")
+    mem_cons.add_argument("--reviewer", default="Lead Architect", help="Nome/ruolo del revisore attestante (default: Lead Architect)")
+    mem_cons.add_argument("--stale-days", type=int, default=90, help="Giorni di validita' prima dello stato stale (default: 90)")
+
+    mem_prune = sub_mem.add_parser("prune", help="Archivia lo scratchpad corrente e lo reimposta allo stato vuoto")
+    mem_prune.add_argument("project_slug", nargs="?", default="", help="Slug del progetto (o ometti con --global)")
+    mem_prune.add_argument("--global", dest="is_global", action="store_true", help="Archivia la Memoria Globale Enterprise")
+    mem_prune.add_argument("--no-archive", action="store_true", help="Non salva una copia nell'archivio")
+
+    # Comando test-suite (Release v0.8)
+    p_ts = subparsers.add_parser("test-suite", help="Esegue la suite di collaudo end-to-end e genera la dashboard HTML di sistema (Release v0.8)")
+    p_ts.add_argument("--report-html", action="store_true", default=True, help="Esporta la dashboard HTML offline di verifica (default: True)")
+    p_ts.add_argument("--no-html", dest="report_html", action="store_false", help="Esegue solo i test a terminale senza esportare HTML")
+    p_ts.add_argument("--out", help="Percorso del file HTML di output (default: projects/system-test-report.html)")
+
+    # Comando inventory (Release v0.7)
+    p_inv = subparsers.add_parser("inventory", help="Ricerca asset hardware, apparati ed entità cross-progetto (Release v0.7)")
+    sub_inv = p_inv.add_subparsers(dest="inv_action", help="Azione inventory", required=True)
+
+    inv_find = sub_inv.add_parser("find", help="Cerca modelli hardware, entità o tecnologie in tutti i progetti")
+    inv_find.add_argument("term", help="Termine di ricerca (es. 'Dell R630', 'CRS326', 'ZeroTier')")
+    inv_find.add_argument("--type", help="Filtro tipo entità (es. technology, framework, toolchain)")
+
+    inv_list = sub_inv.add_parser("list-hardware", help="Elenca tutti gli apparati hardware censiti nel portfolio clienti")
+    inv_list.add_argument("--vendor", help="Filtra per vendor (es. Dell, MikroTik, HP, Cisco, Fortinet)")
+
+    inv_sum = sub_inv.add_parser("summary", help="Dashboard statistica del patrimonio tecnologico multi-cliente")
 
     # Comando health-check
     p_hc = subparsers.add_parser("health-check", help="Esegue telemetria e health check non distruttivo (ICMP/TCP) sugli apparati del manifest")
@@ -2389,6 +2764,12 @@ def main():
         return cmd_health_check(args)
     elif args.command == "export-graph":
         return cmd_export_graph(args)
+    elif args.command == "memory":
+        return cmd_memory(args)
+    elif args.command == "inventory":
+        return cmd_inventory(args)
+    elif args.command == "test-suite":
+        return cmd_test_suite(args)
     else:
         parser.print_help()
         return 1

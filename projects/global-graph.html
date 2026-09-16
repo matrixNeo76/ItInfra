@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITInfra Global Enterprise Knowledge Graph OKF v0.2 (Multi-Tenant)</title>
+    <!-- D3.js v7 da CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #111827;
+            --bg-card: #1f2937;
+            --border-color: #374151;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-mono: 'Cascadia Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            overflow: hidden;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #top-bar {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            right: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .interactive-panel {
+            pointer-events: auto;
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .badge-okf {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            color: #fff;
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .search-input {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            width: 180px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .search-input:focus {
+            border-color: var(--accent-cyan);
+            width: 220px;
+        }
+
+        .filter-select {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .btn-action {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-action:hover {
+            background: #374151;
+        }
+
+        #graph-container {
+            flex: 1;
+            height: 100%;
+            width: 100%;
+            cursor: grab;
+        }
+        #graph-container:active {
+            cursor: grabbing;
+        }
+
+        .node {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .node circle {
+            stroke-width: 2.5px;
+            stroke: #ffffff33;
+            transition: all 0.3s;
+        }
+        .node:hover circle {
+            stroke: #ffffff;
+            stroke-width: 3.5px;
+            filter: drop-shadow(0 0 10px currentColor);
+        }
+
+        .node text {
+            font-size: 11px;
+            font-weight: 500;
+            fill: #e2e8f0;
+            pointer-events: none;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .link {
+            stroke-opacity: 0.65;
+            transition: stroke-opacity 0.2s, stroke-width 0.2s;
+        }
+        .link.highlighted {
+            stroke-opacity: 1 !important;
+            stroke-width: 3px !important;
+        }
+        .node.dimmed, .link.dimmed {
+            opacity: 0.15;
+        }
+
+        #sidebar {
+            position: absolute;
+            top: 5.5rem;
+            right: 1.5rem;
+            bottom: 1.5rem;
+            width: 380px;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: -10px 10px 30px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            transform: translateX(450px);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 30;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        #sidebar.open {
+            transform: translateX(0);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .sidebar-type {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .sidebar-id {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            word-break: break-all;
+            background: #0f172a;
+            padding: 0.3rem 0.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-section {
+            margin-top: 1.25rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1rem;
+        }
+
+        .sidebar-section h4 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .entity-chip {
+            display: inline-block;
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            margin: 0.2rem;
+        }
+        .entity-chip strong {
+            color: var(--accent-cyan);
+        }
+
+        .relation-item {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.6rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+        }
+        .relation-type {
+            font-weight: 700;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            display: inline-block;
+            font-size: 0.7rem;
+            margin-bottom: 0.3rem;
+        }
+
+        #legend {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.85rem 1.25rem;
+            z-index: 10;
+            font-size: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .legend-line {
+            width: 16px;
+            height: 3px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="top-bar">
+    <div class="interactive-panel">
+        <h1>
+            <span>🕸️</span> ITInfra Global Enterprise Knowledge Graph OKF v0.2 (Multi-Tenant)
+            <span class="badge-okf">OKF v0.2 Graph</span>
+        </h1>
+    </div>
+
+    <div class="interactive-panel">
+        <input type="text" id="search-box" class="search-input" placeholder="🔍 Cerca nodo o entità...">
+        <select id="type-filter" class="filter-select">
+            <option value="ALL">Tutti i Tipi</option>
+            <option value="architecture">Architecture (HLD, LLD, As-Built)</option>
+            <option value="specification">Specification (RSD, ATP, Handover)</option>
+            <option value="guide">Guide (MOP, Rollback, SOP, RCA)</option>
+            <option value="concept">Concept & Index</option>
+        </select>
+        <button class="btn-action" onclick="resetZoom()">Centra Vista</button>
+        <button class="btn-action" id="btn-toggle-hubs" onclick="toggleEntityHubs()" style="background:#f59e0b22; border-color:#f59e0b; color:#fbbf24;">🔗 Entità Condivise (ON)</button>
+        <select id="project-filter" class="search-box" style="padding:0.4rem 0.6rem; max-width:180px;" onchange="filterByProject(this.value)">
+            <option value="ALL">Tutti i Progetti</option>
+        </select>
+    </div>
+</div>
+
+<div id="graph-container"></div>
+
+<!-- Sidebar Informativa -->
+<div id="sidebar">
+    <button class="close-btn" onclick="closeSidebar()">&times;</button>
+    <div id="sidebar-content"></div>
+</div>
+
+<!-- Legenda Ontologica -->
+<div id="legend">
+    <div style="font-weight: 700; margin-bottom: 0.2rem; color: #cbd5e1;">Tipi Documentali OKF</div>
+    <div class="legend-item"><div class="legend-color" style="background: #38bdf8;"></div> Architecture (HLD, LLD, As-Built)</div>
+    <div class="legend-item"><div class="legend-color" style="background: #34d399;"></div> Specification (RSD, ATP, Handover)</div>
+    <div class="legend-item"><div class="legend-color" style="background: #fbbf24;"></div> Guide (MOP, Rollback, SOP, RCA)</div>
+    <div class="legend-item"><div class="legend-color" style="background: #f59e0b; box-shadow: 0 0 8px #f59e0b;"></div> Hub Entità Condivisa (Bridge)</div>
+    <div style="font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem; color: #cbd5e1;">Archi Semantici</div>
+    <div class="legend-item"><div class="legend-line" style="background: #ef4444;"></div> depends_on (Forte)</div>
+    <div class="legend-item"><div class="legend-line" style="background: #3b82f6;"></div> extends (Estensione)</div>
+    <div class="legend-item"><div class="legend-line" style="background: #10b981;"></div> documents (Attestazione)</div>
+    <div class="legend-item"><div class="legend-line" style="background: #94a3b8;"></div> references / relates_to</div>
+    <div style="font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem; color: #cbd5e1;">Trust Signals</div>
+    <div class="legend-item"><div class="legend-color" style="border: 2px solid #10b981; background: transparent;"></div> ✓ Verificato (verified: true)</div>
+    <div class="legend-item"><div class="legend-color" style="border: 2px dashed #ef4444; background: transparent;"></div> ⚠ Scaduto (stale_after)</div>
+</div>
+
+<script>
+    const graphData = {"nodes": [{"id": "specification-demo-acme-rsd-01", "filename": "[demo-acme] 01-RSD-URS.md", "raw_filename": "01-RSD-URS.md", "project": "demo-acme", "customer": "Acme Corporation", "title": "RSD/URS — Modernizzazione Rete Datacenter Acme Milano", "type": "specification", "phase": 1, "status": "in-review", "author": "Mario Rossi", "tags": ["okf-v0.2", "rsd", "urs", "requirements", "assessment", "fase-1"], "entities": [{"name": "Requisiti Architetturali Acme", "type": "concept", "description": "Requisiti funzionali e di affidabilita' per il nuovo Datacenter Milano"}, {"name": "Disaster Recovery SLA", "type": "specification", "description": "Obiettivi RTO di 15 min e RPO zero sincrono su sito secondario"}, {"name": "Spine-Leaf DC Fabric", "type": "pattern", "description": "Topologia di rete fabric leaf-spine a 100G/25G"}, {"name": "Dell PowerEdge R630", "type": "technology", "description": "Server cluster di virtualizzazione compute per servizi legacy Acme"}, {"name": "MikroTik CRS326 Port Mapping", "type": "toolchain", "description": "Switch ToR di aggregazione per connettivita' OOB e console management"}, {"name": "ZeroTier Overlay Network", "type": "technology", "description": "Rete SDN geografica cifrata peer-to-peer per interconnessione remota tra sedi e nodi mobili"}, {"name": "HP Z4 G4 Workstation", "type": "technology", "description": "Stazione compute di staging e simulazione per collaudi pre-deployment"}], "color": "#34d399", "val": 20, "verified": false, "verified_by": "", "last_vetted": "", "stale_after": "", "is_stale": false, "is_entity_hub": false, "degree": 2}, {"id": "specification-severino-srl-rsd-01", "filename": "[severino-srl] 01-RSD-URS.md", "raw_filename": "01-RSD-URS.md", "project": "severino-srl", "customer": "Severino Srl", "title": "RSD/URS — Requisiti Infrastruttura LAN, Virtualizzazione Hyper-V e Collaboration Severino Srl", "type": "specification", "phase": 1, "status": "in-review", "author": "Marco Severino", "tags": ["okf-v0.2", "rsd", "urs", "requirements", "assessment", "severino-srl", "hyper-v", "mikrotik"], "entities": [{"name": "Infrastruttura Severino Srl", "type": "concept", "description": "Infrastruttura IT on-premise comprensiva di rete LAN/WLAN, server Hyper-V, file sharing e sala riunioni"}, {"name": "Hyper-V Virtualization Platform", "type": "technology", "description": "Ambiente di virtualizzazione Windows Server 2022 Datacenter ospitato su workstation HP Z4"}, {"name": "MikroTik CRS326 Core Switch & Firewall", "type": "toolchain", "description": "Apparato centrale per routing inter-VLAN, policy di firewalling perimetrale e commutazione LAN"}, {"name": "ZeroTier Secure SD-WAN", "type": "technology", "description": "Rete virtuale crittografata per consentire l'accesso sicuro alle share SMB da postazioni remote"}, {"name": "Backup Strategy & RustCopy", "type": "pattern", "description": "Strategia di replica dati verso NAS QNAP TS-233 tramite Cobian Reflector con migrazione a RustCopy"}], "color": "#34d399", "val": 40, "verified": false, "verified_by": "", "last_vetted": "", "stale_after": "", "is_stale": false, "is_entity_hub": false, "degree": 9}, {"id": "architecture-severino-srl-hld-01", "filename": "[severino-srl] 02-HLD.md", "raw_filename": "02-HLD.md", "project": "severino-srl", "customer": "Severino Srl", "title": "HLD — High-Level Design Architettura LAN, Virtualizzazione Hyper-V e Collaboration Severino Srl", "type": "architecture", "phase": 2, "status": "in-review", "author": "Marco Severino", "tags": ["okf-v0.2", "hld", "architecture", "severino-srl", "hyper-v", "mikrotik", "zerotier", "teams-rooms"], "entities": [{"name": "Architettura Severino Srl", "type": "concept", "description": "Progetto architetturale macroscopico comprendente LAN, perimetro MikroTik, virtualizzazione Hyper-V e ZeroTier"}, {"name": "Active Directory Dominio severino", "type": "framework", "description": "Infrastruttura di identità e controllo accessi basata su Windows Server 2022 con DC all'indirizzo 192.168.120.239"}, {"name": "Hyper-V Virtualization Cluster", "type": "technology", "description": "Piattaforma di virtualizzazione su workstation HP Z4 con Windows Server 2022 Datacenter"}, {"name": "MikroTik CRS326 Core Switching & Security", "type": "toolchain", "description": "Apparato centrale RouterOS per commutazione di rete, routing inter-VLAN e firewalling perimetrale"}, {"name": "ZeroTier SD-WAN Network", "type": "technology", "description": "Rete virtuale sicura (ID: 65228D8D6D71CA23) per accesso remoto alle cartelle SMB"}], "color": "#38bdf8", "val": 40, "verified": false, "verified_by": "", "last_vetted": "", "stale_after": "", "is_stale": false, "is_entity_hub": false, "degree": 11}, {"id": "architecture-severino-srl-lld-01", "filename": "[severino-srl] 03-LLD.md", "raw_filename": "03-LLD.md", "project": "severino-srl", "customer": "Severino Srl", "title": "LLD — Low-Level Design Esecutivo Rete, Cablaggi, Virtualizzazione e Rack 10U Severino Srl", "type": "architecture", "phase": 2, "status": "in-review", "author": "Marco Severino", "tags": ["okf-v0.2", "lld", "architecture", "severino-srl", "mikrotik", "patch-panel", "rack-10u", "hyper-v", "ip-plan"], "entities": [{"name": "Low-Level Design Severino Srl", "type": "concept", "description": "Specifiche esecutive di dettaglio per cablaggi, configurazione porte switch MikroTik e rack 10U"}, {"name": "MikroTik CRS326 Port Mapping", "type": "toolchain", "description": "Configurazione RouterOS con ether1 WAN fuori bridge ed ether2-ether24 in hardware bridge"}, {"name": "Patch Panel e Cablaggio Strutturato", "type": "framework", "description": "Matrice di interconnessione Cat6 tra porte switch, patch panel 24p e prese a muro LAN"}, {"name": "Rack 10U Layout", "type": "pattern", "description": "Disposizione fisica ottimizzata dei componenti nell'armadio rack a 10 unità"}, {"name": "Piano Indirizzamento IP e Reservation", "type": "specification", "description": "Allocazione subnet 192.168.120.0/24 con pool DHCP ed esclusioni statiche per server e apparati"}], "color": "#38bdf8", "val": 40, "verified": true, "verified_by": "Mario Rossi (Tech Lead)", "last_vetted": "2026-09-16", "stale_after": "2026-12-15", "is_stale": false, "is_entity_hub": false, "degree": 14}, {"id": "guide-severino-srl-mop-01", "filename": "[severino-srl] 04-MOP.md", "raw_filename": "04-MOP.md", "project": "severino-srl", "customer": "Severino Srl", "title": "MOP — Method of Procedure Implementazione Rete, Hyper-V, Storage e Dominio Severino Srl", "type": "guide", "phase": 3, "status": "in-review", "author": "Marco Severino", "tags": ["okf-v0.2", "mop", "procedure", "operations", "fase-3", "deploy", "raci", "severino-srl"], "entities": [{"name": "Maintenance Window Severino Srl", "type": "pattern", "description": "Finestra temporale concordata per l'attivazione della rete e il cutover dei client aziendali"}, {"name": "RACI Matrix Severino Srl", "type": "pattern", "description": "Matrice di responsabilita per il deployment dell'infrastruttura IT di Severino Srl"}, {"name": "Verification Gate System", "type": "concept", "description": "Punti di controllo bloccanti (Gate 1-8) propedeutici all'avanzamento dei lavori"}, {"name": "Deployment Sequence", "type": "specification", "description": "Sequenza temporale di montaggio rack 10U, RouterOS, Hyper-V, AD dc01, storage fs01/fs02, ZeroTier e MTR"}], "color": "#fbbf24", "val": 40, "verified": false, "verified_by": "", "last_vetted": "", "stale_after": "", "is_stale": false, "is_entity_hub": false, "degree": 14}, {"id": "guide-severino-srl-rollback-01", "filename": "[severino-srl] 05-Rollback.md", "raw_filename": "05-Rollback.md", "project": "severino-srl", "customer": "Severino Srl", "title": "Rollback Plan — Piano di Contingency e Ripristino Emergenziale Severino Srl", "type": "guide", "phase": 3, "status": "in-review", "author": "Marco Severino", "tags": ["okf-v0.2", "rollback", "contingency", "fallback", "fase-3", "disaster-recovery", "severino-srl"], "entities": [{"name": "Rollback Trigger Severino Srl", "type": "concept", "description": "Condizioni oggettive che impongono l'arresto del deployment o il ripristino dei sistemi"}, {"name": "No-Return Point Criteria", "type": "concept", "description": "Soglia temporale e logica oltre la quale il ripristino integrale cede il passo al fix-forward"}, {"name": "Baseline Snapshot Integrity", "type": "pattern", "description": "Insieme delle immagini e backup pre-intervento verificati tramite hash SHA256"}, {"name": "Emergency Fallback Procedures", "type": "pattern", "description": "Procedure operative inverse strutturate per annullare selettivamente ogni fase del MOP"}], "color": "#fbbf24", "val": 38, "verified": false, "verified_by": "", "last_vetted": "", "stale_after": "", "is_stale": false, "is_entity_hub": false, "degree": 8}, {"id": "architecture-severino-srl-asbuilt-01", "filename": "[severino-srl] 06-As-Built.md", "raw_filename": "06-As-Built.md", "project": "severino-srl", "customer": "Severino Srl", "title": "As-Built — Documentazione Tecnica Finale dell'Infrastruttura Severino Srl", "type": "architecture", "phase": 5, "status": "in-review", "author": "Marco Severino", "tags": ["okf-v0.2", "as-built", "architecture", "delivery", "post-work", "fase-5", "inventory", "severino-srl"], "entities": [{"name": "Asset Inventory Severino Srl", "type": "specification", "description": "Inventario dettagliato e matriciale di tutti gli asset hardware e software installati in sede"}, {"name": "Configuration Baseline Snapshot", "type": "pattern", "description": "Snapshot e backup certificati delle configurazioni effettive di apparati e macchine virtuali"}, {"name": "As-Built Network Topology", "type": "pattern", "description": "Topologia fisica e logica consolidata con mappatura porte switch MikroTik e patch panel 24p"}, {"name": "Hyper-V Virtual Infrastructure", "type": "toolchain", "description": "Configurazione finale del cluster hypervisor mononodo su Workstation HP Z4 e relative VM"}, {"name": "Backup and Retention Policy", "type": "specification", "description": "Regime di backup automatico giornaliero verso storage NAS QNAP TS-233 con Cobian Reflector / RustCopy"}], "color": "#38bdf8", "val": 40, "verified": false, "verified_by": "", "last_vetted": "", "stale_after": "", "is_stale": false, "is_entity_hub": false, "degree": 15}, {"id": "specification-severino-srl-atp-01", "filename": "[severino-srl] 07-ATP.md", "raw_filename": "07-ATP.md", "project": "severino-srl", "customer": "Severino Srl", "title": "ATP — Acceptance Test Plan e Rapporto di Collaudo Esecutivo Severino Srl", "type": "specification", "phase": 6, "status": "in-review", "author": "Marco Severino", "tags": ["okf-v0.2", "atp", "testing", "collaudo", "fase-6", "acceptance", "severino-srl"], "entities": [{"name": "Acceptance Criterion Severino Srl", "type": "specification", "description": "Criteri di accettazione e collaudo formale definiti sulla base del documento RSD/URS"}, {"name": "Test Case Catalog", "type": "specification", "description": "Catalogo completo dei 25 casi di test eseguiti su switching, Hyper-V, AD, storage, ZeroTier e MTR"}, {"name": "Test Evidence Repository", "type": "pattern", "description": "Registrazione puntuale di log, output di console e certifiche tecniche allegate al verbale"}, {"name": "Failover Validation System", "type": "concept", "description": "Verifica della continuita operativa e della tenuta dell'alimentazione sotto gruppo di continuita UPS"}, {"name": "Backup and Restore Verification", "type": "pattern", "description": "Collaudo formale del ciclo di backup Cobian/RustCopy verso storage NAS QNAP TS-233 con test di restore"}], "color": "#34d399", "val": 40, "verified": false, "verified_by": "", "last_vetted": "", "stale_after": "", "is_stale": false, "is_entity_hub": false, "degree": 11}, {"id": "guide-severino-srl-sop-runbook-01", "filename": "[severino-srl] 08-SOP-Runbook.md", "raw_filename": "08-SOP-Runbook.md", "project": "severino-srl", "customer": "Severino Srl", "title": "SOP / Runbook — Procedure Operative Standard e Manuale di Gestione Severino Srl", "type": "guide", "phase": 7, "status": "in-review", "author": "Marco Severino", "tags": ["okf-v0.2", "sop", "runbook", "operations", "fase-7", "procedures", "severino-srl"], "entities": [{"name": "Standard Operating Procedure Severino", "type": "concept", "description": "Raccolta di istruzioni operative standardizzate per la gestione e manutenzione dei sistemi IT"}, {"name": "IT Operations Runbook", "type": "pattern", "description": "Guida operativa di primo e secondo livello per gli amministratori di rete e sistemisti"}, {"name": "Backup and Restore Runbook", "type": "specification", "description": "Procedure dettagliate per la gestione dei job Cobian/RustCopy verso storage NAS QNAP TS-233"}, {"name": "Incident and Escalation Path", "type": "pattern", "description": "Catena di escalation per incidenti di livello L1-L4 con contatti e tempi di intervento garantiti"}, {"name": "Active Directory User Lifecycle", "type": "toolchain", "description": "Flusso di lavoro per onboarding, profilazione permessi, mapping dischi e offboarding utenti"}], "color": "#fbbf24", "val": 40, "verified": false, "verified_by": "", "last_vetted": "", "stale_after": "", "is_stale": false, "is_entity_hub": false, "degree": 9}, {"id": "specification-severino-srl-handover-01", "filename": "[severino-srl] 09-Handover-Inventory.md", "raw_filename": "09-Handover-Inventory.md", "project": "severino-srl", "customer": "Severino Srl", "title": "Handover & Inventory — Verbale di Consegna e Registro Asset Definitivo Severino Srl", "type": "specification", "phase": 7, "status": "in-review", "author": "Marco Severino", "tags": ["okf-v0.2", "handover", "inventory", "assets", "fase-7", "sla", "severino-srl"], "entities": [{"name": "Asset Inventory Register Severino", "type": "specification", "description": "Registro ufficiale di tutti gli apparati hardware con matricole, MAC, IP e garanzie attive"}, {"name": "Service Level Agreement Baseline", "type": "specification", "description": "Accordo formale sui livelli di servizio (99.9% uptime, RTO 2h, RPO 1h, change window weekend)"}, {"name": "Hardware Warranty Register", "type": "specification", "description": "Registro delle garanzie vendor e contratti di assistenza tecnica per HP, MikroTik, QNAP e Logitech"}, {"name": "Software License Allocation", "type": "specification", "description": "Riepilogo delle licenze Windows Server 2022, Windows 11, Teams Rooms e ZeroTier"}, {"name": "Post-Cutover Hypercare", "type": "pattern", "description": "Periodo di affiancamento e supporto prioritario garantito per i 30 giorni successivi al collaudo"}, {"name": "Vendor Support Matrix", "type": "organization", "description": "Contatti diretti dei canali di supporto dei produttori hardware e software"}], "color": "#34d399", "val": 40, "verified": false, "verified_by": "", "last_vetted": "", "stale_after": "", "is_stale": false, "is_entity_hub": false, "degree": 10}, {"id": "guide-severino-srl-rca-fs01-smb-connectivity", "filename": "[severino-srl] 10-RCA-FS01-SMB-Connectivity.md", "raw_filename": "10-RCA-FS01-SMB-Connectivity.md", "project": "severino-srl", "customer": "Severino Srl", "title": "RCA & Troubleshooting — Timeout e Degrado Connessioni SMB FS01 su Rete Overlay ZeroTier", "type": "guide", "phase": 7, "status": "approved", "author": "Lead Infrastructure Architect", "tags": ["okf-v0.2", "rca", "troubleshooting", "incident", "fase-7", "operations"], "entities": [{"name": "Root Cause Analysis", "type": "concept", "description": "Metodologia strutturata di indagine causale per identificare l'anomalia primaria generatrice del disservizio"}, {"name": "OSI Layered Diagnostics", "type": "framework", "description": "Albero diagnostico a 7 strati (L1-L7) per isolamento progressivo e deterministico dei guasti"}, {"name": "Path MTU Black Hole", "type": "concept", "description": "Fenomeno di scarto pacchetti TCP con Don't Fragment abilitato senza ritorno di messaggi ICMP Fragmentation Needed"}, {"name": "TCP MSS Clamping", "type": "technology", "description": "Tecnica firewall di riscrittura del Maximum Segment Size nei pacchetti SYN per prevenire frammentazione WAN"}, {"name": "ZeroTier Overlay Network", "type": "technology", "description": "Rete peer-to-peer cifrata Layer 2/3 operante su subnet 10.147.19.0/24"}], "color": "#fbbf24", "val": 29, "verified": false, "verified_by": "", "last_vetted": "", "stale_after": "", "is_stale": false, "is_entity_hub": false, "degree": 5}, {"id": "entity-hub-mikrotik-crs326-port-mapping", "filename": "Entity: MikroTik CRS326 Port Mapping", "raw_filename": "MikroTik CRS326 Port Mapping", "project": "global-shared", "customer": "Condiviso tra 2 clienti", "title": "MikroTik CRS326 Port Mapping", "type": "entity_hub", "phase": 0, "status": "shared", "author": "Global Ontology", "tags": ["entity", "bridge", "toolchain"], "entities": [], "color": "#f59e0b", "val": 20, "verified": true, "verified_by": "Enterprise Engine", "last_vetted": "2026-09-16", "stale_after": "", "is_stale": false, "is_entity_hub": true, "entity_type": "toolchain", "description": "Switch ToR di aggregazione per connettivita' OOB e console management", "projects_list": ["demo-acme", "severino-srl"], "rca_alerts": [], "degree": 2}, {"id": "entity-hub-zerotier-overlay-network", "filename": "Entity: ZeroTier Overlay Network", "raw_filename": "ZeroTier Overlay Network", "project": "global-shared", "customer": "Condiviso tra 2 clienti", "title": "ZeroTier Overlay Network", "type": "entity_hub", "phase": 0, "status": "shared", "author": "Global Ontology", "tags": ["entity", "bridge", "technology"], "entities": [], "color": "#f59e0b", "val": 20, "verified": true, "verified_by": "Enterprise Engine", "last_vetted": "2026-09-16", "stale_after": "", "is_stale": false, "is_entity_hub": true, "entity_type": "technology", "description": "Rete SDN geografica cifrata peer-to-peer per interconnessione remota tra sedi e nodi mobili", "projects_list": ["demo-acme", "severino-srl"], "rca_alerts": [{"title": "RCA & Troubleshooting — Timeout e Degrado Connessioni SMB FS01 su Rete Overlay ZeroTier", "customer": "Severino Srl", "project": "severino-srl", "doc_id": "guide-severino-srl-rca-fs01-smb-connectivity"}], "degree": 2}], "links": [{"source": "specification-severino-srl-rsd-01", "target": "architecture-severino-srl-hld-01", "relationType": "depends_on", "description": "L'HLD traduce i requisiti del RSD/URS in architettura di rete, virtualizzazione e storage", "weight": 1.0, "color": "#ef4444"}, {"source": "specification-severino-srl-rsd-01", "target": "guide-severino-srl-mop-01", "relationType": "references", "description": "Il MOP coordina la sequenza operativa di deploy fisico, configurazione switch e VM", "weight": 0.85, "color": "#94a3b8"}, {"source": "architecture-severino-srl-hld-01", "target": "specification-severino-srl-rsd-01", "relationType": "implements", "description": "L'HLD traduce i requisiti di business e tecnici del RSD/URS in architettura di sistema", "weight": 1.0, "color": "#8b5cf6"}, {"source": "architecture-severino-srl-hld-01", "target": "architecture-severino-srl-lld-01", "relationType": "depends_on", "description": "L'LLD espande l'HLD definendo porte switch esatte, tabelle IP statici e configurazioni puntuali", "weight": 1.0, "color": "#ef4444"}, {"source": "architecture-severino-srl-hld-01", "target": "guide-severino-srl-mop-01", "relationType": "references", "description": "Il MOP coordina la sequenza di staging e attivazione dell'architettura", "weight": 0.85, "color": "#94a3b8"}, {"source": "architecture-severino-srl-hld-01", "target": "specification-severino-srl-rsd-01", "relationType": "depends_on", "description": "Dipendenza canonica formale", "weight": 1.0, "color": "#ef4444"}, {"source": "architecture-severino-srl-lld-01", "target": "specification-severino-srl-rsd-01", "relationType": "references", "description": "Riferimento ai requisiti funzionali e di continuità", "weight": 0.9, "color": "#94a3b8"}, {"source": "architecture-severino-srl-lld-01", "target": "architecture-severino-srl-hld-01", "relationType": "implements", "description": "L'LLD implementa a livello esecutivo l'architettura logica approvata nell'HLD", "weight": 1.0, "color": "#8b5cf6"}, {"source": "architecture-severino-srl-lld-01", "target": "guide-severino-srl-mop-01", "relationType": "depends_on", "description": "Il MOP conterrà i comandi CLI e la sequenza esecutiva basati su questo LLD", "weight": 0.9, "color": "#ef4444"}, {"source": "architecture-severino-srl-lld-01", "target": "specification-severino-srl-atp-01", "relationType": "documents", "description": "L'ATP verificherà il corretto funzionamento delle porte e degli IP allocati nell'LLD", "weight": 0.85, "color": "#10b981"}, {"source": "architecture-severino-srl-lld-01", "target": "architecture-severino-srl-hld-01", "relationType": "depends_on", "description": "Dipendenza canonica formale", "weight": 1.0, "color": "#ef4444"}, {"source": "guide-severino-srl-mop-01", "target": "architecture-severino-srl-lld-01", "relationType": "depends_on", "description": "Il MOP usa l'LLD come blueprint operativo e matrice di cablaggio passo-passo", "weight": 1.0, "color": "#ef4444"}, {"source": "guide-severino-srl-mop-01", "target": "guide-severino-srl-rollback-01", "relationType": "depends_on", "description": "Procedura di contingency e ripristino in caso di anomalie bloccanti durante il deploy", "weight": 1.0, "color": "#ef4444"}, {"source": "guide-severino-srl-mop-01", "target": "architecture-severino-srl-hld-01", "relationType": "references", "description": "Riferimento all'architettura logica e funzionale complessiva", "weight": 0.85, "color": "#94a3b8"}, {"source": "guide-severino-srl-mop-01", "target": "specification-severino-srl-rsd-01", "relationType": "references", "description": "I criteri di accettazione del RSD vengono collaudati nei test gate del MOP", "weight": 0.85, "color": "#94a3b8"}, {"source": "guide-severino-srl-mop-01", "target": "architecture-severino-srl-asbuilt-01", "relationType": "references", "description": "L'As-Built documentera la configurazione finale al termine delle fasi del MOP", "weight": 0.9, "color": "#94a3b8"}, {"source": "guide-severino-srl-mop-01", "target": "specification-severino-srl-atp-01", "relationType": "references", "description": "L'ATP convalida formalmente i servizi attivati tramite il presente MOP", "weight": 0.85, "color": "#94a3b8"}, {"source": "guide-severino-srl-rollback-01", "target": "guide-severino-srl-mop-01", "relationType": "depends_on", "description": "Il Rollback definisce le procedure inverse per ogni fase operativa del MOP", "weight": 1.0, "color": "#ef4444"}, {"source": "guide-severino-srl-rollback-01", "target": "architecture-severino-srl-lld-01", "relationType": "references", "description": "Lo stato di riferimento e la matrice fisica fanno riferimento all'LLD esecutivo", "weight": 0.85, "color": "#94a3b8"}, {"source": "guide-severino-srl-rollback-01", "target": "architecture-severino-srl-asbuilt-01", "relationType": "references", "description": "In caso di fallback parziale, l'As-Built fotografa l'assetto operativo effettivamente consolidato", "weight": 0.8, "color": "#94a3b8"}, {"source": "architecture-severino-srl-asbuilt-01", "target": "architecture-severino-srl-lld-01", "relationType": "depends_on", "description": "L'As-Built documenta lo stato reale e le eventuali deviazioni rispetto all'LLD iniziale", "weight": 1.0, "color": "#ef4444"}, {"source": "architecture-severino-srl-asbuilt-01", "target": "guide-severino-srl-mop-01", "relationType": "depends_on", "description": "L'As-Built fotografa il risultato operativo consolidato al termine dei lavori eseguiti con il MOP", "weight": 0.95, "color": "#ef4444"}, {"source": "architecture-severino-srl-asbuilt-01", "target": "specification-severino-srl-rsd-01", "relationType": "references", "description": "Verifica di conformita rispetto agli obiettivi e ai requisiti originari di business", "weight": 0.9, "color": "#94a3b8"}, {"source": "architecture-severino-srl-asbuilt-01", "target": "architecture-severino-srl-hld-01", "relationType": "references", "description": "Riferimento all'architettura concettuale macro e alle scelte strategiche", "weight": 0.85, "color": "#94a3b8"}, {"source": "architecture-severino-srl-asbuilt-01", "target": "guide-severino-srl-rollback-01", "relationType": "references", "description": "Riferimento alle procedure di salvaguardia e baseline di emergenza archiviate", "weight": 0.8, "color": "#94a3b8"}, {"source": "architecture-severino-srl-asbuilt-01", "target": "specification-severino-srl-atp-01", "relationType": "references", "description": "L'ATP ha collaudato con esito 100% Pass la configurazione descritta nell'As-Built", "weight": 0.95, "color": "#94a3b8"}, {"source": "architecture-severino-srl-asbuilt-01", "target": "guide-severino-srl-sop-runbook-01", "relationType": "references", "description": "Il Runbook operativo fa riferimento ai percorsi, IP e parametri consolidati nell'As-Built", "weight": 0.95, "color": "#94a3b8"}, {"source": "architecture-severino-srl-asbuilt-01", "target": "specification-severino-srl-handover-01", "relationType": "references", "description": "L'inventario definitivo e la consegna al cliente si basano sui dati As-Built", "weight": 0.95, "color": "#94a3b8"}, {"source": "specification-severino-srl-atp-01", "target": "architecture-severino-srl-lld-01", "relationType": "depends_on", "description": "L'ATP verifica i parametri di indirizzamento, cablaggio e sizing stabiliti nell'LLD", "weight": 1.0, "color": "#ef4444"}, {"source": "specification-severino-srl-atp-01", "target": "guide-severino-srl-mop-01", "relationType": "depends_on", "description": "I test gate eseguiti nel MOP costituiscono i presupposti di superamento dell'ATP", "weight": 1.0, "color": "#ef4444"}, {"source": "specification-severino-srl-atp-01", "target": "specification-severino-srl-rsd-01", "relationType": "references", "description": "L'ATP valida tutti i requisiti funzionali e non funzionali espressi nel RSD", "weight": 0.95, "color": "#94a3b8"}, {"source": "specification-severino-srl-atp-01", "target": "architecture-severino-srl-hld-01", "relationType": "references", "description": "L'architettura logica e di sicurezza e validata complessivamente nel collaudo", "weight": 0.85, "color": "#94a3b8"}, {"source": "specification-severino-srl-atp-01", "target": "guide-severino-srl-rollback-01", "relationType": "references", "description": "In caso di fallimento irreversibile dei test critici, viene attivato il piano di rollback", "weight": 0.85, "color": "#94a3b8"}, {"source": "specification-severino-srl-atp-01", "target": "architecture-severino-srl-asbuilt-01", "relationType": "references", "description": "L'esito positivo dell'ATP consente la validazione definitiva della configurazione As-Built", "weight": 0.9, "color": "#94a3b8"}, {"source": "guide-severino-srl-sop-runbook-01", "target": "architecture-severino-srl-asbuilt-01", "relationType": "depends_on", "description": "Il SOP usa l'As-Built come riferimento per hostname, IP, porte switch e configurazioni reali", "weight": 1.0, "color": "#ef4444"}, {"source": "guide-severino-srl-sop-runbook-01", "target": "specification-severino-srl-atp-01", "relationType": "references", "description": "Le procedure di verifica del SOP replicano i test case collaudati nell'ATP", "weight": 0.85, "color": "#94a3b8"}, {"source": "guide-severino-srl-sop-runbook-01", "target": "specification-severino-srl-handover-01", "relationType": "references", "description": "La consegna formale al cliente include l'affidamento del presente manuale operativo", "weight": 0.95, "color": "#94a3b8"}, {"source": "guide-severino-srl-sop-runbook-01", "target": "architecture-severino-srl-lld-01", "relationType": "references", "description": "Riferimento alle specifiche fisiche, logiche e di cablaggio di dettaglio", "weight": 0.8, "color": "#94a3b8"}, {"source": "guide-severino-srl-sop-runbook-01", "target": "guide-severino-srl-mop-01", "relationType": "references", "description": "I task di manutenzione straordinaria ereditano le sequenze e i gate operativi dal MOP", "weight": 0.85, "color": "#94a3b8"}, {"source": "guide-severino-srl-sop-runbook-01", "target": "guide-severino-srl-rollback-01", "relationType": "references", "description": "Procedure di emergenza e fallback da applicare in caso di guasti bloccanti", "weight": 0.85, "color": "#94a3b8"}, {"source": "specification-severino-srl-handover-01", "target": "architecture-severino-srl-asbuilt-01", "relationType": "depends_on", "description": "L'Handover eredita l'inventario tecnico e le configurazioni documentate nell'As-Built", "weight": 1.0, "color": "#ef4444"}, {"source": "specification-severino-srl-handover-01", "target": "specification-severino-srl-atp-01", "relationType": "depends_on", "description": "La presa in carico formale e subordinata al superamento con esito Pass dell'ATP", "weight": 0.95, "color": "#ef4444"}, {"source": "specification-severino-srl-handover-01", "target": "specification-severino-srl-rsd-01", "relationType": "references", "description": "Gli SLA e i criteri di consegna fanno riferimento ai requisiti originari approvati", "weight": 0.85, "color": "#94a3b8"}, {"source": "specification-severino-srl-handover-01", "target": "architecture-severino-srl-hld-01", "relationType": "references", "description": "Riferimento all'architettura complessiva di progetto", "weight": 0.8, "color": "#94a3b8"}, {"source": "specification-severino-srl-handover-01", "target": "architecture-severino-srl-lld-01", "relationType": "references", "description": "Riferimento alle tabelle di cablaggio e allocazione porte", "weight": 0.85, "color": "#94a3b8"}, {"source": "specification-severino-srl-handover-01", "target": "guide-severino-srl-mop-01", "relationType": "references", "description": "La chiusura del MOP certifica il completamento di tutti gli step operativi", "weight": 0.85, "color": "#94a3b8"}, {"source": "specification-severino-srl-handover-01", "target": "guide-severino-srl-rollback-01", "relationType": "references", "description": "Riferimento alle strategie di contingency archiviate nel vault", "weight": 0.8, "color": "#94a3b8"}, {"source": "specification-severino-srl-handover-01", "target": "guide-severino-srl-sop-runbook-01", "relationType": "references", "description": "La consegna include il rilascio del manuale operativo al team di gestione", "weight": 0.95, "color": "#94a3b8"}, {"source": "guide-severino-srl-rca-fs01-smb-connectivity", "target": "architecture-severino-srl-asbuilt-01", "relationType": "extends", "description": "L'RCA estende la documentazione As-Built registrando le modifiche correttive apportate a MTU e firewall", "weight": 1.0, "color": "#3b82f6"}, {"source": "guide-severino-srl-rca-fs01-smb-connectivity", "target": "architecture-severino-srl-lld-01", "relationType": "relates_to", "description": "L'RCA si confronta con il design LLD per verificare deviazioni nei parametri MTU di ZeroTier e MSS clamping", "weight": 0.8, "color": "#06b6d4"}, {"source": "guide-severino-srl-rca-fs01-smb-connectivity", "target": "guide-severino-srl-sop-runbook-01", "relationType": "extends", "description": "L'RCA alimenta il Runbook con la procedura diagnostica L1-L7 per disservizi VPN e clamp MTU", "weight": 0.9, "color": "#3b82f6"}, {"source": "guide-severino-srl-rca-fs01-smb-connectivity", "target": "architecture-severino-srl-asbuilt-01", "relationType": "depends_on", "description": "Dipendenza canonica formale", "weight": 1.0, "color": "#ef4444"}, {"source": "architecture-severino-srl-lld-01", "target": "entity-hub-mikrotik-crs326-port-mapping", "relationType": "uses_entity", "description": "Adotta MikroTik CRS326 Port Mapping", "weight": 0.8, "color": "#f59e0b"}, {"source": "specification-demo-acme-rsd-01", "target": "entity-hub-mikrotik-crs326-port-mapping", "relationType": "uses_entity", "description": "Adotta MikroTik CRS326 Port Mapping", "weight": 0.8, "color": "#f59e0b"}, {"source": "specification-demo-acme-rsd-01", "target": "entity-hub-zerotier-overlay-network", "relationType": "uses_entity", "description": "Adotta ZeroTier Overlay Network", "weight": 0.8, "color": "#f59e0b"}, {"source": "guide-severino-srl-rca-fs01-smb-connectivity", "target": "entity-hub-zerotier-overlay-network", "relationType": "uses_entity", "description": "Adotta ZeroTier Overlay Network", "weight": 0.8, "color": "#f59e0b"}]};
+
+    const container = document.getElementById('graph-container');
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    const svg = d3.select("#graph-container")
+        .append("svg")
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .attr("viewBox", [0, 0, width, height]);
+
+    const g = svg.append("g");
+
+    const zoom = d3.zoom()
+        .scaleExtent([0.15, 4])
+        .on("zoom", (event) => {
+            g.attr("transform", event.transform);
+        });
+
+    svg.call(zoom);
+
+    function resetZoom() {
+        svg.transition().duration(750).call(
+            zoom.transform,
+            d3.zoomIdentity.translate(width / 2, height / 2).scale(0.85).translate(-width / 2, -height / 2)
+        );
+    }
+
+    const defs = svg.append("defs");
+    const relationColors = {"depends_on": "#ef4444", "extends": "#3b82f6", "documents": "#10b981", "implements": "#8b5cf6", "references": "#94a3b8", "relates_to": "#06b6d4", "governs": "#f97316", "constrains": "#e11d48", "default": "#64748b"};
+
+    Object.entries(relationColors).forEach(([rel, col]) => {
+        defs.append("marker")
+            .attr("id", "arrow-" + rel)
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", 22)
+            .attr("refY", 0)
+            .attr("markerWidth", 6)
+            .attr("markerHeight", 6)
+            .attr("orient", "auto")
+            .append("path")
+            .attr("d", "M0,-5L10,0L0,5")
+            .attr("fill", col);
+    });
+
+    const simulation = d3.forceSimulation(graphData.nodes)
+        .force("link", d3.forceLink(graphData.links).id(d => d.id).distance(140))
+        .force("charge", d3.forceManyBody().strength(-550))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide().radius(d => d.val + 25));
+
+    const link = g.append("g")
+        .selectAll("line")
+        .data(graphData.links)
+        .join("line")
+        .attr("class", "link")
+        .attr("stroke", d => d.color || "#64748b")
+        .attr("stroke-width", d => Math.max(1.5, (d.weight || 1) * 2))
+        .attr("marker-end", d => `url(#arrow-${d.relationType || 'default'}`);
+
+    const node = g.append("g")
+        .selectAll("g")
+        .data(graphData.nodes)
+        .join("g")
+        .attr("class", "node")
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
+
+    node.append("circle")
+        .attr("r", d => d.val)
+        .attr("fill", d => d.color)
+        .attr("stroke", d => d.is_stale ? "#ef4444" : (d.verified ? "#10b981" : "#ffffff"))
+        .attr("stroke-width", d => (d.verified || d.is_stale) ? 3 : 1.5)
+        .attr("stroke-dasharray", d => d.is_stale ? "4,2" : "none");
+
+    node.append("text")
+        .attr("dx", d => d.val + 8)
+        .attr("dy", "0.35em")
+        .text(d => d.filename.replace(".md", ""));
+
+    simulation.on("tick", () => {
+        link
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+
+        node
+            .attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
+
+    let selectedNode = null;
+
+    node.on("mouseover", (event, d) => {
+        if (selectedNode) return;
+        const neighborIds = new Set();
+        neighborIds.add(d.id);
+
+        link.each(function(l) {
+            if (l.source.id === d.id || l.target.id === d.id) {
+                neighborIds.add(l.source.id);
+                neighborIds.add(l.target.id);
+                d3.select(this).classed("highlighted", true);
+            } else {
+                d3.select(this).classed("dimmed", true);
+            }
+        });
+
+        node.classed("dimmed", n => !neighborIds.has(n.id));
+    });
+
+    node.on("mouseout", () => {
+        if (selectedNode) return;
+        link.classed("highlighted", false).classed("dimmed", false);
+        node.classed("dimmed", false);
+    });
+
+    node.on("click", (event, d) => {
+        event.stopPropagation();
+        selectedNode = d;
+        showSidebar(d);
+
+        const neighborIds = new Set([d.id]);
+        link.each(function(l) {
+            if (l.source.id === d.id || l.target.id === d.id) {
+                neighborIds.add(l.source.id);
+                neighborIds.add(l.target.id);
+                d3.select(this).classed("highlighted", true).classed("dimmed", false);
+            } else {
+                d3.select(this).classed("highlighted", false).classed("dimmed", true);
+            }
+        });
+        node.classed("dimmed", n => !neighborIds.has(n.id));
+    });
+
+    svg.on("click", () => {
+        selectedNode = null;
+        closeSidebar();
+        link.classed("highlighted", false).classed("dimmed", false);
+        node.classed("dimmed", false);
+    });
+
+    function showSidebar(d) {
+        const sidebar = document.getElementById("sidebar");
+        const content = document.getElementById("sidebar-content");
+
+        const outgoing = graphData.links.filter(l => l.source.id === d.id || l.source === d.id);
+        const incoming = graphData.links.filter(l => l.target.id === d.id || l.target === d.id);
+
+        let entitiesHtml = (d.entities && d.entities.length > 0)
+            ? d.entities.map(e => `<span class="entity-chip"><strong>${escapeHtml(e.name)}</strong> (${e.type})</span>`).join(" ")
+            : '<span style="color:#64748b; font-size:0.8rem;">Nessuna entità registrata</span>';
+
+        let outgoingHtml = outgoing.length > 0 ? outgoing.map(l => {
+            const targetName = l.target.filename || l.target.id || l.target;
+            return `<div class="relation-item">
+                <span class="relation-type" style="background:${l.color || '#3b82f6'}22; color:${l.color || '#3b82f6'}">${l.relationType}</span>
+                &rarr; <strong>${escapeHtml(targetName)}</strong>
+                <div style="color:#94a3b8; font-size:0.75rem; margin-top:2px;">${escapeHtml(l.description || '')}</div>
+            </div>`;
+        }).join("") : '<div style="color:#64748b; font-size:0.8rem;">Nessuna relazione in uscita</div>';
+
+        let incomingHtml = incoming.length > 0 ? incoming.map(l => {
+            const sourceName = l.source.filename || l.source.id || l.source;
+            return `<div class="relation-item">
+                <strong>${escapeHtml(sourceName)}</strong>
+                &rarr; <span class="relation-type" style="background:${l.color || '#3b82f6'}22; color:${l.color || '#3b82f6'}">${l.relationType}</span>
+                <div style="color:#94a3b8; font-size:0.75rem; margin-top:2px;">${escapeHtml(l.description || '')}</div>
+            </div>`;
+        }).join("") : '<div style="color:#64748b; font-size:0.8rem;">Nessuna relazione in entrata</div>';
+
+        content.innerHTML = `
+            <span class="sidebar-type" style="background:${d.color}22; color:${d.color}">${d.type} — Fase ${d.phase}</span>
+            ${d.verified ? `<div style="display:inline-block; margin-left:6px; padding:2px 8px; border-radius:12px; font-size:0.75rem; background:#10b98122; border:1px solid #10b981; color:#34d399; font-weight:600;">✓ Verificato (${escapeHtml(d.verified_by || 'Reviewer')})</div>` : ''}
+            ${d.is_stale ? `<div style="display:inline-block; margin-left:6px; padding:2px 8px; border-radius:12px; font-size:0.75rem; background:#ef444422; border:1px solid #ef4444; color:#f87171; font-weight:600;">⚠ Scaduto (${escapeHtml(d.stale_after)})</div>` : ''}
+            ${d.is_entity_hub ? `<div style="display:inline-block; margin-left:6px; padding:2px 8px; border-radius:12px; font-size:0.75rem; background:#f59e0b33; border:1px solid #f59e0b; color:#fbbf24; font-weight:700;">🔗 Hub Entità Condivisa</div>` : ''}
+            <div class="sidebar-title">${escapeHtml(d.title)}</div>
+            <div class="sidebar-id">${escapeHtml(d.id)}</div>
+            <div style="font-size:0.85rem; color:#94a3b8; margin-bottom:1rem;">
+                Autore: <strong>${escapeHtml(d.author)}</strong> | Stato: <strong>${escapeHtml(d.status)}</strong>
+            </div>
+
+            ${d.is_entity_hub && d.rca_alerts && d.rca_alerts.length > 0 ? `
+            <div style="margin-bottom:1rem; padding:10px 12px; background:#ef444422; border:1px solid #ef4444; border-radius:8px; font-size:0.8rem; color:#fca5a5;">
+                <div style="font-weight:700; font-size:0.85rem; margin-bottom:4px; color:#ef4444;">⚠️ Cross-Client Incident Intelligence</div>
+                Rilevato disservizio noto su questo hardware/tecnologia in un altro progetto:
+                ${d.rca_alerts.map(a => `<div style="margin-top:4px;">&bull; <strong>${escapeHtml(a.customer)}</strong>: ${escapeHtml(a.title)}</div>`).join('')}
+            </div>` : ''}
+
+            ${d.is_entity_hub ? `
+            <div class="sidebar-section">
+                <h4>Descrizione Entità</h4>
+                <div style="font-size:0.85rem; color:#cbd5e1; line-height:1.4;">${escapeHtml(d.description || 'Nessuna descrizione registrata')}</div>
+            </div>
+            <div class="sidebar-section">
+                <h4>Progetti / Clienti che adottano questo Asset (${d.projects_list ? d.projects_list.length : 0})</h4>
+                <div style="font-size:0.85rem; color:#38bdf8;">${d.projects_list ? d.projects_list.map(p => `<span class="entity-chip">${escapeHtml(p)}</span>`).join(' ') : 'N/A'}</div>
+            </div>` : ''}
+
+            <div class="sidebar-section">
+                <h4>Entità Ontologiche (${d.entities ? d.entities.length : 0})</h4>
+                ${entitiesHtml}
+            </div>
+
+            <div class="sidebar-section">
+                <h4>Relazioni in Uscita (${outgoing.length})</h4>
+                ${outgoingHtml}
+            </div>
+
+            <div class="sidebar-section">
+                <h4>Relazioni in Entrata (${incoming.length})</h4>
+                ${incomingHtml}
+            </div>
+        `;
+
+        sidebar.classList.add("open");
+    }
+
+    function closeSidebar() {
+        document.getElementById("sidebar").classList.remove("open");
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    document.getElementById("search-box").addEventListener("input", (e) => {
+        const term = e.target.value.toLowerCase().trim();
+        if (!term) {
+            node.classed("dimmed", false);
+            link.classed("dimmed", false);
+            return;
+        }
+
+        const matchedIds = new Set();
+        graphData.nodes.forEach(n => {
+            const inTitle = n.title.toLowerCase().includes(term);
+            const inId = n.id.toLowerCase().includes(term);
+            const inFilename = n.filename.toLowerCase().includes(term);
+            const inEntities = n.entities && n.entities.some(ent => ent.name.toLowerCase().includes(term));
+            if (inTitle || inId || inFilename || inEntities) {
+                matchedIds.add(n.id);
+            }
+        });
+
+        node.classed("dimmed", n => !matchedIds.has(n.id));
+        link.classed("dimmed", l => !matchedIds.has(l.source.id) || !matchedIds.has(l.target.id));
+    });
+
+    document.getElementById("type-filter").addEventListener("change", (e) => {
+        const selectedType = e.target.value;
+        if (selectedType === "ALL") {
+            node.classed("dimmed", false);
+            link.classed("dimmed", false);
+            return;
+        }
+        const matchedIds = new Set(graphData.nodes.filter(n => n.type === selectedType).map(n => n.id));
+        node.classed("dimmed", n => !matchedIds.has(n.id));
+        link.classed("dimmed", l => !matchedIds.has(l.source.id) || !matchedIds.has(l.target.id));
+    });
+
+    resetZoom();
+</script>
+
+</body>
+</html>

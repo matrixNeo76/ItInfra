@@ -17,12 +17,13 @@ Questa skill fornisce le linee guida operative per la gestione sicura e crittogr
    - Derivazione della master key con **PBKDF2-HMAC-SHA256** (100.000 iterazioni con salt casuale a 16 byte).
 3. **Concorrenza Sicura e Multi-Worktree:** L'accesso al vault è protetto da un meccanismo di **File Locking atomico** (`.vault.lock`) con context manager per prevenire corruzioni dei dati durante l'esecuzione parallela di subagenti su Git Worktree.
 4. **Protezione Git Totale:** I file `.vault.enc`, `.vault.lock`, chiavi e file `.secret` sono tassativamente esclusi dal controllo versione tramite `.gitignore`.
+5. **Protezione Preventiva da Secret Leakage Globale (Release v0.8):** È severamente vietato inserire credenziali o riferimenti `vault://it/projects/` nello Staging Scratchpad Globale (`projects/_global_scratchpad.md`). Il sanitizer preventivo (`validate_global_entry_safety`) blocca automaticamente tali tentativi sollevando `PermissionError`.
 
 ---
 
 ## 2. Riferimento delle Credenziali nei Documenti Markdown
 
-Nei file tecnici (`01-RSD` ... `09-Handover`), le credenziali devono essere espresse esclusivamente tramite l'URI standard del vault aziendale:
+Nei file tecnici (`01-RSD` ... `10-RCA`) e nello scratchpad locale (`_scratchpad.md`), le credenziali devono essere espresse esclusivamente tramite l'URI standard del vault aziendale:
 
 ```markdown
 <!-- ESEMPIO CORRETTO NEI DOCUMENTI MARKDOWN -->
@@ -63,19 +64,15 @@ python scripts/itinfra.py vault list <slug>
 ```
 
 ### Audit dei Riferimenti Markdown vs Vault
-Scansiona tutti i 9 documenti tecnici del progetto, estrae ogni occorrenza di `vault://` e verifica se corrisponde a un segreto effettivamente censito:
+Scansiona tutti i 10 documenti tecnici del progetto e lo scratchpad, estrae ogni occorrenza di `vault://` e verifica se corrisponde a un segreto effettivamente censito:
 ```powershell
 python scripts/itinfra.py vault audit <slug> [--passphrase "<passphrase>"]
 ```
 - Segnala **chiavi mancanti**: citate nei documenti tecnici ma non ancora inserite nel vault.
-- Segnala **chiavi orfane**: presenti nel vault ma non utilizzate nella documentazione.
+- Segnala **chiavi orfane**: presenti nel vault ma non referenziate in alcun documento.
 
----
-
-## 4. Variabile d'Ambiente per Automazione CI/CD
-
-Nei contesti di automazione o script di provisioning unattended, è possibile definire la master passphrase del vault tramite variabile d'ambiente:
+### Collaudo Unificato di Sicurezza
+Verifica la piena integrità crittografica e l'assenza di secret leaks tramite il modulo `MOD-03` dell'Enterprise Test Suite:
 ```powershell
-$env:ITINFRA_VAULT_PASS = "LaTuaMasterPassphraseSicura2026!"
+python scripts/itinfra.py test-suite --report-html
 ```
-Non committare mai script che contengono la variabile valorizzata in chiaro.

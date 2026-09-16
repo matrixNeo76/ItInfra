@@ -40,6 +40,18 @@ entities:
   - name: "Spine-Leaf DC Fabric"
     type: "pattern"
     description: "Topologia di rete fabric leaf-spine a 100G/25G"
+  - name: "Dell PowerEdge R630"
+    type: "technology"
+    description: "Server cluster di virtualizzazione compute per servizi legacy Acme"
+  - name: "MikroTik CRS326 Port Mapping"
+    type: "toolchain"
+    description: "Switch ToR di aggregazione per connettivita' OOB e console management"
+  - name: "ZeroTier Overlay Network"
+    type: "technology"
+    description: "Rete SDN geografica cifrata peer-to-peer per interconnessione remota tra sedi e nodi mobili"
+  - name: "HP Z4 G4 Workstation"
+    type: "technology"
+    description: "Stazione compute di staging e simulazione per collaudi pre-deployment"
 
 relations:
   - targetTitle: "HLD — High-Level Design Datacenter Acme"

@@ -23,6 +23,7 @@ related_docs:
   - "specification-itinfra-assistant-v02"
   - "guide-itinfra-agentic-assistant-01"
   - "specification-itinfra-manifest-projects-01"
+  - "guide-global-memory-system-test-01"
 depends_on:
   - "specification-itinfra-assistant-v02"
 classification: "public"
@@ -64,6 +65,11 @@ relations:
     relationType: "references"
     weight: 0.85
     description: "Riferimento al manifest di progetto per parametri di retention e vault"
+  - targetTitle: "Guida Operativa — Global Staging Memory & Enterprise System Test Suite"
+    targetId: "guide-global-memory-system-test-01"
+    relationType: "references"
+    weight: 0.9
+    description: "Politiche di sicurezza preventiva contro secret leakage e verifica automatica"
 ---
 
 # Specifica dei Framework di Compliance e Resilienza Operativa
@@ -107,7 +113,7 @@ L'aggiornamento 2022 dello standard ISO/IEC 27001 organizza i controlli di sicur
 
 | Dominio ISO 27001:2022 | Controlli Rilevanti per l'Infrastruttura | Documento ITInfra Corrispondente |
 |------------------------|------------------------------------------|----------------------------------|
-| **A.5 Controlli Organizzativi** | Politiche di controllo accessi, gestione asset, segregazione compiti | `01-RSD-URS.md`, `09-Handover-Inventory.md` |
+| **A.5 Controlli Organizzativi** | Politiche di controllo accessi, gestione asset, segregazione compiti, gestione incidenti (A.5.24) | `01-RSD-URS.md`, `09-Handover-Inventory.md`, `10-RCA-Troubleshooting.md` |
 | **A.6 Controlli Persone** | Screening, accordi di riservatezza, sensibilizzazione | `04-MOP.md` (ruoli ed escalation) |
 | **A.7 Controlli Fisici** | Sicurezza perimetrale data center, cablaggio sicuro, manutenzione rack | `03-LLD.md` (Rack elevation e patch panel) |
 | **A.8 Controlli Tecnologici** | Segregazione reti (A.8.20), sicurezza servizi di rete (A.8.21), segregazione in reti (A.8.22), PAM (A.8.2) | `02-HLD.md` (Zone trust), `03-LLD.md` (VLAN, ACL) |
@@ -147,4 +153,11 @@ Il repository include il modulo `scripts/itinfra_vault.py` e il subparser CLI `v
 3. **Concorrenza Sicura e Multi-Worktree:** Un context manager di **File Locking Atomico** (`.vault.lock`) garantisce l'accesso esclusivo al vault, prevenendo corruzioni dei dati durante l'esecuzione parallela di più subagenti AI su Git Worktree.
 4. **Protezione Git Totale:** I file `.vault.enc`, `.vault.lock` e chiavi `.secret` sono tassativamente esclusi da Git via `.gitignore`.
 5. **Audit di Coerenza Automatico:** Il comando `python scripts/itinfra.py vault audit <slug>` scansiona tutti i file Markdown del progetto, verifica la corrispondenza dei riferimenti `vault://` e rileva secret mancanti o orfani.
+
+### 5.2 Prevenzione del Secret Leakage nella Memoria Globale (Release v0.8)
+Nelle architetture multi-tenant, la condivisione di una memoria globale (`projects/_global_scratchpad.md`) comporta il rischio critico di propagazione involontaria di credenziali o riferimenti specifici del cliente tra diversi progetti.
+Per soddisfare le policy Zero-Leakage:
+1. **Sanitizer Preventivo (`validate_global_entry_safety`):** Il motore di persistenza in `scripts/itinfra_memory.py` analizza preventivamente qualsiasi annotazione destinata al pool globale. Se il testo contiene riferimenti a `vault://it/projects/` o stringhe di credenziali in chiaro (`password:`, `secret:`, token), l'operazione viene immediatamente abortita con `PermissionError`.
+2. **Confinamento Ermetico dei Secret:** La conoscenza condivisa è circoscritta unicamente a vincoli architetturali generici, incompatibilità di apparati note e linee guida di vendor. Tutti i secret rimangono confinati nel `.vault.enc` di ciascun cliente.
+3. **Collaudo Continuo:** Il modulo `MOD-03` e `MOD-07` dell'Enterprise System Test Suite (`scripts/itinfra_test_suite.py`) verifica costantemente l'assenza di leakage crittografico su tutti i file del repository.
 

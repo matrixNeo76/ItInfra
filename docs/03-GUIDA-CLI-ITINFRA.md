@@ -23,6 +23,8 @@ related_docs:
   - "specification-itinfra-assistant-v02"
   - "specification-itinfra-manifest-projects-01"
   - "guide-itinfra-agentic-assistant-01"
+  - "guide-global-enterprise-graph-v02"
+  - "guide-global-memory-system-test-01"
 depends_on:
   - "specification-itinfra-assistant-v02"
 classification: "public"
@@ -61,6 +63,16 @@ relations:
     relationType: "relates_to"
     weight: 0.9
     description: "Fornisce la base di comandi eseguibili dagli agenti AI"
+  - targetTitle: "Guida al Knowledge Graph Globale Enterprise & Entity Bridges"
+    targetId: "guide-global-enterprise-graph-v02"
+    relationType: "documents"
+    weight: 0.95
+    description: "Documenta l'uso dei comandi inventory e graph per l'interpolazione multi-tenant"
+  - targetTitle: "Guida alla Memoria Globale Enterprise & Verification Dashboard"
+    targetId: "guide-global-memory-system-test-01"
+    relationType: "documents"
+    weight: 0.95
+    description: "Documenta l'uso di memory --global e test-suite per il collaudo end-to-end"
 ---
 
 # Manuale Operativo: ITInfra CLI (`scripts/itinfra.py`)
@@ -373,10 +385,104 @@ python scripts/itinfra.py export-graph <project_slug> [--out <percorso_output.ht
 
 # Genera il Knowledge Graph dei template master:
 python scripts/itinfra.py export-graph templates
+
+# Genera il Knowledge Graph globale enterprise federato (tutti i progetti e nodi ponte Shared Entity):
+python scripts/itinfra.py export-graph all [--out projects/global-graph.html]
 ```
 
 **Esempio:**
 ```bash
 python scripts/itinfra.py export-graph severino-srl
 # Produce: projects/severino-srl/graph.html
+
+python scripts/itinfra.py export-graph all
+# Produce: projects/global-graph.html
 ```
+
+---
+
+### 3.15 `memory` — Memoria Locale Ibrida a 3 Livelli & Global Enterprise Pool (Release v0.6 e v0.8)
+Gestisce la persistenza dello Staging Scratchpad sia per singolo cliente (`projects/<slug>/_scratchpad.md`) sia a livello globale aziendale (`projects/_global_scratchpad.md`), eliminando i micro-commit provvisori su Git e consentendo la marcatura di confidenza (**Trust Signals**) o la condivisione protetta di best practice e known issues:
+
+```bash
+# Inizializza lo staging scratchpad (locale o globale):
+python scripts/itinfra.py memory init <slug>
+python scripts/itinfra.py memory init --global
+
+# Registra una decisione, requisito o nota (con controllo anti-leak multi-tenant):
+python scripts/itinfra.py memory log <slug> --section decisioni --text "<decisione approvata>" [--role <ruolo>]
+python scripts/itinfra.py memory log --global --section best-practices --text "<regola generica approvata>" [--role <ruolo>]
+python scripts/itinfra.py memory log --global --section known-issues --text "<limitazione firmware nota>"
+
+# Visualizza lo stato e le statistiche dello scratchpad (locale o globale):
+python scripts/itinfra.py memory show <slug>
+python scripts/itinfra.py memory show --global
+
+# Sincronizza (merge) gli scratchpad temporanei dei worktree paralleli (.memory/):
+python scripts/itinfra.py memory merge <slug>
+
+# Consolida le decisioni confermate nel documento target applicando i Trust Signals:
+python scripts/itinfra.py memory consolidate <slug> --target <01-RSD|02-HLD|03-LLD|...> --reviewer "<Nome Revisore>" [--stale-days 90]
+
+# Archivia lo scratchpad corrente e ripristina la struttura vuota:
+python scripts/itinfra.py memory prune <slug> [--no-archive]
+python scripts/itinfra.py memory prune --global [--no-archive]
+```
+
+**Esempi:**
+```bash
+python scripts/itinfra.py memory log severino-srl --section decisioni --text "Confermato passaggio a Jumbo Frame MTU 9000 su VLAN 40 iSCSI" --role infra-architect
+python scripts/itinfra.py memory log --global --section best-practices --text "ZeroTier: impostare sempre MTU 1400 e change-tcp-mss=yes per evitare frammentazione SMB"
+python scripts/itinfra.py memory show --global
+```
+
+---
+
+### 3.16 `inventory` — Global Enterprise Asset & Entity Knowledge Graph (Release v0.7)
+Interroga e correla apparati hardware, modelli, vendor ed entità tecnologiche attraverso l'intero catalogo dei progetti (`projects/*`), abilitando l'intelligence multi-tenant e la correlazione cross-client di incidenti e disservizi pregressi:
+
+```bash
+# Ricerca trasversale per termine o tecnologia (es. vendor, modello, protocollo):
+python scripts/itinfra.py inventory find "<termine>"
+
+# Censimento apparati hardware con filtro facoltativo per vendor:
+python scripts/itinfra.py inventory list-hardware [--vendor <Dell|MikroTik|Cisco|...>]
+
+# Riepilogo aggregato dell'infrastruttura enterprise (progetti, vendor, entità e RCA correlate):
+python scripts/itinfra.py inventory summary
+```
+
+**Esempi:**
+```bash
+python scripts/itinfra.py inventory find "Dell"
+python scripts/itinfra.py inventory find "ZeroTier"
+python scripts/itinfra.py inventory list-hardware --vendor Dell
+python scripts/itinfra.py inventory summary
+```
+
+---
+
+### 3.17 `test-suite` — Enterprise System Test & Verification Dashboard (Release v0.8)
+Esegue una suite di collaudo automatizzata end-to-end su tutti i 10 moduli del framework ITInfra (Linter, Strict Grounding, Vault AES-256, Worktrees, Playbook RouterOS/PowerShell, RCA Telemetry, Memoria Ibrida, Asset Inventory, Cross-Client Alerting e D3.js Graph) ed esporta la dashboard offline di certificazione:
+
+```bash
+# Esecuzione completa con esportazione della Dashboard HTML:
+python scripts/itinfra.py test-suite
+
+# Esecuzione solo terminale (senza generare file HTML):
+python scripts/itinfra.py test-suite --no-html
+
+# Esecuzione con percorso di output personalizzato:
+python scripts/itinfra.py test-suite --out exports/system-audit.html
+```
+
+**Esempio di Output:**
+```text
+======================================================================
+  [OK] ESITO COLLAUDO GENERALE: 10/10 MODULI SUPERATI (100.0%)
+  Tempo totale: 1291.48 ms | Allucinazioni: 0 | Secret Leaks: 0
+======================================================================
+[OK] Dashboard HTML di collaudo salvata in: projects/system-test-report.html
+```
+
+

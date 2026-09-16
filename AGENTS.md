@@ -171,7 +171,17 @@ python scripts/itinfra.py troubleshoot [init|list] <slug> <ticket_id>
 python scripts/itinfra.py health-check <slug> [--timeout 1.0]
 
 # Mappa Interattiva D3.js Knowledge Graph OKF v0.2:
-python scripts/itinfra.py export-graph <slug|templates> [--out graph.html]
+python scripts/itinfra.py export-graph <slug|templates|all> [--out graph.html]
+
+# Memoria Locale Ibrida (L1-L3), Global Scratchpad e Trust Signals (Release v0.6 & v0.8):
+python scripts/itinfra.py memory [init|log|show|merge|consolidate|prune] <slug>
+python scripts/itinfra.py memory [init|log|show|prune] --global
+
+# Global Enterprise Asset & Entity Knowledge Graph (Release v0.7):
+python scripts/itinfra.py inventory [find|list-hardware|summary]
+
+# Enterprise System Test Suite & Verification Dashboard (Release v0.8):
+python scripts/itinfra.py test-suite [--report-html] [--no-html] [--out projects/system-test-report.html]
 ```
 
 ### 7. Validazione finale & Gate di Qualità

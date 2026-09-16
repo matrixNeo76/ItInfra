@@ -123,3 +123,75 @@ Vengono estratti e validati:
 - `sw-core-01.rsc`: comandi RouterOS v7 per MikroTik Switch/Firewall.
 - `setup_ad_hyperv.ps1`: script PowerShell esecutivo per il provisioning di VM, vSwitch e utenti AD.
 
+---
+
+## 5. Gestione della Memoria Locale Ibrida a 3 Livelli, Global Scratchpad & Trust Signals (Release v0.6 & v0.8)
+
+Per preservare il contesto tra sessioni, condividere limitazioni hardware note ed evitare l'inquinamento di Git con micro-commit provvisori:
+
+1. **Prima di porre domande all'utente (Step 0):**
+   - Esegui prima `python scripts/itinfra.py memory show --global` per verificare best practice aziendali, limitazioni hardware note e linee guida di vendor trasversali (`projects/_global_scratchpad.md`).
+   - Esegui poi `python scripts/itinfra.py memory show <slug>` per verificare le decisioni già concordate o i requisiti pendenti nello scratchpad del progetto specifico. Non ripetere domande già risolte.
+
+2. **Durante l'intervista tecnica (Step 3):**
+   - Per ogni decisione tecnica confermata dall'utente sul singolo progetto, registra la nota:
+     ```powershell
+     python scripts/itinfra.py memory log <slug> --section decisioni --text "<decisione approvata>" [--role <ruolo>]
+     ```
+   - Per regole di architettura o vincoli hardware generali validi per tutta l'azienda (senza riferimenti a clienti o secret), registra nello scratchpad globale:
+     ```powershell
+     python scripts/itinfra.py memory log --global --section "Best Practices & Design Patterns" --text "<regola generica>"
+     ```
+     *(Nota di sicurezza: il sistema esegue un controllo preventivo di sicurezza; è severamente vietato inserire riferimenti `vault://` o secret nella memoria globale).*
+   - Per ogni informazione mancante o dubbia, usa tassativamente `<DA-RICHIEDERE>`:
+     ```powershell
+     python scripts/itinfra.py memory log <slug> --section sospesi --text "<DA-RICHIEDERE> <parametro mancante>" [--role <ruolo>]
+     ```
+
+3. **In caso di esecuzione multi-agente parallela:**
+   - Ciascun agente appunta con proprio `--role` (scrive in `.memory/scratchpad.<ruolo>.md`).
+   - Prima della redazione finale, unifica le note:
+     ```powershell
+     python scripts/itinfra.py memory merge <slug>
+     ```
+
+4. **In fase di consegna del documento (Step 5):**
+   - Consolida le decisioni nel documento target OKF v0.2 applicando i metadati di confidenza (**Trust Signals**):
+     ```powershell
+     python scripts/itinfra.py memory consolidate <slug> --target <NN-TIPO> --reviewer "<Nome Revisore>" [--stale-days 90]
+     ```
+   - Valida che il documento aggiornato soddisfi `itinfra.py validate` e `itinfra.py audit-consistency`.
+
+---
+
+## 6. Global Enterprise Knowledge Graph & Asset Inventory (Release v0.7)
+
+Quando l'utente richiede informazioni su componenti hardware, modelli, vendor o tecnologie trasversali tra più clienti o per la pianificazione di un nuovo impianto:
+
+1. **Consultazione Cross-Progetto (Step 0):**
+   - Esegui una ricerca rapida per verificare l'adozione e le configurazioni storiche:
+     ```powershell
+     python scripts/itinfra.py inventory find "<modello o tecnologia>"
+     python scripts/itinfra.py inventory list-hardware --vendor <vendor>
+     ```
+2. **Prevenzione Proattiva Incidenti (Incident Intelligence):**
+   - Se l'output segnala allarmi `[!] CROSS-CLIENT INCIDENT ALERT`, consulta immediatamente la scheda post-mortem indicata (es. `10-RCA-*.md`) per adottare fin dalla fase di design le contromisure e workaround documentati (es. MTU/MSS clamping su overlay VPN, firmware consigliati).
+3. **Mappatura Globale D3.js:**
+   - Per visualizzare l'intero grafo enterprise federato e le connessioni tra progetti tramite i nodi ponte (`Shared Entity Bridges`):
+     ```powershell
+     python scripts/itinfra.py export-graph all --out projects/global-graph.html
+     ```
+
+---
+
+## 7. Enterprise System Test & Verification Dashboard (Release v0.8)
+
+Per verificare periodicamente o prima di ogni consegna formale la piena integrità funzionale, la conformità ontologica e l'assenza di secret leaks su tutti i 10 moduli dell'ecosistema:
+
+1. **Esecuzione Suite di Collaudo Unificata:**
+   ```powershell
+   python scripts/itinfra.py test-suite --report-html
+   ```
+2. **Dashboard di Verifica Offline (Zero-CDN):**
+   - Apri il report generato in `projects/system-test-report.html`.
+   - Verifica che tutti i 10 moduli (Linter OKF v0.2, Strict Grounding Audit, Encrypted Vault, Multi-Agent Worktrees, Playbook Exporter, Triage & RCA Engine, Hybrid Memory System, Asset Inventory Engine, Cross-Client Incident Intelligence, Interactive Knowledge Graph) risultino con esito `[PASS]` e Pass Rate 100%.

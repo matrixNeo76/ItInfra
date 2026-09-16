@@ -107,15 +107,31 @@ timeline
         Anti-Hallucination Engine : Strict Grounding & Audit
         Multi-Framework Skills    : .agents/skills/ Universali
         Configuration Playbooks   : RouterOS .rsc & PowerShell
-    section v0.5 (Q4 2026)
+    section v0.5 (Rilasciato)
         Incident & RCA Template   : 10-RCA-Troubleshooting.md
         Agent & Skill Troubleshooter: Diagnosi Deterministica OSI
         CLI Diagnostic Assistant  : itinfra.py troubleshoot
         Knowledge Graph Linking   : Relazioni Incidente-Topologia
-    section v0.6 (Q1 2027)
-        Health-Check & Telemetry  : itinfra.py health-check
-        Graph Semantic Search     : Query locale RAG su OKF
-        Change Management RFC     : Request For Change formale
+    section v0.6 (Rilasciato)
+        Hybrid Memory L1-L3       : _scratchpad.md & itinfra_memory.py
+        Trust Signals & Staleness : verified, last_vetted, stale_after
+        CLI Memory Suite          : itinfra.py memory [init|log|consolidate]
+        D3.js Badges & Linter     : OKFValidator & Graph Badges
+    section v0.7 (Rilasciato)
+        Global Enterprise Graph   : itinfra.py export-graph all
+        Entity Bridges (Hardware) : Nodi Ponte Cross-Progetto
+        CLI Inventory Search      : itinfra.py inventory find/list
+        Cross-Client RCA Insights : Prevenzione Disservizi Multi-Tenant
+    section v0.8 (Rilasciato)
+        Global Staging Memory     : _global_scratchpad.md & memory --global
+        Secret Leak Prevention    : Sanitizer Preventivo Multi-Tenant
+        End-to-End Test Suite     : itinfra.py test-suite (10 Moduli)
+        Unified System Dashboard  : projects/system-test-report.html (Zero-CDN)
+    section v0.9 (Q1 2027)
+        Model Context Protocol    : Server MCP per Claude Desktop & IDE
+        Advanced Topology Engine  : Diagrammi Spine-Leaf e Cablaggi
+        CI/CD GitHub Actions      : Quality Gates & PR Validation
+        Direct IPAM REST API      : NetBox & Nautobot Importer
     section v1.0 (Q2 2027)
         Sincronizzazione Live     : NetBox / Nautobot Sync
         Knowledge Graph 3D        : Viewer interattivo per topologie
@@ -207,24 +223,114 @@ timeline
 
 ---
 
-### ⚡ Release v0.6 — Local Semantic Graph RAG, Change Management RFC & Proactive Alerting (Prospettiva)
-- [ ] **Local Semantic Graph Querying (Offline AI Search su OKF):**
-  - Interfaccia CLI per interrogare in linguaggio naturale il grafo ontologico del cliente (`python scripts/itinfra.py ask <slug> "chi è il server di backup e dove risiede la share?"`).
-  - Utilizza la rete ontologica (`entities` e `relations`) per restituire risposte certe al 100% senza allucinazioni basandosi su cammini esatti.
-- [ ] **Modulo RFC (Request For Change / Change Management Formale):**
-  - Template `11-RFC-Change-Request.md` per governare modifiche e manutenzioni post-Go-Live con matrice di rischio, finestra approvata e piano di rollback collegato.
-- [ ] **Proactive Monitoring & Telemetry Daemon:**
-  - Esecuzione periodica programmata di `health-check` con allarmi webhook (Teams/Slack) in caso di degradazione dei socket critici.
+### ✅ Release v0.6 — Sistema di Memoria Locale Ibrida a 3 Livelli & Trust Signals (Completato)
+- [x] **Sistema di Memoria Locale Ibrida a Tre Livelli (100% File-Based & Git-Native):**
+  - **Livello 1: Memoria a Breve Termine (Working Memory):** Contesto volatile della sessione conversazionale per il parsing immediato.
+  - **Livello 2: Memoria a Medio Termine (Staging / Scratchpad):**
+    - File semi-strutturato `projects/<slug>/_scratchpad.md` con sezioni standard (*Decisioni Tecniche Confermate*, *Requisiti in Sospeso <DA-RICHIEDERE>*, *Note Operative & Contatti*, *Cronologia Consolidamenti*).
+    - Supporto isolamento concorrente multi-agente per Git Worktrees (`.memory/scratchpad.<ruolo>.md`).
+    - Hashing SHA-256 e deduplicazione automatica di ogni voce (`<!-- id:mem-xxxxxxxx -->`).
+  - **Livello 3: Memoria a Lungo Termine (Ground Truth OKF v0.2):** I 10 documenti ufficiali di progetto (`01-RSD` .. `10-RCA`) convalidati con linter.
+- [x] **Iniezione dei Trust Signals (Metadati di Affidabilità nel Frontmatter OKF v0.2):**
+  - `verified`: booleano per attestare la convalida umana formale.
+  - `verified_by`: revisore / lead architect che ha validato l'informazione.
+  - `last_vetted`: data ISO dell'ultima revisione confermata.
+  - `stale_after`: data ISO di obsolescenza tecnica con emissione di avviso automatico `[STALE-WARNING]`.
+  - Estensione di `OKFValidator` e `audit-consistency` per verificare i Trust Signals e segnalare obsolescenze.
+- [x] **CLI Memory Suite (`scripts/itinfra.py memory`):**
+  - `python scripts/itinfra.py memory init <slug>`: inizializzazione staging scratchpad.
+  - `python scripts/itinfra.py memory log <slug> --section <sec> --text "..." [--role <ruolo>]`: logging atomico con timestamp.
+  - `python scripts/itinfra.py memory show <slug>`: visualizzazione sezioni, conteggi e note pendenti.
+  - `python scripts/itinfra.py memory merge <slug>`: riconciliazione non distruttiva degli scratchpad worktree.
+  - `python scripts/itinfra.py memory consolidate <slug> --target <doc> --reviewer "<nome>" [--stale-days 90]`: passaggio guidato in L3 con Trust Signals.
+  - `python scripts/itinfra.py memory prune <slug>`: archiviazione pulita in `_scratchpad.archive.md`.
+- [x] **Knowledge Graph D3.js con Trust Badges:**
+  - Nodi con `verified: true` contraddistinti da bordo verde brillante `✓`.
+  - Nodi con certificazione scaduta (`is_stale`) contraddistinti da bordo tratteggiato rosso `⚠`.
+  - Sidebar informativa arricchita con badge di confidenza e validità.
+- [x] **Template & Documentazione Operativa:**
+  - Template `templates/99-Scratchpad-Template.md` convalidato OKF v0.2.
+  - Guida `docs/08-GUIDA-MEMORIA-IBRIDA-TRUST-SIGNALS.md` convalidata OKF v0.2.
+  - Skill `.agents/skills/itinfra-assistant/SKILL.md` e `skills/itinfra-assistant/` allineate con Step 0 e istruzioni di memoria.
 
 ---
 
-### 🌐 Release v1.0 — Enterprise Ecosystem & Sincronizzazione Live
+### ✅ Release v0.7 — Global Enterprise Asset & Entity Knowledge Graph (Completato)
+- [x] **Cross-Project Global Graph Engine (`itinfra.py export-graph all` / `--global`):**
+  - Generazione di una mappa unificata ad alta densità che aggrega tutti i progetti censiti nella directory `projects/`.
+  - Clusterizzazione visiva e colorazione differenziata per cliente/tenant, preservando il perimetro progettuale di ciascun sito.
+- [x] **Hub Ontologici delle Entità Condivise (Shared Entity Bridges):**
+  - Proiezione dinamica nel grafo delle `entities` condivise (modelli server Dell/HP, switch MikroTik/Cisco, firewall Fortinet, hypervisor Hyper-V/Proxmox, subnet SDN).
+  - Collegamento bidirezionale automatico: due documenti di clienti diversi che citano lo stesso hardware (es. *Dell PowerEdge R630*) si collegano al medesimo nodo centrale entità.
+  - Toggle interattivo in D3.js per accendere/spegnere la vista ad entità ponte inter-cliente.
+- [x] **CLI Global Inventory & Asset Search (`scripts/itinfra.py inventory`):**
+  - `python scripts/itinfra.py inventory find "<modello/termine>"`: ricerca istantanea cross-progetto (es. interroga tutti i server Dell R630 o switch CRS326 e restituisce clienti, documenti As-Built e ruoli).
+  - `python scripts/itinfra.py inventory list-hardware [--vendor <vendor>]`: catalogo normalizzato di tutto l'hardware installato nei vari data center/filiali.
+  - `python scripts/itinfra.py inventory summary`: dashboard riassuntiva del parco tecnologico, sistemi operativi e apparati attivi.
+- [x] **Cross-Client Incident Intelligence & Prevenzione RCA Proattiva:**
+  - Correlazione automatica tra ticket di incidente (`10-RCA`) di un cliente e apparati identici in uso presso altri clienti.
+  - Generazione di alert preventivi ("*Rilevata criticità nota su Dell R630 / Broadcom NIC registrata in Severino Srl; verificare configurazione su Acme SpA*").
+- [x] **Zero-Leakage Multi-Tenant Security Policy:**
+  - Rigorosa segregazione delle credenziali: i secret `.vault.enc` rimangono ermeticamente isolati e cifrati per singolo tenant; solo i metadati tecnici e ontologici delle entità sono aggregati a livello di intelligence globale.
+- [x] **Nuova Guida Operativa & Skill Update:**
+  - Redazione della guida `docs/09-GUIDA-GLOBAL-ENTERPRISE-GRAPH.md` conforme a OKF v0.2.
+
+---
+
+### ✅ Release v0.8 — Global Enterprise Staging Memory & Unified Verification Dashboard (Completato)
+- [x] **Global Staging Memory Pool (`projects/_global_scratchpad.md`):**
+  - Estensione del modulo `scripts/itinfra_memory.py` per supportare lo scope `--global` in `init`, `log`, `show` e `prune`.
+  - Persistenza centralizzata delle lezioni apprese, pattern architetturali approvati, limitazioni firmware note e linee guida trasversali non legate a un singolo cliente.
+  - Segregazione rigorosa rispetto ai singoli tenant: i dati specifici (IP operativi, credenziali vault, configurazioni riservate) restano nei singoli `projects/<slug>/_scratchpad.md`, mentre la memoria globale raccoglie esclusivamente *Knowledge & Best Practices*.
+- [x] **Protezione Preventiva Secret Leaks & Concorrenza Atomica:**
+  - Sanitizer preventivo `validate_global_entry_safety` che blocca sul nascere injection di `vault://it/projects/` o secret in chiaro con `PermissionError`.
+  - Meccanismo di `AtomicFileLock` cross-platform con timeout di 10s e auto-prune di lock orfani (> 120s).
+- [x] **Consultazione Trasparente Multi-Livello per Agenti AI (Step 0):**
+  - La skill `itinfra-assistant` interroga contestualmente `memory show --global` e `memory show <slug>` all'avvio di una sessione tecnica.
+  - Ereditarietà automatica delle best practice (es. parametri MTU standard, configurazione switch trunk) nei nuovi progetti.
+- [x] **Enterprise System Test Suite (`scripts/itinfra.py test-suite`):**
+  - Batteria di test automatizzata end-to-end che valida programmaticamente tutti i 10 moduli del framework:
+    1. Linter formale OKF v0.2 su tutti i template e progetti
+    2. Strict Grounding Audit & coerenza IP/subnet
+    3. Local Encrypted Secret Vault (AES-256-GCM + lockfile atomico)
+    4. Multi-Agent Git Worktree Isolator
+    5. Configuration Playbooks integrity (.rsc e .ps1)
+    6. Incident Management & OSI L1-L7 Diagnostic Telemetry
+    7. Hybrid Memory L1-L3 & Trust Signals (tenant + global)
+    8. Global Asset & Entity Inventory
+    9. Cross-Client Incident Intelligence & Alert
+    10. D3.js Interactive Knowledge Graph
+- [x] **Unified System Test & Verification Dashboard (`projects/system-test-report.html`):**
+  - Generazione di un report HTML consolidato offline moderno, reattivo e ad alto impatto visivo (`--report-html`).
+  - Scorecard KPI esecutiva (100% Pass Rate, 0 Allucinazioni, 0 Credenziali esposte, Nodi & Entità censite).
+  - Accordion di dettaglio con output diagnostico live di ogni singolo modulo collaudato.
+  - Funzionamento 100% Zero-CDN per piena operatività in data center air-gapped.
+
+---
+
+### 🔮 Release v0.9 — Advanced Topology Engine, MCP Server & Automated CI/CD (Pianificato Q1 2027)
+- [ ] **Server MCP Nativo (Model Context Protocol):**
+  - Implementazione del server standalone `scripts/itinfra_mcp.py` basato sullo standard open-source MCP.
+  - Esposizione di strumenti nativi (init, status, validate, audit-consistency, memory, inventory, troubleshoot, test-suite) per Claude Desktop, Cursor MCP, Windsurf e agenti LLM esterni.
+- [ ] **Advanced Topology & Cabling Generator:**
+  - Generazione automatica di schemi topologici Spine-Leaf ad alta definizione con raggruppamento per rack/ruolo e mappatura colori per VLAN.
+  - Generazione di diagrammi di cablaggio e patch-panel (SFP28, QSFP28, Cat.6A) direttamente dal documento LLD.
+- [ ] **Automated CI/CD Quality Gates (GitHub Actions):**
+  - Workflow `.github/workflows/quality-gate.yml` per la validazione automatica di tutte le Pull Request.
+  - Esecuzione obbligatoria del linter OKF v0.2, dell'audit di coerenza semantica incrociata e della suite di test unificata con blocco merge in caso di warning o secret leaks.
+- [ ] **Direct IPAM REST API Integration:**
+  - Connettore client REST per sincronizzazione diretta e provisioning di subnet, pool IP e VLAN verso le API di NetBox e Nautobot.
+
+---
+
+### 🌐 Release v1.0 — Enterprise Ecosystem & Sincronizzazione Live (Pianificato Q2 2027)
 - [ ] **Sincronizzazione Bidirezionale NetBox / Nautobot:**
   - Connettore API per popolare automaticamente il `project-manifest.yaml` e l'As-Built a partire dai dati live dell'infrastruttura.
 - [ ] **Knowledge Graph 3D per Infrastrutture:**
   - Integrazione col visualizzatore D3/Three.js del Knowledge Vault per navigare graficamente rack, switch, server e relative relazioni contrattuali.
 - [ ] **Gestione Ciclo di Vita Contrattuale (Handover):**
   - Generazione di alert calendario (ICS / Webhook) per le date di rinnovo garanzie hardware e licenze software documentate in `09-Handover-Inventory.md`.
+```
 
 
 ---

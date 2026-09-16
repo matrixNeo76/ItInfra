@@ -23,6 +23,8 @@ related_docs:
   - "specification-itinfra-assistant-v02"
   - "guide-itinfra-cli-manual-01"
   - "guide-itinfra-agentic-assistant-01"
+  - "guide-global-enterprise-graph-v02"
+  - "guide-global-memory-system-test-01"
 depends_on:
   - "specification-itinfra-assistant-v02"
 classification: "public"
@@ -61,6 +63,16 @@ relations:
     relationType: "governs"
     weight: 0.95
     description: "Regola l'ereditarietà delle variabili di contesto da parte degli agenti"
+  - targetTitle: "Guida Operativa — Global Enterprise Asset & Entity Knowledge Graph"
+    targetId: "guide-global-enterprise-graph-v02"
+    relationType: "references"
+    weight: 0.9
+    description: "Federazione multi-tenant dei manifesti e delle entità ontologiche"
+  - targetTitle: "Guida Operativa — Global Staging Memory & Enterprise System Test Suite"
+    targetId: "guide-global-memory-system-test-01"
+    relationType: "references"
+    weight: 0.9
+    description: "Scansione globale dei manifest e collaudo integrità"
 ---
 
 # Specifica del Registro Progetti e del Manifesto Condiviso (`projects/`)
@@ -90,11 +102,16 @@ projects/
 ├── _schema/
 │   └── project-manifest.schema.json       ← Schema formale JSON Schema Draft-07
 ├── _template/
-│   └── project-manifest.yaml              ← Modello base commentato copiato da `init`
+│   ├── project-manifest.yaml              ← Modello base commentato copiato da `init`
+│   └── _scratchpad.md                     ← Template di staging memory (Livello 2)
+├── _global_scratchpad.md                  ← Staging Memory globale condivisa (cross-project hardware limitations & patterns)
+├── global-graph.html                      ← Mappa interattiva D3.js Global Enterprise Knowledge Graph
+├── system-test-report.html                ← Dashboard HTML offline di collaudo globale di tutti i 10 moduli
 └── <project-slug>/                        ← Cartella isolata per ciascun progetto (Multi-Tenant)
     ├── project-manifest.yaml              ← Configurazione globale del progetto
     ├── .vault.enc                         ← Local Encrypted Vault AES-256-GCM (escluso da Git)
     ├── .vault.lock                        ← File lock atomico temporaneo per concorrenza
+    ├── _scratchpad.md                     ← Staging Memory locale del progetto
     ├── 01-RSD-URS.md                      ← Requisiti (Fase 1)
     ├── 02-HLD.md                          ← High-Level Design (Fase 2)
     ├── 03-LLD.md                          ← Low-Level Design (Fase 2)
@@ -104,7 +121,9 @@ projects/
     ├── 07-ATP.md                          ← Acceptance Test Plan (Fase 6)
     ├── 08-SOP-Runbook.md                  ← Runbook & Procedure (Fase 7)
     ├── 09-Handover-Inventory.md           ← Handover & Asset (Fase 7)
-    ├── report.html                        ← Dashboard consolidata HTML offline
+    ├── 10-RCA-[ticket_id].md              ← Root Cause Analysis & Post-Mortem incidenti (Fase 7)
+    ├── report.html                        ← Dashboard consolidata HTML offline con tab Incident & RCA
+    ├── graph.html                         ← Mappa interattiva D3.js Knowledge Graph di progetto
     ├── configs/                           ← Script operativi esportati (RouterOS .rsc, PowerShell .ps1)
     └── exports/                           ← Esportazioni IPAM (CSV/JSON per NetBox)
 ```
@@ -182,6 +201,7 @@ documents:
   07-ATP: "missing"
   08-SOP-Runbook: "missing"
   09-Handover-Inventory: "missing"
+  10-RCA: "missing"
 ```
 
 ---

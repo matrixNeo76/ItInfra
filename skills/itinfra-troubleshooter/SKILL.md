@@ -6,7 +6,7 @@ description: Agente diagnostico deterministico e assistente per la Root Cause An
 # ITInfra Troubleshooter Skill — Incident RCA & Diagnostica Deterministica
 
 Questa skill guida l'agente AI nella gestione rigorosa, deterministica e documentata dei disservizi e incidenti di infrastruttura IT.
-Fornisce il protocollo d'indagine a 7 strati ISO/OSI (L1-L7), la tecnica dei 5 Perché, la validazione telemetrica e la generazione del documento risolutivo **`10-RCA-Troubleshooting.md`** su standard **OKF v0.2**.
+Fornisce il protocollo d'indagine a 7 strati ISO/OSI (L1-L7), la tecnica dei 5 Perché, la validazione telemetrica, l'intelligence cross-client e la generazione del documento risolutivo **`10-RCA-Troubleshooting.md`** su standard **OKF v0.2**.
 
 ---
 
@@ -16,12 +16,28 @@ Fornisce il protocollo d'indagine a 7 strati ISO/OSI (L1-L7), la tecnica dei 5 P
 2. **FALLBACK OBBLIGATORIO `<DA-RICHIEDERE>`:** Qualora un log, un indirizzo IP, una versione firmware o un riscontro strumentale non sia disponibile, l'unico valore ammesso è tassativamente `<DA-RICHIEDERE>`.
 3. **CONFRONTO CON IL MANIFESTO E L'AS-BUILT:** Ogni apparato, subnet, VLAN, interfaccia o servizio citato DEVE corrispondere rigidamente a quanto censito in:
    - `projects/<slug>/project-manifest.yaml`
-   - `projects/<slug>/07-As-Built.md`
+   - `projects/<slug>/06-As-Built.md`
    - `projects/<slug>/03-LLD.md`
 
 ---
 
-## 2. Protocollo Diagnostico Deterministico a 7 Strati OSI (L1-L7)
+## 2. Intelligence Preventiva Cross-Client (Step 0)
+
+Prima di avviare il triage, l'agente deve verificare se il disservizio o l'apparato anomalo presenta precedenti o vincoli noti nel portfolio:
+1. **Verifica Incidenti Precedenti su Altri Clienti:**
+   ```powershell
+   python scripts/itinfra.py inventory find "<tecnologia o apparato>"
+   ```
+   Se viene notificato `[!] CROSS-CLIENT INCIDENT ALERT`, consulta immediatamente la scheda RCA pregressa per verificare se il sintomo è già stato isolato e risolto (es. clamping MTU/MSS).
+2. **Consultazione Vincoli Noti nella Memoria Globale:**
+   ```powershell
+   python scripts/itinfra.py memory show --global
+   ```
+   Verifica limitazioni hardware e linee guida di vendor censite in `projects/_global_scratchpad.md`.
+
+---
+
+## 3. Protocollo Diagnostico Deterministico a 7 Strati OSI (L1-L7)
 
 Per isolare il guasto in modo scientifico ed eliminare false piste, l'agente DEVE procedere rigorosamente dal basso verso l'alto (Bottom-Up):
 
@@ -67,7 +83,7 @@ graph TD
 
 ---
 
-## 3. Metodo dei 5 Perché (5 Whys Root Cause Analysis)
+## 4. Metodo dei 5 Perché (5 Whys Root Cause Analysis)
 
 Una volta isolato lo strato anomalo, l'agente conduce l'analisi causale con domande progressive concatenate:
 1. **Perché si è manifestato il sintomo visibile all'utente?** (Es. Impossibile aprire cartella di rete)
@@ -78,34 +94,37 @@ Una volta isolato lo strato anomalo, l'agente conduce l'analisi causale con doma
 
 ---
 
-## 4. Workflow Operativo di Risoluzione Incidente
+## 5. Workflow Operativo di Risoluzione Incidente
 
 ```
 1. Rilevamento Allarme o Segnalazione Ticket
    ↓
-2. Inizializzazione Ticket RCA (`python scripts/itinfra.py troubleshoot init <slug> <ticket_id>`)
+2. Controllo Intelligence Preventiva (`inventory find` + `memory show --global`)
    ↓
-3. Esecuzione Health Check Non Distruttivo (`python scripts/itinfra.py health-check <slug>`)
+3. Inizializzazione Ticket RCA (`python scripts/itinfra.py troubleshoot init <slug> <ticket_id>`)
    ↓
-4. Indagine Deterministica a Strati OSI L1-L7 (Intervista guidata senza allucinazioni)
+4. Esecuzione Health Check Non Distruttivo (`python scripts/itinfra.py health-check <slug>`)
    ↓
-5. Root Cause Analysis (5 Perché) e Isolamento
+5. Indagine Deterministica a Strati OSI L1-L7 (Intervista guidata senza allucinazioni)
    ↓
-6. Applicazione Workaround / Fix Definitivo
+6. Root Cause Analysis (5 Perché) e Isolamento
    ↓
-7. Suite di Collaudo e Non-Regressione (TR-01..TR-04)
+7. Applicazione Workaround / Fix Definitivo
    ↓
-8. Piano CAPA (Corrective and Preventive Actions)
+8. Suite di Collaudo e Non-Regressione (TR-01..TR-04)
    ↓
-9. Aggiornamento Documentale (Wiki-links verso LLD, As-Built, Runbook)
+9. Piano CAPA (Corrective and Preventive Actions)
    ↓
-10. Validazione OKF v0.2 (`python scripts/itinfra.py validate`) e Chiusura
+10. Aggiornamento Documentale (Wiki-links verso LLD, As-Built, Runbook)
+   ↓
+11. Validazione OKF v0.2 (`python scripts/itinfra.py validate`) e Test Suite (`test-suite --report-html`)
 ```
 
 ---
 
-## 5. Sicurezza e Segretezza
+## 6. Sicurezza e Segretezza
 
 - Se l'indagine richiede l'accesso con credenziali di livello amministrativo, fare riferimento ESCLUSIVAMENTE al Secret Vault locale tramite URI simbolico:
   `vault://it/projects/<slug>/<apparato>/<utenza>`
 - Non stampare né inserire nei documenti chiavi API o password in chiaro.
+- Se dalla risoluzione emerge un vincolo hardware generale per tutti i clienti, registrarlo nella memoria globale via `python scripts/itinfra.py memory log --global ...` (senza mai includere riferimenti a clienti o vault).

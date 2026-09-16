@@ -75,7 +75,7 @@ Il presente documento guida l'integrazione nel repo `matrixNeo76/KnowledgeVault`
 
 | Livello | Cosa aggiunge | Complessità | Tempo stimato | Breaking changes |
 |---------|--------------|-------------|----------------|-------------------|
-| **Livello 1** | 10 template documentali .md con schema OKF v0.2 nativo | Bassa | 30 min | Nessuno |
+| **Livello 1** | 11 template documentali .md (10 template + 1 indice) con schema OKF v0.2 nativo | Bassa | 30 min | Nessuno |
 | **Livello 2** | Estensione parser (`okfParser.ts`, `types.ts`) + nuovo file `okfItTemplates.ts` | Media | 2-3 ore | Nessuno (additivo) |
 | **Livello 3** | 4 componenti React + 1 servizio backend + 4 patch a file esistenti | Alta | 4-6 ore | Nessuno (additivo) |
 
@@ -109,7 +109,7 @@ git checkout -b feature/it-infrastructure-complete
 ## 3. Livello 1 — Template documentali OKF v0.2
 
 ### Obiettivo
-Aggiungere 10 file `.md` (9 template + 1 indice) + cartella `examples/` con 11 file di prompt + 3 file di orientamento (`README.md`, `AGENTS.md`, `CLAUDE.md`).
+Aggiungere 11 file `.md` (10 template + 1 indice) + cartella `examples/` con 12 file di prompt + 3 file di orientamento (`README.md`, `AGENTS.md`, `CLAUDE.md`).
 
 ### Origine dei file
 I file sono già pronti nel pacchetto `templates.zip` scaricato da `/home/z/my-project/download/templates.zip`. Estrai lo zip in una directory temporanea:
@@ -146,6 +146,7 @@ docs/
     ├── 07-ATP.md
     ├── 08-SOP-Runbook.md
     ├── 09-Handover-Inventory.md
+    ├── 10-RCA-Troubleshooting.md
     └── examples/
         ├── README.md
         ├── 00-prompt-master-template.md
@@ -157,7 +158,8 @@ docs/
         ├── 06-prompt-As-Built.md
         ├── 07-prompt-ATP.md
         ├── 08-prompt-SOP-Runbook.md
-        └── 09-prompt-Handover-Inventory.md
+        ├── 09-prompt-Handover-Inventory.md
+        └── 10-prompt-RCA-Troubleshooting.md
 ```
 
 ### Comandi
@@ -167,7 +169,7 @@ cd /path/to/KnowledgeVault
 
 # Copia i template nella cartella docs/it-infrastructure/
 mkdir -p docs/it-infrastructure/examples
-cp /tmp/it-templates/templates/0[0-9]-*.md docs/it-infrastructure/
+cp /tmp/it-templates/templates/[0-9][0-9]-*.md docs/it-infrastructure/
 cp /tmp/it-templates/templates/README.md docs/it-infrastructure/
 cp /tmp/it-templates/templates/AGENTS.md docs/it-infrastructure/
 cp /tmp/it-templates/templates/CLAUDE.md docs/it-infrastructure/

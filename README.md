@@ -5,18 +5,18 @@
 [![Made for Knowledge Vault](https://img.shields.io/badge/Integrates%20with-Knowledge%20Vault-8E75B2.svg)](https://github.com/matrixNeo76/KnowledgeVault)
 [![Italian](https://img.shields.io/badge/Language-Italiano-red.svg)]()
 
-> **Repository di template documentali per infrastrutture IT complesse — dalla fase di Assessment al Go-Live, conformi allo standard OKF v0.2 (Open Knowledge Format).**
+> **Repository di template documentali e suite agentica di automazione per infrastrutture IT complesse — dalla fase di Assessment al Go-Live, gestione incidenti (RCA), crittografia locale, memoria ibrida e Knowledge Graph, conformi allo standard OKF v0.2 (Open Knowledge Format).**
 >
-> Progettato per essere compilato da agenti AI (Claude, GPT, Gemini, Cursor, Copilot) tramite chat agentiche, e salvato in un knowledge vault dove i documenti vengono relazionati tra loro tramite `entities` e `relations` ontologiche.
+> Progettato per essere guidato e compilato da agenti AI (Google Antigravity, Claude Code, Cursor, Windsurf, Copilot) tramite interviste a blocchi, salvato in un knowledge vault con `entities` e `relations` ontologiche, e collaudato programmaticamente con una test suite integrata.
 
 ---
 
 ## 🎯 A chi è rivolto
 
-- **Integratori / System Engineer IT** che producono documentazione tecnica per progetti di infrastruttura
-- **Team Operations** che devono gestire la documentazione post-rilascio
-- **Agenti AI** che compilano template a partire da dati forniti in chat
-- **Knowledge Engineers** che mantengono un knowledge vault ontologico
+- **Integratori / System Engineer / Network Architect** che progettano, installano e documentano infrastrutture IT
+- **Team Operations & SRE** che gestiscono la manutenzione post-rilascio e la Root Cause Analysis (RCA)
+- **Agenti AI & Ingegneri di Prompt** che orchestrano la redazione documentale con garanzia Zero-Hallucination
+- **Knowledge Engineers** che mantengono grafi di conoscenza ontologici inter-progetto e inventari enterprise
 
 ---
 
@@ -40,22 +40,32 @@ ItInfra/
 │   ├── 04-GUIDA-ASSISTENTE-AGENTICO.md← Guida per Antigravity, Claude Code e Cursor
 │   ├── 05-MANIFEST-E-PROGETTI.md      ← Specifica registro progetti e manifest condiviso
 │   ├── 06-COMPLIANCE-E-SICUREZZA.md   ← Framework normativi NIS2, ISO 27001 e DORA
-│   └── 07-GUIDA-RISOLUZIONE-PROBLEMATICHE-AI.md ← Guida troubleshooting, telemetria e RCA per agenti AI
+│   ├── 07-GUIDA-RISOLUZIONE-PROBLEMATICHE-AI.md ← Guida troubleshooting, telemetria e RCA per agenti AI
+│   ├── 08-GUIDA-MEMORIA-IBRIDA-TRUST-SIGNALS.md ← Guida memoria locale a 3 livelli, scratchpad e Trust Signals
+│   ├── 09-GUIDA-GLOBAL-ENTERPRISE-GRAPH.md      ← Knowledge Graph globale, nodi ponte e inventario cross-client
+│   └── 10-GUIDA-GLOBAL-MEMORY-SYSTEM-TEST.md    ← Global Staging Memory e Enterprise System Test Suite
 │
 ├── projects/                          ← Registro progetti e manifest globali
 │   ├── _schema/                       ← Schema JSON formale del manifest
-│   ├── _template/                     ← Template di project-manifest.yaml
+│   ├── _template/                     ← Template di project-manifest.yaml e _scratchpad.md
+│   ├── _global_scratchpad.md          ← Staging Memory globale condivisa (cross-project hardware limitations & patterns)
+│   ├── system-test-report.html        ← Dashboard HTML offline di collaudo e verifica globale di tutti i 10 moduli
+│   ├── global-graph.html              ← Mappa interattiva D3.js Global Enterprise Knowledge Graph (Shared Entity Bridges)
 │   ├── demo-acme/                     ← Progetto demo collaudato (Acme Corporation)
 │   └── severino-srl/                  ← Progetto reale pilota (100% delle 7 fasi + ticket RCA completati)
 │       ├── configs/                   ← Script operativi RouterOS e PowerShell esportati
+│       ├── _scratchpad.md             ← Staging Memory (Livello 2) con decisioni consolidate
 │       ├── 10-RCA-FS01-SMB-Connectivity.md ← Caso pilota reale post-mortem SMB su ZeroTier
 │       ├── report.html                ← Dashboard consolidata HTML offline con tab Incident & RCA
 │       └── graph.html                 ← Mappa interattiva D3.js Knowledge Graph (10 nodi, 52 archi)
 │
 ├── scripts/                           ← Toolchain CLI e automazione
-│   ├── itinfra.py                     ← CLI master: init, validate, status, vault, worktree, audit, export, troubleshoot, health-check, export-graph
+│   ├── itinfra.py                     ← CLI master: init, validate, status, vault, worktree, audit, export, troubleshoot, health-check, export-graph, memory, inventory, test-suite
+│   ├── itinfra_test_suite.py          ← Suite di collaudo unificata (10 moduli) e generatore HTML Zero-CDN
+│   ├── itinfra_inventory.py           ← Motore globale di asset & entity inventory cross-progetto
+│   ├── itinfra_memory.py              ← Gestore della Memoria Locale Ibrida a 3 Livelli, Global Memory e Trust Signals
 │   ├── itinfra_vault.py               ← Motore crittografico locale AES-256-GCM con atomic file locking
-│   └── graph_generator.py             ← Generatore di Knowledge Graph D3.js v7 interattivo
+│   └── graph_generator.py             ← Generatore di Knowledge Graph D3.js v7 interattivo (single-project & global enterprise)
 │
 ├── .agents/skills/                    ← Skill universali per Antigravity e moderni agent framework
 │   ├── itinfra-assistant/SKILL.md     ← Procedura guidata a turni (intervista a blocchi)
@@ -127,8 +137,23 @@ python scripts/itinfra.py export-configs acme-dc
 python scripts/itinfra.py troubleshoot init acme-dc INC-001
 python scripts/itinfra.py health-check acme-dc
 
-# Genera la mappa interattiva D3.js Knowledge Graph OKF v0.2:
+# Genera la mappa interattiva D3.js Knowledge Graph OKF v0.2 (singolo progetto o globale):
 python scripts/itinfra.py export-graph acme-dc
+python scripts/itinfra.py export-graph all
+
+# Memoria Locale Ibrida (L1-L3), Staging Scratchpad e Trust Signals:
+python scripts/itinfra.py memory show --global
+python scripts/itinfra.py memory log --global --section "Best Practices & Design Patterns" --text "MTU 1500 per trunk L2; jumbo frame 9000 isolato su VLAN iSCSI"
+python scripts/itinfra.py memory log acme-dc --section decisioni --text "Confermato MTU 9000 su VLAN 40"
+python scripts/itinfra.py memory consolidate acme-dc --target 03-LLD --reviewer "Lead Architect"
+
+# Global Enterprise Asset & Entity Inventory (Release v0.7):
+python scripts/itinfra.py inventory find "ZeroTier"
+python scripts/itinfra.py inventory list-hardware --vendor Dell
+python scripts/itinfra.py inventory summary
+
+# Enterprise System Test Suite & Verification Dashboard (Release v0.8):
+python scripts/itinfra.py test-suite --report-html
 
 # Genera la Dashboard HTML offline completa e interattiva:
 python scripts/itinfra.py export-html acme-dc
@@ -233,24 +258,84 @@ graph TD
 
 ---
 
-## 🛣️ Roadmap
+## 🛣️ Roadmap e Stato di Avanzamento
 
-> Per la visione strategica dettagliata e la pianificazione delle prossime release (v0.3, v0.4, v1.0), consulta il documento ufficiale [`ROADMAP.md`](./ROADMAP.md).
+> Per la visione strategica dettagliata e il piano esecutivo completo, consulta il documento ufficiale [`ROADMAP.md`](./ROADMAP.md) e il cronoprogramma esecutivo in [`docs/02-ROADMAP-PIANO-SVILUPPO.md`](./docs/02-ROADMAP-PIANO-SVILUPPO.md).
 
-### ✅ Completato (v0.2)
-- [x] **Livello 1**: 10 template OKF v0.2 nativi per le 7 fasi IT
-- [x] **Livello 2**: Estensione parser Knowledge Vault con 9 alias IT + 9 boilerplate
-- [x] **Livello 3**: Modulo UI completo + API AI compiler (Gemini) per Knowledge Vault
-- [x] **Automation CLI (`scripts/itinfra.py`)**: Linter OKF v0.2, init progetti, status avanzamento
-- [x] **Project Registry (`projects/`)**: Manifesto globale condiviso per parametri di rete e SLA
-- [x] **Antigravity Custom Skill**: Procedura a turni per intervista guidata per blocchi logici
+### ✅ Stato Attuale: Rilasciato e Operativo al 100% (v0.2 — v0.8)
 
-### 🔮 Prossimi Traguardi (v0.3+)
-- [ ] Checklist e requisiti di conformità integrati (NIS2, ISO 27001, DORA)
-- [ ] Generazione automatica di diagrammi topologici Spine-Leaf e rack layout in Mermaid
-- [ ] Export tabelle VLAN e IP per import bulk in NetBox / IPAM
-- [ ] GitHub Actions per validazione automatica PR
-- [ ] Wrapper MCP per integrazione con Claude Desktop
+Il progetto si è evoluto da una raccolta iniziale di template statici a un **ecosistema agentico end-to-end completo, 100% locale, file-based e verificato programmaticamente**:
+
+1. **v0.2 Core Templates & Vault Integration:**
+   - 10 template documentali in standard nativo **OKF v0.2** per le 7 fasi del ciclo lavorativo IT + indice navigazionale (`00-INDEX.md`).
+   - Manifesto condiviso del progetto (`project-manifest.yaml`) con schema JSON formale e baseline di rete/SLA.
+   - CLI di base `scripts/itinfra.py` con linter formale OKF v0.2.
+   - Integrazione completa col repository Knowledge Vault (Livelli 1, 2 e 3).
+
+2. **v0.3 Compliance, Diagrammi & Progetto Pilota Reale:**
+   - Integrazione nativa dei requisiti di conformità **NIS2**, **ISO/IEC 27001:2022** e **DORA**.
+   - Generatore visuale di topologie di rete e rack elevation in formato Mermaid.js.
+   - Esportazione IPAM per NetBox in CSV e JSON.
+   - Completamento al 100% delle 7 fasi del **progetto pilota reale Severino Srl** (9 documenti tecnici approvati).
+   - Generatore di dashboard HTML offline con rendering vettoriale.
+
+3. **v0.4 Security Vault, Git Worktrees & Anti-Hallucination:**
+   - **Local Encrypted Secret Vault (AES-256-GCM)** con derivazione PBKDF2-HMAC-SHA256 e atomic file locking (`.vault.lock`).
+   - Orchestrazione multi-agente parallela su **Git Worktree** dedicati per ruolo operativo (`infra-architect`, `infra-security`, `infra-automation`, `infra-qa`).
+   - Motore di audit semantico incrociato e **Strict Grounding** anti-allucinazione (`audit-consistency`): divieto di generare parametri non accertati e fallback obbligatorio a `<DA-RICHIEDERE>`.
+   - Esportatore automatico di configurazioni operative (`export-configs`): script RouterOS (`.rsc`) e PowerShell (`.ps1`).
+
+4. **v0.5 Incident Resolution, Telemetry & Deterministic RCA:**
+   - Template **`10-RCA-Troubleshooting.md`** post-mortem per la gestione strutturata dei disservizi e incidenti cliente.
+   - Subagent specializzato e skill **`itinfra-troubleshooter`** con albero diagnostico deterministico a 7 strati ISO/OSI (L1-L7) e metodo dei 5 Perché.
+   - CLI diagnostica `troubleshoot` e telemetria live non distruttiva `health-check` (ICMP ping + probe TCP su porte critiche).
+   - Mappa interattiva D3.js Knowledge Graph per singolo progetto e risoluzione al 100% del caso reale di connettività SMB/ZeroTier.
+
+5. **v0.6 Hybrid Local Memory & Trust Signals:**
+   - Sistema di memoria locale a 3 livelli temporali: L1 (Working volatile), L2 (Staging Scratchpad `_scratchpad.md`), L3 (Ground Truth OKF v0.2).
+   - Isolamento note su Git Worktree (`.memory/scratchpad.<ruolo>.md`) e fusione atomica (`memory merge`).
+   - Metadati di confidenza **Trust Signals** nel frontmatter (`verified`, `verified_by`, `last_vetted`, `stale_after`) con rilevamento obsolescenza e badge visivi D3.js.
+
+6. **v0.7 Global Enterprise Knowledge Graph & Asset Inventory:**
+   - Grafo enterprise federato cross-progetto (`export-graph all`): clusterizzazione tenant e nodi ponte **Shared Entity Bridges** (colore ambra) per apparati hardware e tecnologie comuni.
+   - Motore di ricerca asset globale (`inventory find`, `list-hardware`, `summary`) per interrogare in tempo reale server, switch e vendor in tutto il parco installato.
+   - **Cross-Client Incident Intelligence**: allarmi proattivi incrociati se una tecnologia oggetto di design ha causato disservizi pregressi in altri clienti.
+   - Segregazione multi-tenant Zero-Leakage: segretezza assoluta dei secret locali.
+
+7. **v0.8 Global Staging Memory & Enterprise System Test Suite:**
+   - Staging scratchpad globale ([`projects/_global_scratchpad.md`](./projects/_global_scratchpad.md)) per la condivisione aziendale di best practice, limitazioni hardware note e linee guida vendor (`memory --global`).
+   - Sanitizer preventivo anti-leakage che blocca categoricamente qualsiasi secret o credenziale con `PermissionError`.
+   - **Enterprise System Test Suite** (`scripts/itinfra_test_suite.py` / `itinfra.py test-suite`): batteria di collaudo automatizzata end-to-end che testa programmaticamente tutti i 10 moduli del sistema con **Pass Rate 100%**.
+   - **Unified Verification Dashboard** ([`projects/system-test-report.html`](./projects/system-test-report.html)): report HTML offline consolidato **100% Zero-CDN** con scorecard KPI esecutive e log diagnostici.
+
+---
+
+### 🔮 Tabella di Marcia Futura: Prossimi Traguardi (v0.9+ / v1.0)
+
+I prossimi sviluppi mirano all'apertura verso l'ecosistema esterno di protocolli agentici (MCP), automazione CI/CD avanzata e integrazione bidirezionale con i sistemi IPAM/DCIM:
+
+#### 🚀 Release v0.9 — MCP Server, Advanced Topology & Automated CI/CD (Pianificato Q1 2027)
+- [ ] **Server MCP Standalone (`scripts/itinfra_mcp.py`):**
+  - Esposizione di tutti i tool della suite (init, status, validate, audit-consistency, memory, inventory, troubleshoot, test-suite) come **Server Model Context Protocol (MCP)** standard.
+  - Integrazione nativa headless con Claude Desktop, Cursor MCP, Windsurf, Roo Code e agenti LLM esterni.
+- [ ] **Advanced Topology & Cabling Generator:**
+  - Generazione automatica di schemi architetturali Spine-Leaf multi-tier con raggruppamento per rack/ruolo e mappatura visiva delle VLAN.
+  - Generazione diagrammi dettagliati di cablaggio e patch-panel (SFP28, QSFP28, Cat.6A) direttamente dal documento LLD.
+- [ ] **Automated CI/CD Quality Gates (GitHub Actions):**
+  - Workflow `.github/workflows/quality-gate.yml` per validazione automatica di ogni Pull Request:
+    - Controllo conformità formale OKF v0.2 di tutti i file Markdown modificati.
+    - Esecuzione obbligatoria di `audit-consistency` e dell'Enterprise System Test Suite.
+    - Blocco automatico del merge in presenza di warning, allucinazioni o tentativi di secret leak.
+- [ ] **Direct IPAM REST API Integration:**
+  - Connettore client REST per sincronizzazione diretta e provisioning di subnet, pool IP e VLAN verso le API di NetBox e Nautobot.
+
+#### 🌐 Release v1.0 — Enterprise Ecosystem & Sincronizzazione Live (Pianificato Q2 2027)
+- [ ] **Sincronizzazione Bidirezionale Live NetBox / Nautobot:**
+  - Connettore API bidirezionale per allineare dinamicamente lo stato dell'infrastruttura reale con il manifesto di progetto e i documenti As-Built.
+- [ ] **Knowledge Graph 3D per Datacenter (WebGL / Three.js):**
+  - Visualizzatore tridimensionale interattivo per esplorare sale dati, rack, apparati montati e relazioni logico-fisiche.
+- [ ] **Lifecycle & Contract Automation:**
+  - Scadenziario automatico ed emissione di alert (ICS / Webhook) per date di rinnovo garanzie hardware, licenze software e contratti di supporto documentati in `09-Handover-Inventory.md`.
 
 ---
 

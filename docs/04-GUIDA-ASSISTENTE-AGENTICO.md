@@ -23,6 +23,9 @@ related_docs:
   - "specification-itinfra-assistant-v02"
   - "guide-itinfra-cli-manual-01"
   - "specification-itinfra-manifest-projects-01"
+  - "guide-memoria-ibrida-trust-signals-v02"
+  - "guide-global-enterprise-graph-v02"
+  - "guide-global-memory-system-test-01"
 depends_on:
   - "specification-itinfra-assistant-v02"
 classification: "public"
@@ -61,6 +64,21 @@ relations:
     relationType: "depends_on"
     weight: 0.95
     description: "Accesso al contesto globale condiviso di progetto"
+  - targetTitle: "Guida Operativa — Sistema di Memoria Locale Ibrida a 3 Livelli & Trust Signals"
+    targetId: "guide-memoria-ibrida-trust-signals-v02"
+    relationType: "references"
+    weight: 0.9
+    description: "Linee guida per la persistenza di decisioni e requisiti tra sessioni"
+  - targetTitle: "Guida Operativa — Global Enterprise Asset & Entity Knowledge Graph"
+    targetId: "guide-global-enterprise-graph-v02"
+    relationType: "references"
+    weight: 0.9
+    description: "Consultazione preliminare cross-progetto per hardware e apparati omologhi"
+  - targetTitle: "Guida Operativa — Global Staging Memory & Enterprise System Test Suite"
+    targetId: "guide-global-memory-system-test-01"
+    relationType: "references"
+    weight: 0.9
+    description: "Consultazione delle limitazioni globali e verifica con la suite di collaudo unificata"
 ---
 
 # Guida all'Uso dell'Assistente Agentico: Compilazione Guidata a Turni
@@ -181,4 +199,37 @@ Nelle implementazioni complesse è possibile attivare più subagenti paralleli p
    - `infra-qa`: branch `feat/testing-atp` (Casi di test ATP, Handover, audit coerenza).
 3. **Sincronizzazione finale:**
    Al termine, ciascun agente esegue `python scripts/itinfra.py worktree sync <ruolo>` per fondere in modo atomico le modifiche con il branch principale.
+
+---
+
+## 6. Consultazione Preventiva della Memoria (Step 0) & Collaudo Finale
+
+Per garantire che l'assistente agentico operi con il massimo grado di affidabilità tecnica ed eviti di ripetere domande già risolte o di riproporre configurazioni incompatibili:
+
+### 6.1 Step 0 — Consultazione Ordinata della Memoria
+Prima di avviare qualsiasi intervista tecnica o porre domande all'ingegnere, l'agente deve eseguire:
+1. **Memoria Globale Aziendale:**
+   ```bash
+   python scripts/itinfra.py memory show --global
+   ```
+   Verifica vincoli trasversali di vendor, incompatibilità hardware note (es. controller RAID, firmware) e best practice architetturali definite in `projects/_global_scratchpad.md`.
+2. **Memoria di Staging di Progetto:**
+   ```bash
+   python scripts/itinfra.py memory show <slug>
+   ```
+   Recupera decisioni pregresse già concordate con il cliente e quesiti pendenti (`<DA-RICHIEDERE>`) registrati nello scratchpad locale.
+
+### 6.2 Prevenzione Proattiva Disservizi (Incident Intelligence)
+Se l'impianto prevede l'adozione di determinate tecnologie (es. VPN overlay, specifici modelli server o switch), l'agente esegue una verifica nell'inventario globale:
+```bash
+python scripts/itinfra.py inventory find "<tecnologia o vendor>"
+```
+Se la CLI restituisce un avviso `[!] CROSS-CLIENT INCIDENT ALERT`, l'agente consulta la scheda post-mortem collegata (es. `10-RCA-*.md`) e adotta sin dalla fase di design le contromisure necessarie (es. clamping MSS, MTU idonea).
+
+### 6.3 Gate di Chiusura — Collaudo con la Suite di Test Unificata
+Prima di consegnare la documentazione approvata o procedere alla chiusura di fase:
+```bash
+python scripts/itinfra.py test-suite --report-html
+```
+L'agente verifica che tutti i 10 moduli di collaudo superino il test con Pass Rate 100%, attestando l'integrità formale e l'assenza di secret leaks.
 

@@ -71,6 +71,10 @@ relations:
     relationType: "documents"
     weight: 0.85
     description: "L'ATP verificherà il corretto funzionamento delle porte e degli IP allocati nell'LLD"
+verified: true
+verified_by: "Mario Rossi (Tech Lead)"
+last_vetted: "2026-09-16"
+stale_after: "2026-12-15"
 ---
 
 # LLD — Low-Level Design Esecutivo: Severino Srl
@@ -249,3 +253,10 @@ Configurazione logica RouterOS:
 - [x] Network ID ZeroTier e mapping utenti remoti configurato.
 - [x] Coerenza tra `related_docs` e `relations` OKF verificata.
 - [x] Nessuna password in chiaro (esclusivo uso di riferimenti `vault://`).
+
+## Decisioni Tecniche Consolidate da Staging Memory
+> Consolidato dallo Scratchpad il `2026-09-16` con attestazione di confidenza da parte di `Mario Rossi (Tech Lead)`.
+> Certificazione valida fino al: `2026-12-15`.
+
+- [2026-09-16 11:04] [agent] (Lead Architect) Standardizzato schema subnet management su 192.168.120.0/24 <!-- id:mem-0dc0cb7b -->
+- [2026-09-16 11:04] [infra-architect] (Mario Rossi) Confermato passaggio a Jumbo Frame MTU 9000 su VLAN 40 iSCSI <!-- id:mem-faa58890 -->

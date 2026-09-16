@@ -23,6 +23,7 @@ OKF_TYPE_COLORS = {
     "concept": "#a855f7",           # Viola
     "tool_description": "#f43f5e",  # Rosa / Rosso
     "prompt_skill": "#ec4899",      # Fucsia
+    "entity_hub": "#f59e0b",        # Oro / Ambra (Hub Entità Condivisa)
     "default": "#94a3b8"            # Grigio Slate
 }
 
@@ -48,60 +49,155 @@ def parse_md_frontmatter(content: str) -> Optional[Dict[str, Any]]:
     except Exception:
         return None
 
-def build_graph_data(folder_path: Path) -> Dict[str, Any]:
+def build_graph_data(folder_path: Path, is_global: bool = False) -> Dict[str, Any]:
     nodes = []
     links = []
     node_ids = set()
     raw_nodes = []
 
-    md_files = sorted(folder_path.glob("*.md"))
-    for file_p in md_files:
-        try:
-            content = file_p.read_text(encoding="utf-8")
-        except Exception:
-            continue
+    # Rilevamento automatico modalita globale
+    target_name = folder_path.name.lower()
+    if target_name in ["all", "global", "projects"] or is_global or not (folder_path / "project-manifest.yaml").exists() and (folder_path / "severino-srl").exists():
+        is_global = True
 
-        fm = parse_md_frontmatter(content)
-        if not fm or not isinstance(fm, dict):
-            continue
+    project_folders = []
+    if is_global:
+        if folder_path.name.lower() in ["all", "global"]:
+            base_dir = folder_path.parent
+            if base_dir.name.lower() != "projects":
+                base_dir = base_dir / "projects"
+        else:
+            base_dir = folder_path
 
-        doc_id = fm.get("id", file_p.stem)
-        doc_type = fm.get("type", "concept")
-        title = fm.get("title", file_p.stem)
-        phase = fm.get("phase", 0)
-        status = fm.get("status", "draft")
-        author = fm.get("author", "N/A")
-        entities = fm.get("entities", [])
-        relations = fm.get("relations", [])
-        depends_on = fm.get("depends_on", []) or []
-        related_docs = fm.get("related_docs", []) or []
-        tags = fm.get("tags", []) or []
+        if not base_dir.exists():
+            base_dir = Path(__file__).resolve().parent.parent / "projects"
 
-        node_color = OKF_TYPE_COLORS.get(doc_type, OKF_TYPE_COLORS["default"])
+        project_folders = [
+            p for p in sorted(base_dir.iterdir())
+            if p.is_dir() and not p.name.startswith("_") and p.name not in ["configs", "exports"]
+        ]
+    else:
+        project_folders = [folder_path]
 
-        node_data = {
-            "id": doc_id,
-            "filename": file_p.name,
-            "title": title,
-            "type": doc_type,
-            "phase": phase,
-            "status": status,
-            "author": author,
-            "tags": tags,
-            "entities": entities,
-            "color": node_color,
-            "val": 15,
-            "relations_raw": relations,
-            "depends_on_raw": depends_on,
-            "related_docs_raw": related_docs
-        }
-        raw_nodes.append(node_data)
-        node_ids.add(doc_id)
+    # Mappe per il calcolo delle entita condivise cross-progetto
+    entity_to_docs = {}
+    rca_records = []
+
+    for p_dir in project_folders:
+        slug = p_dir.name
+        manifest_file = p_dir / "project-manifest.yaml"
+        customer = slug.capitalize()
+        if manifest_file.exists():
+            try:
+                m_data = yaml.safe_load(manifest_file.read_text(encoding="utf-8")) or {}
+                customer = m_data.get("customer", customer)
+            except Exception:
+                pass
+
+        md_files = sorted(p_dir.glob("*.md"))
+        for file_p in md_files:
+            if file_p.name.startswith("_") or file_p.name.lower() == "readme.md":
+                continue
+
+            try:
+                content = file_p.read_text(encoding="utf-8")
+            except Exception:
+                continue
+
+            fm = parse_md_frontmatter(content)
+            if not fm or not isinstance(fm, dict):
+                continue
+
+            doc_id = fm.get("id", file_p.stem)
+            doc_type = fm.get("type", "concept")
+            title = fm.get("title", file_p.stem)
+            phase = fm.get("phase", 0)
+            status = fm.get("status", "draft")
+            author = fm.get("author", "N/A")
+            entities = fm.get("entities", [])
+            relations = fm.get("relations", [])
+            depends_on = fm.get("depends_on", []) or []
+            related_docs = fm.get("related_docs", []) or []
+            tags = fm.get("tags", []) or []
+
+            node_color = OKF_TYPE_COLORS.get(doc_type, OKF_TYPE_COLORS["default"])
+
+            verified = bool(fm.get("verified", False))
+            verified_by = fm.get("verified_by", "")
+            last_vetted = str(fm.get("last_vetted", "")) if fm.get("last_vetted") else ""
+            stale_after = str(fm.get("stale_after", "")) if fm.get("stale_after") else ""
+            is_stale = False
+            if stale_after:
+                try:
+                    from datetime import datetime
+                    if datetime.strptime(stale_after.strip(), "%Y-%m-%d").date() < datetime.now().date():
+                        is_stale = True
+                except Exception:
+                    pass
+
+            display_filename = f"[{slug}] {file_p.name}" if is_global else file_p.name
+
+            node_data = {
+                "id": doc_id,
+                "filename": display_filename,
+                "raw_filename": file_p.name,
+                "project": slug,
+                "customer": customer,
+                "title": title,
+                "type": doc_type,
+                "phase": phase,
+                "status": status,
+                "author": author,
+                "tags": tags,
+                "entities": entities,
+                "color": node_color,
+                "val": 15,
+                "verified": verified,
+                "verified_by": verified_by,
+                "last_vetted": last_vetted,
+                "stale_after": stale_after,
+                "is_stale": is_stale,
+                "is_entity_hub": False,
+                "relations_raw": relations,
+                "depends_on_raw": depends_on,
+                "related_docs_raw": related_docs
+            }
+            raw_nodes.append(node_data)
+            node_ids.add(doc_id)
+
+            if file_p.name.startswith("10-RCA-"):
+                rca_records.append({
+                    "id": doc_id,
+                    "title": title,
+                    "customer": customer,
+                    "project": slug,
+                    "content": content
+                })
+
+            # Traccia entita per hub condivisi
+            for ent in entities:
+                if isinstance(ent, dict):
+                    e_name = ent.get("name", "").strip()
+                    if e_name and len(e_name) > 3:
+                        norm_e = e_name.lower()
+                        if norm_e not in entity_to_docs:
+                            entity_to_docs[norm_e] = {
+                                "original_name": e_name,
+                                "type": ent.get("type", "concept"),
+                                "description": ent.get("description", ""),
+                                "docs": [],
+                                "projects": set()
+                            }
+                        entity_to_docs[norm_e]["docs"].append(doc_id)
+                        entity_to_docs[norm_e]["projects"].add(slug)
 
     for n in raw_nodes:
         nodes.append({
             "id": n["id"],
             "filename": n["filename"],
+            "raw_filename": n.get("raw_filename", n["filename"]),
+            "project": n.get("project", ""),
+            "customer": n.get("customer", ""),
             "title": n["title"],
             "type": n["type"],
             "phase": n["phase"],
@@ -110,7 +206,13 @@ def build_graph_data(folder_path: Path) -> Dict[str, Any]:
             "tags": n["tags"],
             "entities": n["entities"],
             "color": n["color"],
-            "val": 15
+            "val": 15,
+            "verified": n.get("verified", False),
+            "verified_by": n.get("verified_by", ""),
+            "last_vetted": n.get("last_vetted", ""),
+            "stale_after": n.get("stale_after", ""),
+            "is_stale": n.get("is_stale", False),
+            "is_entity_hub": False
         })
 
     link_signatures = set()
@@ -163,10 +265,71 @@ def build_graph_data(folder_path: Path) -> Dict[str, Any]:
                         "source": src,
                         "target": actual_dep,
                         "relationType": "depends_on",
-                        "description": "Dipendenza architetturale obbligatoria",
+                        "description": "Dipendenza canonica formale",
                         "weight": 1.0,
                         "color": RELATION_COLORS["depends_on"]
                     })
+
+    # Creazione dei Nodi Hub Entita Condivisi (Shared Entity Bridges) per modalita globale
+    if is_global:
+        for norm_e, e_info in entity_to_docs.items():
+            # Condivisa se citata in almeno 2 documenti o in progetti multipli
+            if len(e_info["docs"]) >= 2 or len(e_info["projects"]) >= 2:
+                safe_slug = re.sub(r'[^a-zA-Z0-9_-]', '-', norm_e)[:35]
+                hub_id = f"entity-hub-{safe_slug}"
+
+                # Cerca eventuali RCA correlate
+                rca_alerts = []
+                for rca in rca_records:
+                    if norm_e in rca["title"].lower() or norm_e in rca["content"].lower():
+                        rca_alerts.append({
+                            "title": rca["title"],
+                            "customer": rca["customer"],
+                            "project": rca["project"],
+                            "doc_id": rca["id"]
+                        })
+
+                hub_node = {
+                    "id": hub_id,
+                    "filename": f"Entity: {e_info['original_name']}",
+                    "raw_filename": e_info["original_name"],
+                    "project": "global-shared",
+                    "customer": f"Condiviso tra {len(e_info['projects'])} clienti",
+                    "title": e_info["original_name"],
+                    "type": "entity_hub",
+                    "phase": 0,
+                    "status": "shared",
+                    "author": "Global Ontology",
+                    "tags": ["entity", "bridge", e_info["type"]],
+                    "entities": [],
+                    "color": "#f59e0b",
+                    "val": 22,
+                    "verified": True,
+                    "verified_by": "Enterprise Engine",
+                    "last_vetted": "2026-09-16",
+                    "stale_after": "",
+                    "is_stale": False,
+                    "is_entity_hub": True,
+                    "entity_type": e_info["type"],
+                    "description": e_info["description"],
+                    "projects_list": sorted(list(e_info["projects"])),
+                    "rca_alerts": rca_alerts
+                }
+                nodes.append(hub_node)
+                node_ids.add(hub_id)
+
+                for doc_id in set(e_info["docs"]):
+                    sig = (doc_id, hub_id, "uses_entity")
+                    if sig not in link_signatures:
+                        link_signatures.add(sig)
+                        links.append({
+                            "source": doc_id,
+                            "target": hub_id,
+                            "relationType": "uses_entity",
+                            "description": f"Adotta {e_info['original_name']}",
+                            "weight": 0.8,
+                            "color": "#f59e0b"
+                        })
 
     degree_map = {n["id"]: 0 for n in nodes}
     for l in links:
@@ -518,6 +681,10 @@ def generate_graph_html(graph_data: Dict[str, Any], title: str = "ITInfra Knowle
             <option value="concept">Concept & Index</option>
         </select>
         <button class="btn-action" onclick="resetZoom()">Centra Vista</button>
+        <button class="btn-action" id="btn-toggle-hubs" onclick="toggleEntityHubs()" style="background:#f59e0b22; border-color:#f59e0b; color:#fbbf24;">🔗 Entità Condivise (ON)</button>
+        <select id="project-filter" class="search-box" style="padding:0.4rem 0.6rem; max-width:180px;" onchange="filterByProject(this.value)">
+            <option value="ALL">Tutti i Progetti</option>
+        </select>
     </div>
 </div>
 
@@ -535,11 +702,15 @@ def generate_graph_html(graph_data: Dict[str, Any], title: str = "ITInfra Knowle
     <div class="legend-item"><div class="legend-color" style="background: #38bdf8;"></div> Architecture (HLD, LLD, As-Built)</div>
     <div class="legend-item"><div class="legend-color" style="background: #34d399;"></div> Specification (RSD, ATP, Handover)</div>
     <div class="legend-item"><div class="legend-color" style="background: #fbbf24;"></div> Guide (MOP, Rollback, SOP, RCA)</div>
+    <div class="legend-item"><div class="legend-color" style="background: #f59e0b; box-shadow: 0 0 8px #f59e0b;"></div> Hub Entità Condivisa (Bridge)</div>
     <div style="font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem; color: #cbd5e1;">Archi Semantici</div>
     <div class="legend-item"><div class="legend-line" style="background: #ef4444;"></div> depends_on (Forte)</div>
     <div class="legend-item"><div class="legend-line" style="background: #3b82f6;"></div> extends (Estensione)</div>
     <div class="legend-item"><div class="legend-line" style="background: #10b981;"></div> documents (Attestazione)</div>
     <div class="legend-item"><div class="legend-line" style="background: #94a3b8;"></div> references / relates_to</div>
+    <div style="font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem; color: #cbd5e1;">Trust Signals</div>
+    <div class="legend-item"><div class="legend-color" style="border: 2px solid #10b981; background: transparent;"></div> ✓ Verificato (verified: true)</div>
+    <div class="legend-item"><div class="legend-color" style="border: 2px dashed #ef4444; background: transparent;"></div> ⚠ Scaduto (stale_after)</div>
 </div>
 
 <script>
@@ -616,7 +787,10 @@ def generate_graph_html(graph_data: Dict[str, Any], title: str = "ITInfra Knowle
 
     node.append("circle")
         .attr("r", d => d.val)
-        .attr("fill", d => d.color);
+        .attr("fill", d => d.color)
+        .attr("stroke", d => d.is_stale ? "#ef4444" : (d.verified ? "#10b981" : "#ffffff"))
+        .attr("stroke-width", d => (d.verified || d.is_stale) ? 3 : 1.5)
+        .attr("stroke-dasharray", d => d.is_stale ? "4,2" : "none");
 
     node.append("text")
         .attr("dx", d => d.val + 8)
@@ -731,11 +905,31 @@ def generate_graph_html(graph_data: Dict[str, Any], title: str = "ITInfra Knowle
 
         content.innerHTML = `
             <span class="sidebar-type" style="background:${{d.color}}22; color:${{d.color}}">${{d.type}} — Fase ${{d.phase}}</span>
+            ${{d.verified ? `<div style="display:inline-block; margin-left:6px; padding:2px 8px; border-radius:12px; font-size:0.75rem; background:#10b98122; border:1px solid #10b981; color:#34d399; font-weight:600;">✓ Verificato (${{escapeHtml(d.verified_by || 'Reviewer')}})</div>` : ''}}
+            ${{d.is_stale ? `<div style="display:inline-block; margin-left:6px; padding:2px 8px; border-radius:12px; font-size:0.75rem; background:#ef444422; border:1px solid #ef4444; color:#f87171; font-weight:600;">⚠ Scaduto (${{escapeHtml(d.stale_after)}})</div>` : ''}}
+            ${{d.is_entity_hub ? `<div style="display:inline-block; margin-left:6px; padding:2px 8px; border-radius:12px; font-size:0.75rem; background:#f59e0b33; border:1px solid #f59e0b; color:#fbbf24; font-weight:700;">🔗 Hub Entità Condivisa</div>` : ''}}
             <div class="sidebar-title">${{escapeHtml(d.title)}}</div>
             <div class="sidebar-id">${{escapeHtml(d.id)}}</div>
             <div style="font-size:0.85rem; color:#94a3b8; margin-bottom:1rem;">
                 Autore: <strong>${{escapeHtml(d.author)}}</strong> | Stato: <strong>${{escapeHtml(d.status)}}</strong>
             </div>
+
+            ${{d.is_entity_hub && d.rca_alerts && d.rca_alerts.length > 0 ? `
+            <div style="margin-bottom:1rem; padding:10px 12px; background:#ef444422; border:1px solid #ef4444; border-radius:8px; font-size:0.8rem; color:#fca5a5;">
+                <div style="font-weight:700; font-size:0.85rem; margin-bottom:4px; color:#ef4444;">⚠️ Cross-Client Incident Intelligence</div>
+                Rilevato disservizio noto su questo hardware/tecnologia in un altro progetto:
+                ${{d.rca_alerts.map(a => `<div style="margin-top:4px;">&bull; <strong>${{escapeHtml(a.customer)}}</strong>: ${{escapeHtml(a.title)}}</div>`).join('')}}
+            </div>` : ''}}
+
+            ${{d.is_entity_hub ? `
+            <div class="sidebar-section">
+                <h4>Descrizione Entità</h4>
+                <div style="font-size:0.85rem; color:#cbd5e1; line-height:1.4;">${{escapeHtml(d.description || 'Nessuna descrizione registrata')}}</div>
+            </div>
+            <div class="sidebar-section">
+                <h4>Progetti / Clienti che adottano questo Asset (${{d.projects_list ? d.projects_list.length : 0}})</h4>
+                <div style="font-size:0.85rem; color:#38bdf8;">${{d.projects_list ? d.projects_list.map(p => `<span class="entity-chip">${{escapeHtml(p)}}</span>`).join(' ') : 'N/A'}}</div>
+            </div>` : ''}}
 
             <div class="sidebar-section">
                 <h4>Entità Ontologiche (${{d.entities ? d.entities.length : 0}})</h4>

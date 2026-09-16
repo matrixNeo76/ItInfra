@@ -31,6 +31,7 @@ templates/
 ├── 08-SOP-Runbook.md                  ← Fase 7 — Standard Operating Procedures
 ├── 09-Handover-Inventory.md           ← Fase 7 — Handover & Asset Inventory
 ├── 10-RCA-Troubleshooting.md          ← Fase 7 Post-Go-Live — Root Cause Analysis & Incident Resolution
+├── 99-Scratchpad-Template.md          ← Staging Memory (Livello 2) — Scratchpad semi-strutturato
 ├── graph.html                         ← Mappa interattiva D3.js Knowledge Graph dei template
 │
 └── examples/                          ← esempi concreti di prompt per agenti AI
@@ -118,7 +119,7 @@ I template utilizzano lo schema YAML nativo dello standard **OKF v0.2 (Open Know
 | `entities` | Array di entità `{name, type, description}` (min 1). `type`: concept/framework/technology/toolchain/pattern/organization/specification |
 | `relations` | Array di relazioni `{targetTitle, targetId, relationType, weight, description}` (può essere vuoto) |
 
-#### Mappatura 9 tipi documentali IT → 6 tipi canonici OKF
+#### Mappatura 10 tipi documentali IT → 6 tipi canonici OKF
 
 | Tipo IT | Tipo canonico OKF | Razionale |
 |---------|-------------------|-----------|
@@ -131,6 +132,7 @@ I template utilizzano lo schema YAML nativo dello standard **OKF v0.2 (Open Know
 | ATP | `specification` | Contratto di collaudo con criteri formali |
 | SOP/Runbook | `guide` | Manuale operativo |
 | Handover & Inventory | `specification` | Verbale formale di presa in carico |
+| RCA & Troubleshooting | `guide` | Analisi deterministica cause radice e piano CAPA post-go-live |
 
 #### Metadati estesi IT (preservati in `rawFrontmatter`)
 

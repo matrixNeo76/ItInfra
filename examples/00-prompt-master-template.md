@@ -54,7 +54,7 @@ Prima di iniziare:
 ## 4. TEMPLATE DA COMPILARE
 
 Template path: /download/templates/NN-TIPO.md
-Tipo documento: <RSD-URS|HLD|LLD|MOP|Rollback|As-Built|ATP|SOP-Runbook|Handover-Inventory>
+Tipo documento: <RSD-URS|HLD|LLD|MOP|Rollback|As-Built|ATP|SOP-Runbook|Handover-Inventory|RCA-Troubleshooting>
 Fase: <1-7>
 
 - Leggi attentamente il blocco <!-- AI-INSTRUCTIONS --> nel frontmatter del template

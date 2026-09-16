@@ -71,7 +71,10 @@ Claude Code dispone dell'esecuzione di comandi da terminale (`Bash`). Usala atti
 - Gestione worktree per subagenti paralleli: `python scripts/itinfra.py worktree [add|list|sync|cleanup]`
 - Esportazione script RouterOS e PowerShell: `python scripts/itinfra.py export-configs <slug>`
 - Gestione incidenti e live health-check: `python scripts/itinfra.py troubleshoot init <slug> <ticket_id>` / `python scripts/itinfra.py health-check <slug>`
-- Mappa interattiva D3.js Knowledge Graph OKF v0.2: `python scripts/itinfra.py export-graph <slug|templates>`
+- Mappa interattiva D3.js Knowledge Graph OKF v0.2: `python scripts/itinfra.py export-graph <slug|templates|all>`
+- Memoria locale ibrida, Global Scratchpad e Trust Signals (Release v0.6 & v0.8): `python scripts/itinfra.py memory [init|log|show|merge|consolidate|prune] <slug>` e `python scripts/itinfra.py memory [init|log|show|prune] --global`
+- Global Enterprise Asset & Entity Knowledge Graph (Release v0.7): `python scripts/itinfra.py inventory [find|list-hardware|summary]`
+- Enterprise System Test Suite & Verification Dashboard (Release v0.8): `python scripts/itinfra.py test-suite [--report-html]`
 
 ### Anti-pattern da evitare (Zero-Hallucination Policy)
 
