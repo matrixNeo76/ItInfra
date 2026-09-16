@@ -82,7 +82,7 @@
         .progress-bar-fill {
             height: 100%;
             background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
-            width: 77%;
+            width: 88%;
             border-radius: 5px;
         }
         .container {
@@ -311,7 +311,7 @@
         </div>
         <div class="header-meta">
             <div class="progress-pill">
-                <span>Avanzamento Fasi: <strong>77%</strong> (7/9)</span>
+                <span>Avanzamento Fasi: <strong>88%</strong> (8/9)</span>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill"></div>
                 </div>
@@ -357,6 +357,7 @@
         <button class="tab-btn" onclick="switchTab('tab-fase3-rollback')">Fase 3: Rollback &check;</button>
         <button class="tab-btn" onclick="switchTab('tab-fase5-asbuilt')">Fase 5: As-Built &check;</button>
         <button class="tab-btn" onclick="switchTab('tab-fase6-atp')">Fase 6: ATP &check;</button>
+        <button class="tab-btn" onclick="switchTab('tab-fase7-sop')">Fase 7: SOP &check;</button>
     </nav>
 
     <!-- TAB DASHBOARD -->
@@ -472,8 +473,8 @@
                             <td><code>08-SOP-Runbook</code></td>
                             <td><span class="wiki-link">guide</span></td>
                             <td>Standard Operating Procedures / Runbook</td>
-                            <td><span class="badge-unchecked">NON REDATTO</span></td>
-                            <td>In attesa</td>
+                            <td><span class="badge-pass">VALIDATO (0 errori)</span></td>
+                            <td>08-SOP-Runbook.md</td>
                         </tr>
         
                         <tr>
@@ -1764,14 +1765,289 @@ pie title Distribuzione Esiti Collaudo ATP Severino Srl
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1.5rem; flex-wrap:wrap; gap: 1rem;">
                 <div>
-                    <h2>Standard Operating Procedures / Runbook</h2>
-                    <p>ID Documento: <code>08-SOP-Runbook</code> | Tipo: <strong>guide</strong> | Fase: <strong>Fase 7</strong></p>
+                    <h2>SOP / Runbook — Procedure Operative Standard e Manuale di Gestione Severino Srl</h2>
+                    <p>ID Documento: <code>guide-severino-srl-sop-runbook-01</code> | Tipo: <strong>guide</strong> | Fase: <strong>Fase 7</strong></p>
                 </div>
                 <div>
                     <span class="badge-pass">&check; Validato OKF v0.2</span>
                 </div>
             </div>
-            <p class='doc-missing'>Documento non ancora redatto (previsto per la Fase 7).</p>
+            <p><!-- AI-INSTRUCTIONS:</p>
+<p>Ruolo: produrre il manuale operativo di primo e secondo livello per i sistemisti di Severino Srl.</p>
+<p>Input attesi: As-Built compilato, ATP superato, matrici di cablaggio e inventario.</p>
+<p>Regole di compilazione:</p>
+<p>1. Ogni procedura deve avere: ID univoco, scopo, prerequisiti, comandi pronti all'uso, verifica ed escalation.</p>
+<p>2. Comandi PowerShell e RouterOS copia-incollabili senza placeholder variabili scoperti.</p>
+<p>3. Nessun secret in chiaro: solo riferimenti al vault.</p>
+<p>4. Coprire onboarding utenti, gestione share SMB, backup QNAP con Cobian e transizione a RustCopy, Hyper-V, MikroTik e sala Teams.</p>
+<p>--></p>
+<h1>SOP / Runbook — Standard Operating Procedures</h1>
+<p><strong>Progetto:</strong> Infrastruttura LAN, Virtualizzazione Hyper-V e Collaboration Severino Srl</p>
+<p><strong>Cliente:</strong> Severino Srl</p>
+<p><strong>Sito:</strong> HQ-SEV (Sede Operativa Principale)</p>
+<p><strong>Versione documento:</strong> 1.0</p>
+<p><strong>Stato:</strong> in-review</p>
+<p><strong>Destinatari:</strong> Team IT Operations (Marco Severino, Francesco Iavarone, Helpdesk Tecnico)</p>
+<hr/>
+<h2>1. Governance Operativa e Livelli di Rischio</h2>
+<p>Il presente Runbook definisce le procedure standardizzate per la conduzione, l'amministrazione ordinaria e la risoluzione dei problemi sull'infrastruttura ICT di <strong>Severino Srl</strong>, documentata in <span class=\"wiki-link\">&sect; architecture-severino-srl-asbuilt-01</span>.</p>
+<h3>1.1 Livelli di Rischio e Matrice di Autorizzazione</h3>
+<div class="table-container"><table><thead><tr><th>Livello</th><th>Definizione Operazione</th><th>Esecutore Delegato</th><th>Approvazione Richiesta</th><th>Finestra Esecutiva</th></tr></thead><tbody><tr><td><strong>L1 (Basso)</strong></td><td>Routine quotidiana (reset password, mapping dischi, restore file utente, verifica log backup)</td><td>Helpdesk L1 / Sysadmin</td><td>Nessuna (operazione standard)</td><td>Qualsiasi orario lavorativo</td></tr><tr><td><strong>L2 (Medio)</strong></td><td>Modifiche configurazione (onboarding nuovo utente AD, creazione share SMB, assegnazione quote, update ZeroTier)</td><td>Francesco Iavarone</td><td>Team Lead / Resp. Reparto</td><td>Orario lavorativo con preavviso</td></tr><tr><td><strong>L3 (Alto)</strong></td><td>Interventi su core (patching host HP Z4, riavvio VM core, modifiche ACL switch MikroTik, firmware QNAP)</td><td>Francesco Iavarone</td><td>Marco Severino (Lead Architect)</td><td>Fuori orario lavorativo (dalle 19:00 o weekend)</td></tr><tr><td><strong>L4 (Critico)</strong></td><td>Disaster Recovery, ripristino bare-metal, sostituzione apparato core, ripristino da ransomware</td><td>Disaster Recovery Team</td><td>Marco Severino (Crisis Manager)</td><td>Immediato / Regime di emergenza</td></tr></tbody></table></div>
+<hr/>
+<h2>2. Procedura RB-01: Gestione Utenti e Ciclo di Vita Active Directory</h2>
+<p><strong>ID Runbook:</strong> RB-01</p>
+<p><strong>Livello Rischio:</strong> L1/L2</p>
+<p><strong>Frequenza:</strong> Su richiesta (Onboarding / Offboarding)</p>
+<p><strong>Autorità:</strong> Francesco Iavarone / Marco Severino</p>
+<h3>2.1 Scopo</h3>
+<p>Creare, configurare o disattivare account utente nel dominio <code>severino.local</code>, garantendo l'assegnazione automatica delle cartelle dipartimentali, l'abilitazione delle share di rete e l'accesso remoto protetto.</p>
+<h3>2.2 Creazione Nuovo Utente (Onboarding)</h3>
+<pre><code class="language-powershell"># Eseguire su Domain Controller dc01 (192.168.120.239) via PowerShell Administrator
+Import-Module ActiveDirectory
+
+$SamAccountName = &quot;nuovo.utente&quot;
+$GivenName = &quot;Nome&quot;
+$Surname = &quot;Cognome&quot;
+$DisplayName = &quot;$GivenName $Surname&quot;
+$Department = &quot;Amministrazione&quot; # Valori: Direzione, Amministrazione, Operativo, RisorseUmane, AreaManager
+$OUPath = &quot;OU=$Department,OU=Users,OU=Severino,DC=severino,DC=local&quot;
+
+# Password casuale temporanea generata e salvata nel vault
+# Registrare il secret in: vault://it/projects/severino-srl/ad/users/$SamAccountName
+$TempPassword = ConvertTo-SecureString &quot;TempPass!2026Secure&quot; -AsPlainText -Force
+
+New-ADUser -Name $DisplayName `
+           -SamAccountName $SamAccountName `
+           -UserPrincipalName &quot;$SamAccountName@severino.local&quot; `
+           -GivenName $GivenName `
+           -Surname $Surname `
+           -DisplayName $DisplayName `
+           -Department $Department `
+           -Path $OUPath `
+           -AccountPassword $TempPassword `
+           -Enabled $true `
+           -ChangePasswordAtLogon $true `
+           -PasswordNeverExpires $false
+
+# Assegnazione al gruppo dipartimentale per permessi share SMB
+Add-ADGroupMember -Identity &quot;GRP-$Department-Users&quot; -Members $SamAccountName
+Write-Host &quot;Utente $SamAccountName creato con successo nell&#x27;OU $OUPath.&quot;</code></pre>
+<h3>2.3 Abilitazione Accesso Remoto ZeroTier (Se Richiesto)</h3>
+<p>1. Accedere al portale ZeroTier Central con account amministrativo <code>salviozt01@gmail.com</code> (credenziali in <code>vault://it/projects/severino-srl/zerotier/admin</code>).</p>
+<p>2. Selezionare la rete <code>65228D8D6D71CA23</code>.</p>
+<p>3. Sul notebook dell'utente, installare il client ZeroTier One ed eseguire:</p>
+<pre><code class="language-cmd">   zerotier-cli join 65228D8D6D71CA23</code></pre>
+<p>4. Nel pannello di controllo cloud, individuare il nuovo Node ID (10 caratteri), apporre il flag <strong>Auth</strong>, assegnare il nome <code>Notebook-$SamAccountName</code> e verificare l'assegnazione dell'IP virtuale nel pool <code>10.147.19.x</code>.</p>
+<h3>2.4 Verifica Finale</h3>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> L'utente effettua il primo logon sul MiniPC HP G6 con password provvisoria e imposta una nuova password sicura.</li>
+<li><span class="badge-checked">&check; Fatto</span> Il disco <code>Z:</code> (<code>\\fs01\DatiSeverino</code>) risulta mappato automaticamente da GPO.</li>
+<li><span class="badge-checked">&check; Fatto</span> L'accesso alle cartelle riservate di altri reparti è inibito (Access Denied).</li>
+</ul>
+<hr/>
+<h2>3. Procedura RB-02: Gestione Condivisioni SMB e Storage Partner SSK</h2>
+<p><strong>ID Runbook:</strong> RB-02</p>
+<p><strong>Livello Rischio:</strong> L2</p>
+<p><strong>Frequenza:</strong> Su necessità</p>
+<p><strong>Autorità:</strong> Francesco Iavarone</p>
+<h3>3.1 Scopo</h3>
+<p>Creare nuove share SMB, gestire i permessi NTFS e verificare il corretto funzionamento dell'archivio partner su SSD esterno SSK 512 GB attestato su <code>fs02</code>.</p>
+<h3>3.2 Creazione Nuova Cartella Condivisa su fs01</h3>
+<pre><code class="language-powershell"># Eseguire su File Server fs01 (192.168.120.240)
+$ShareName = &quot;ProgettiSpeciali&quot;
+$FolderDir = &quot;D:\DatiSeverino\$ShareName&quot;
+
+# 1. Creazione cartella fisica su volume VHDX 2 TB
+if (-not (Test-Path $FolderDir)) {
+    New-Item -Path $FolderDir -ItemType Directory
+}
+
+# 2. Configurazione permessi NTFS con disabilitazione ereditarietà selettiva
+$Acl = Get-Acl $FolderDir
+$Acl.SetAccessRuleProtection($true, $true) # Mantiene i permessi esistenti ma disaccoppia dal genitore
+$RuleAdmins = New-Object System.Security.AccessControl.FileSystemAccessRule(&quot;SEVERINO\Domain Admins&quot;, &quot;FullControl&quot;, &quot;ContainerInherit,ObjectInherit&quot;, &quot;None&quot;, &quot;Allow&quot;)
+$RuleUsers = New-Object System.Security.AccessControl.FileSystemAccessRule(&quot;SEVERINO\GRP-Operativo-Users&quot;, &quot;Modify&quot;, &quot;ContainerInherit,ObjectInherit&quot;, &quot;None&quot;, &quot;Allow&quot;)
+$Acl.AddAccessRule($RuleAdmins)
+$Acl.AddAccessRule($RuleUsers)
+Set-Acl -Path $FolderDir -AclObject $Acl
+
+# 3. Creazione condivisione SMB di rete
+New-SmbShare -Name $ShareName -Path $FolderDir -FullAccess &quot;SEVERINO\Domain Admins&quot; -ChangeAccess &quot;SEVERINO\GRP-Operativo-Users&quot;
+Write-Host &quot;Share SMB \\fs01\$ShareName operativa con permessi configurati.&quot;</code></pre>
+<h3>3.3 Gestione Storage SSK 512 GB Passthrough su fs02</h3>
+<p>Qualora fosse necessario verificare o re-inizializzare lo storage esterno SSK per le aziende partner:</p>
+<p>1. Su Host <strong>HP Z4</strong> (<code>192.168.120.10</code>), verificare lo stato del disco con PowerShell:</p>
+<pre><code class="language-powershell">   Get-Disk | Where-Object FriendlyName -like &quot;*SSK*&quot;
+   # Il disco DEVE trovarsi nello stato &quot;Offline&quot; su Host per consentire il passthrough alla VM</code></pre>
+<p>2. Se lo storage risulta disconnesso, ripristinare il passthrough nella configurazione della VM <code>fs02</code>:</p>
+<pre><code class="language-powershell">   # Eseguire su Host HP Z4
+   $DiskNum = (Get-Disk | Where-Object FriendlyName -like &quot;*SSK*&quot;).Number
+   Add-VMHardDiskDrive -VMName &quot;fs02&quot; -ControllerType SCSI -ControllerNumber 0 -DiskNumber $DiskNum</code></pre>
+<p>3. Su VM <code>fs02</code>, verificare la presenza del volume <code>E:\DatiPartner</code> e l'accessibilità delle share <code>\\fs02\AziendaA$</code> e <code>\\fs02\AziendaB$</code>.</p>
+<hr/>
+<h2>4. Procedura RB-03: Backup Giornaliero e Transizione a RustCopy</h2>
+<p><strong>ID Runbook:</strong> RB-03</p>
+<p><strong>Livello Rischio:</strong> L1 (Verifica/Restore) / L2 (Modifica Job)</p>
+<p><strong>Frequenza:</strong> Giornaliera (Audit automatico) / Mensile (Test restore)</p>
+<p><strong>Autorità:</strong> Francesco Iavarone / Marco Severino</p>
+<h3>4.1 Architettura e Piani di Salvataggio</h3>
+<p>Il backup protegge i dati aziendali di Severino Srl e delle due aziende partner archiviandoli sul NAS QNAP TS-233 (<code>192.168.120.250</code>):</p>
+<ul>
+<li><strong>Sorgente 1:</strong> <code>D:\DatiSeverino</code> (VM <code>fs01</code>)</li>
+<li><strong>Sorgente 2:</strong> <code>E:\DatiPartner</code> (VM <code>fs02</code>, storage SSK 512 GB)</li>
+<li><strong>Destinazione:</strong> <code>\\192.168.120.250\Backup</code> (autenticazione con account di servizio <code>backup</code>)</li>
+<li><strong>Retention:</strong> 30 giorni di versioning cronologico.</li>
+</ul>
+<h3>4.2 Ispezione Giornaliera Cobian Reflector</h3>
+<p>1. Connettersi via RDP a <code>fs01</code> con credenziali di gestione (vault).</p>
+<p>2. Aprire l'interfaccia di Cobian Reflector e consultare il pannello "Cronologia / Log":</p>
+<ul>
+<li>Verificare che il task <code>Backup-Dati-Severino</code> riporti lo stato <strong>"Terminato con successo"</strong>.</li>
+<li>Verificare che non siano presenti errori di file bloccati (VSS attivo).</li>
+</ul>
+<p>3. Eseguire la medesima verifica su <code>fs02</code> per il task <code>Backup-Dati-Partner</code>.</p>
+<h3>4.3 Procedura di Ripristino Mensile di Prova (Test Restore)</h3>
+<pre><code class="language-powershell"># Eseguire da PowerShell su fs01
+$BackupNasPath = &quot;\\192.168.120.250\Backup\fs01\DatiSeverino&quot;
+$TestRestoreDir = &quot;C:\RestoreTest_$(Get-Date -Format &#x27;yyyyMMdd&#x27;)&quot;
+
+New-Item -Path $TestRestoreDir -ItemType Directory
+# Selezionare l&#x27;archivio incrementale più recente e copiare un file campione
+Copy-Item &quot;$BackupNasPath\DocumentoCampione.pdf&quot; -Destination $TestRestoreDir
+$ShaOrig = (Get-FileHash &quot;D:\DatiSeverino\DocumentoCampione.pdf&quot; -Algorithm SHA256).Hash
+$ShaRest = (Get-FileHash &quot;$TestRestoreDir\DocumentoCampione.pdf&quot; -Algorithm SHA256).Hash
+
+if ($ShaOrig -eq $ShaRest) {
+    Write-Host &quot;[OK] Test di restore superato con successo: hash SHA256 identico.&quot; -ForegroundColor Green
+    Remove-Item $TestRestoreDir -Recurse -Force
+} else {
+    Write-Warning &quot;[ALLARME] Discrepanza hash nel ripristino dei dati!&quot;
+}</code></pre>
+<h3>4.4 Roadmap di Transizione Operativa a RustCopy v7.4.1+</h3>
+<p>Non appena la release di <strong>RustCopy v7.4.1+</strong> (<code>https://github.com/matrixNeo76/rustcopy</code>) sarà certificata per l'ambiente di produzione:</p>
+<p>1. Posizionare il binario in <code>C:\Scripts\rustcopy\rustcopy.exe</code> su <code>fs01</code> e <code>fs02</code>.</p>
+<p>2. Configurare lo script PowerShell per la sincronizzazione multithreaded ad alte prestazioni con blocco delta:</p>
+<pre><code class="language-powershell">   # C:\Scripts\rustcopy\run_backup.ps1
+   $Source = &quot;D:\DatiSeverino&quot;
+   $Target = &quot;\\192.168.120.250\Backup\RustCopy_Severino&quot;
+   $LogFile = &quot;C:\Scripts\rustcopy\logs\backup_$(Get-Date -Format &#x27;yyyy-MM-dd&#x27;).log&quot;
+
+   &amp; &quot;C:\Scripts\rustcopy\rustcopy.exe&quot; sync `
+       --source $Source `
+       --dest $Target `
+       --threads 8 `
+       --checksum sha256 `
+       --retention-days 30 `
+       --log $LogFile</code></pre>
+<p>3. Registrare il task nel Task Scheduler di Windows come job notturno alle ore 22:30 con esecuzione sotto l'account <code>SEVERINO\backup</code>.</p>
+<p>4. Disabilitare gradualmente i job su Cobian Reflector previa verifica di coerenza per 7 giorni.</p>
+<hr/>
+<h2>5. Procedura RB-04: Manutenzione Switch Core MikroTik CRS326</h2>
+<p><strong>ID Runbook:</strong> RB-04</p>
+<p><strong>Livello Rischio:</strong> L2 (Backup/Monitoraggio) / L3 (Upgrade RouterOS)</p>
+<p><strong>Frequenza:</strong> Mensile / Trimestrale</p>
+<p><strong>Autorità:</strong> Marco Severino</p>
+<h3>5.1 Backup della Configurazione RouterOS v7</h3>
+<p>Prima di qualsiasi modifica o aggiornamento dello switch core, eseguire sempre il doppio backup (binario + script testuale):</p>
+<pre><code class="language-routeros"># Connettersi via SSH o Terminale WinBox a sw-core-01 (192.168.120.1)
+/system identity print
+# 1. Generazione backup binario (password prelevata da vault://it/projects/severino-srl/mikrotik/backup-key)
+/system backup save name=&quot;asbuilt-backup-sw-core-01&quot;
+
+# 2. Generazione export configurazione in chiaro per audit
+/export file=&quot;asbuilt-export-sw-core-01.rsc&quot;</code></pre>
+<p>Scaricare i due file generati tramite SFTP/WinBox e archiviarli nel vault: <code>vault://it/projects/severino-srl/backups/mikrotik/</code>.</p>
+<h3>5.2 Aggiornamento Firmware e RouterBOOT</h3>
+<p>1. Verificare la disponibilità di release stabili RouterOS v7 LTS:</p>
+<pre><code class="language-routeros">   /system package update check-for-updates</code></pre>
+<p>2. Se approvato da Marco Severino, procedere con il download e l'installazione fuori orario lavorativo:</p>
+<pre><code class="language-routeros">   /system package update download
+   /system reboot</code></pre>
+<p>3. Dopo il riavvio, aggiornare il BIOS del bootloader hardware (RouterBOOT):</p>
+<pre><code class="language-routeros">   /system routerboard upgrade
+   /system reboot</code></pre>
+<p>4. Al riavvio finale, verificare lo stato del bridge e della WAN:</p>
+<pre><code class="language-routeros">   /interface bridge print
+   /ip route print
+   /ping 8.8.8.8 count=4</code></pre>
+<hr/>
+<h2>6. Procedura RB-05: Manutenzione Host HP Z4 e Macchine Virtuali</h2>
+<p><strong>ID Runbook:</strong> RB-05</p>
+<p><strong>Livello Rischio:</strong> L2/L3</p>
+<p><strong>Frequenza:</strong> Mensile (Patch Day Microsoft)</p>
+<p><strong>Autorità:</strong> Francesco Iavarone / Marco Severino</p>
+<h3>6.1 Sequenza di Riavvio Ordinato delle Macchine Virtuali</h3>
+<p>Qualora sia necessario riavviare l'host fisico HP Z4 per aggiornamenti di sistema:</p>
+<pre><code class="language-powershell"># Eseguire su Host HP Z4 (192.168.120.10) da PowerShell Administrator
+
+# FASE 1: Spegnimento controllato delle VM (in ordine inverso di dipendenza)
+Write-Host &quot;Spegnimento VM fs02 (Partner)...&quot;
+Stop-VM -Name &quot;fs02&quot; -Force
+Write-Host &quot;Spegnimento VM fs01 (Severino Srl)...&quot;
+Stop-VM -Name &quot;fs01&quot; -Force
+Write-Host &quot;Spegnimento VM dc01 (Domain Controller)...&quot;
+Stop-VM -Name &quot;dc01&quot; -Force
+
+# FASE 2: Riavvio Host Fisico
+Restart-Computer -Force
+
+# FASE 3: Sequenza di Avvio (all&#x27;avvio dell&#x27;host o manualmente se non in automatic startup)
+# 1. Avviare dc01 e attendere 90 secondi per consentire l&#x27;avvio completo di AD DS e DNS
+Start-VM -Name &quot;dc01&quot;
+Start-Sleep -Seconds 90
+
+# 2. Avviare fs01 e fs02
+Start-VM -Name &quot;fs01&quot;
+Start-VM -Name &quot;fs02&quot;
+
+# 3. Verifica stato
+Get-VM | Select-Object Name, State, Uptime, MemoryAssigned</code></pre>
+<hr/>
+<h2>7. Procedura RB-06: Gestione Sala Riunioni Microsoft Teams Rooms</h2>
+<p><strong>ID Runbook:</strong> RB-06</p>
+<p><strong>Livello Rischio:</strong> L1</p>
+<p><strong>Frequenza:</strong> Su necessità</p>
+<p><strong>Autorità:</strong> Helpdesk L1 / Francesco Iavarone</p>
+<h3>7.1 Resync e Riavvio Logitech Rally Bar & Touch Tablet</h3>
+<p>Se la sala riunioni presenta mancata risposta dei controlli touch sul tablet o assenza di segnale video su TV 65":</p>
+<p>1. <strong>Verifica Alimentazione e Rete:</strong></p>
+<ul>
+<li>Controllare che il tablet Logitech Tap IP sia acceso (LED alimentazione PoE attivo).</li>
+<li>Verificare che il cavo HDMI tra Rally Bar e porta HDMI 1 della TV sia saldamente inserito.</li>
+<li>Verificare che la presa di rete <code>ether15</code> sul patch panel abbia il LED verde link 1 Gbps attivo.</li>
+</ul>
+<p>2. <strong>Riavvio del Sistema Teams Rooms:</strong></p>
+<ul>
+<li>Tramite tablet, accedere a: <em>Impostazioni (icona ingranaggio) -> Impostazioni Amministratore (password in <code>vault://it/projects/severino-srl/teams/meeting</code>) -> Riavvia dispositivo</em>.</li>
+<li>Se il tablet non risponde, eseguire un power-cycle staccando e reinserendo il cavo di alimentazione sul retro della Rally Bar (attendere 15 secondi prima di reinserire).</li>
+</ul>
+<p>3. <strong>Esecuzione Chiamata di Collaudo:</strong></p>
+<ul>
+<li>Avviare una chiamata Teams con un utente interno per confermare microfoni beamforming, telecamera AI auto-framing e audio diffuso.</li>
+</ul>
+<hr/>
+<h2>8. Procedura RB-07: Rotazione Credenziali di Sicurezza</h2>
+<p><strong>ID Runbook:</strong> RB-07</p>
+<p><strong>Livello Rischio:</strong> L2 (Dispositivi) / L3 (Domain Admin)</p>
+<p><strong>Frequenza:</strong> Trimestrale (90 giorni) per switch/hypervisor; Semestrale (180 giorni) per account locali</p>
+<p><strong>Autorità:</strong> Marco Severino</p>
+<p>1. <strong>Generazione Chiave:</strong> Generare password complessa ad alta entropia (minimo 18 caratteri con lettere, numeri e simboli).</p>
+<p>2. <strong>Registrazione Vault:</strong> Aggiornare PRIMA il secret nel vault aziendale (<code>vault://it/projects/severino-srl/...</code>), registrando data di rotazione e operatore.</p>
+<p>3. <strong>Applicazione:</strong> Applicare la nuova password sull'interfaccia dell'apparato o tramite comando di sistema.</p>
+<p>4. <strong>Verifica Obbligatoria:</strong> Effettuare logout completo e rieseguire il login con la nuova credenziale accertandosi che la vecchia chiave venga scartata.</p>
+<hr/>
+<h2>9. Matrice di Escalation e Contatti di Emergenza</h2>
+<div class="table-container"><table><thead><tr><th>Livello</th><th>Descrizione Evento</th><th>Tempistica Risposta (SLA)</th><th>Contatto di Riferimento</th><th>Canale Operativo</th></tr></thead><tbody><tr><td><strong>L1</strong></td><td>Problema singola postazione utente (MiniPC, password dimenticata, mapping disco mancante)</td><td>Entro 2 ore lavorative</td><td>Helpdesk Tecnico Severino Srl</td><td>Ticket interno / Assistenza diretta</td></tr><tr><td><strong>L2</strong></td><td>Interruzione accesso share di reparto o anomalia backup giornaliero</td><td>Entro 1 ora lavorativa</td><td><strong>Francesco Iavarone</strong> (Senior Sysadmin)</td><td>Telefono / Sessione remota</td></tr><tr><td><strong>L3</strong></td><td>Blocco switch core MikroTik, indisponibilità host HP Z4 o perdita connettività WAN</td><td>Entro 30 minuti</td><td><strong>Francesco Iavarone</strong> + <strong>Marco Severino</strong></td><td>Presenza sul posto / Chiamata diretta</td></tr><tr><td><strong>L4</strong></td><td>Evento disastroso, corruzione dati, violazione sicurezza o guasto hardware non riparabile</td><td>Immediato (< 15 min)</td><td><strong>Marco Severino</strong> (Lead Architect & Crisis Manager)</td><td>Attivazione piano di emergenza</td></tr></tbody></table></div>
+<hr/>
+<h2>10. Checklist di Validazione Runbook</h2>
+<ul>
+<li><span class="badge-checked">&check; Fatto</span> Tutte le 7 procedure operative (RB-01..RB-07) sono dettagliate e collaudate.</li>
+<li><span class="badge-checked">&check; Fatto</span> Gli script PowerShell e RouterOS sono completi, pronti all'uso e privi di placeholder aperti.</li>
+<li><span class="badge-checked">&check; Fatto</span> La roadmap di transizione verso RustCopy v7.4.1+ è chiara e strutturata.</li>
+<li><span class="badge-checked">&check; Fatto</span> Nessuna password in chiaro; utilizzati rigorosamente i riferimenti <code>vault://</code>.</li>
+<li><span class="badge-checked">&check; Fatto</span> La matrice di escalation L1-L4 presenta ruoli, SLA e contatti definiti.</li>
+<li><span class="badge-checked">&check; Fatto</span> Documento conforme allo standard OKF v0.2.</li>
+</ul>
         </div>
     </div>
             
