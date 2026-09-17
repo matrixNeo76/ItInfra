@@ -40,6 +40,17 @@ class ProjectScaffolder:
         self.templates_dir = self.repo_root / "templates"
         self.projects_dir = self.repo_root / "projects"
 
+    def find_similar_slug(self, slug: str, cutoff: float = 0.70) -> List[str]:
+        """Restituisce eventuali slug esistenti simili a quello richiesto per prevenire typo."""
+        import difflib
+        if not self.projects_dir.exists():
+            return []
+        existing = [
+            d.name for d in self.projects_dir.iterdir()
+            if d.is_dir() and not d.name.startswith(("_", ".")) and d.name != slug
+        ]
+        return difflib.get_close_matches(slug, existing, n=3, cutoff=cutoff)
+
     def scaffold(self, slug: str, dry_run: bool = False, force: bool = False) -> Tuple[bool, str, Dict[str, Any]]:
         """Esegue lo scaffolding dei 10 documenti OKF v0.2 per lo slug indicato."""
         project_dir = self.projects_dir / slug
@@ -47,6 +58,19 @@ class ProjectScaffolder:
 
         auto_initialized = False
         if not project_dir.exists() or not manifest_file.exists():
+            # Typo Guard: se il progetto non esiste, verifica se ci sono progetti simili
+            if not force and not project_dir.exists():
+                similar = self.find_similar_slug(slug)
+                if similar:
+                    sim_str = ", ".join(f"'{s}'" for s in similar)
+                    return (
+                        False,
+                        f"[TYPO GUARD] Il progetto '{slug}' non esiste, ma sono stati trovati progetti con nome simile: {sim_str}. "
+                        f"Se intendevi lavorare su uno di essi, correggi il comando. "
+                        f"Per forzare la creazione del nuovo progetto '{slug}', usa il flag --force.",
+                        {"similar_projects": similar}
+                    )
+
             auto_initialized = True
             if not dry_run:
                 project_dir.mkdir(parents=True, exist_ok=True)

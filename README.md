@@ -181,18 +181,28 @@ python scripts/itinfra.py validate projects/acme-dc/01-RSD-URS.md
 # Genera o aggiorna il Cruscotto Esecutivo Generative UI:
 python scripts/itinfra.py ui [--open]
 
-# Pubblicazione su storage centrale con Quality Gate OKF v0.2:
-python scripts/itinfra.py publish acme-dc
+# Reverse Reconciliation inversa (allinea As-Built -> manifesto con Drift Report):
+python scripts/itinfra.py reconcile acme-dc [--dry-run]
 
-# Esegui l'Enterprise Test Suite di collaudo (13 moduli):
+# Intervista modulare a checkpoint atomici (anti-saturazione del contesto):
+python scripts/itinfra.py interview acme-dc --status
+python scripts/itinfra.py interview acme-dc --prompt network
+python scripts/itinfra.py interview acme-dc --block network --set dc_ip="10.100.10.10"
+
+# Pubblicazione protetta da Remote Lock atomico su share centrale:
+python scripts/itinfra.py publish acme-dc [--include-vault]
+
+# Esegui l'Enterprise Test Suite di collaudo (14 moduli, 100% PASS):
 python scripts/itinfra.py test-suite --report-html
 
 # Esegui l'Audit di Coerenza Incrociata & Strict Grounding:
 python scripts/itinfra.py audit-consistency acme-dc
 
-# Gestisci il Local Encrypted Secret Vault (AES-256-GCM):
+# Gestisci il Local Encrypted Secret Vault (AES-256-GCM) e Team Bundling:
 python scripts/itinfra.py vault init acme-dc
 python scripts/itinfra.py vault set acme-dc fw/admin --value "SegretoSicuro2026!"
+python scripts/itinfra.py vault export-bundle acme-dc --out projects/acme-dc/team.vbundle
+python scripts/itinfra.py vault import-bundle acme-dc --in projects/acme-dc/team.vbundle
 
 # Esporta playbook esecutivi (RouterOS .rsc e PowerShell .ps1):
 python scripts/itinfra.py export-configs acme-dc

@@ -15,7 +15,9 @@ Garantisce:
 import os
 import re
 import json
+import time
 import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
 
@@ -27,6 +29,96 @@ CLEARTEXT_SECRET_PATTERNS = [
     re.compile(r'(?:password|secret|token|api_key|priv_key)\s*:\s*["\'](?!vault:\/\/|<DA-RICHIEDERE>|da-richiedere)([^"\']+)["\']', re.IGNORECASE),
     re.compile(r'(?:password|secret|token|chiave)\s*=\s*["\'](?!vault:\/\/|<DA-RICHIEDERE>|da-richiedere)([^"\']+)["\']', re.IGNORECASE),
 ]
+
+class RemoteShareLock:
+    """
+    Gestore del lock atomico e distribuito sulla share centrale / storage SMB.
+    Previene race condition, corruzione dei file e scritture concorrenti durante la pubblicazione.
+    """
+    def __init__(self, lock_path: Path, timeout: float = 15.0, poll_interval: float = 0.5, stale_timeout: float = 180.0):
+        self.lock_path = lock_path
+        self.timeout = timeout
+        self.poll_interval = poll_interval
+        self.stale_timeout = stale_timeout
+        self.acquired = False
+
+    def acquire(self, slug: str) -> bool:
+        start_time = time.time()
+        self.lock_path.parent.mkdir(parents=True, exist_ok=True)
+        import socket
+        import getpass
+
+        user = "unknown"
+        try:
+            user = getpass.getuser()
+        except Exception:
+            pass
+
+        host = "unknown"
+        try:
+            host = socket.gethostname()
+        except Exception:
+            pass
+
+        lock_info = {
+            "slug": slug,
+            "user": user,
+            "hostname": host,
+            "pid": os.getpid(),
+            "timestamp": time.time(),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+
+        while True:
+            try:
+                fd = os.open(str(self.lock_path), os.O_CREAT | os.O_EXCL | os.O_RDWR)
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    json.dump(lock_info, f, indent=2)
+                self.acquired = True
+                return True
+            except FileExistsError:
+                lock_data = {}
+                try:
+                    if self.lock_path.exists():
+                        try:
+                            lock_data = json.loads(self.lock_path.read_text(encoding="utf-8"))
+                        except Exception:
+                            pass
+                        ts = lock_data.get("timestamp") or os.path.getmtime(self.lock_path)
+                        if time.time() - ts > self.stale_timeout:
+                            try:
+                                self.lock_path.unlink()
+                                continue
+                            except OSError:
+                                pass
+                except OSError:
+                    pass
+
+                if time.time() - start_time >= self.timeout:
+                    holder = f"{lock_data.get('user', 'utente')}@{lock_data.get('hostname', 'remoto')} (PID {lock_data.get('pid', '?')})"
+                    created = lock_data.get('created_at', 'recentemente')
+                    raise TimeoutError(
+                        f"[BLOCCO CONCORRENZA] La destinazione su share centrale per '{slug}' è bloccata da {holder}.\n"
+                        f"  Lockfile: {self.lock_path}\n"
+                        f"  Acquisito il: {created}\n"
+                        f"  Riprovare al termine della pubblicazione concorrente o rimuovere il lock se orfano."
+                    )
+                time.sleep(self.poll_interval)
+
+    def release(self):
+        if self.acquired:
+            try:
+                if self.lock_path.exists():
+                    self.lock_path.unlink()
+            except OSError:
+                pass
+            self.acquired = False
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.release()
 
 class ProjectPublisher:
     def __init__(self, workspace_root: Optional[Path] = None):
@@ -119,10 +211,11 @@ class ProjectPublisher:
         slug: str,
         target_share: Optional[str] = None,
         dry_run: bool = False,
-        force: bool = False
+        force: bool = False,
+        include_vault: bool = False
     ) -> Tuple[bool, str, Dict[str, Any]]:
         """
-        Pubblica in modo atomico il progetto locale su storage centrale.
+        Pubblica in modo atomico il progetto locale su storage centrale con lock distribuito anti-race.
         """
         dest_share_str = self.get_central_share(target_share)
         dest_share = Path(dest_share_str)
@@ -133,6 +226,7 @@ class ProjectPublisher:
             "files_copied": 0,
             "bytes_copied": 0,
             "dry_run": dry_run,
+            "include_vault": include_vault,
             "status": "pending"
         }
 
@@ -183,8 +277,11 @@ class ProjectPublisher:
         # Raccoglie tutti i file validi da pubblicare
         for root, _, files in os.walk(source_dir):
             for file_name in files:
-                # Esclude secret cifrati locali e file lock atomici
-                if file_name.endswith(".enc") or file_name.endswith(".lock") or file_name.endswith(".tmp"):
+                # Esclude lock atomici e file temporanei
+                if file_name.endswith(".lock") or file_name.endswith(".tmp"):
+                    continue
+                # Esclude secret cifrati locali a meno di esplicito include_vault
+                if file_name.endswith(".enc") and not include_vault:
                     continue
                 file_path = Path(root) / file_name
                 rel_path = file_path.relative_to(source_dir)
@@ -198,28 +295,58 @@ class ProjectPublisher:
             msg = (
                 f"[DRY-RUN] Pre-Flight Quality Gate superato con successo per '{slug}'!\n"
                 f"Destinazione: {dest_project_slug_dir}\n"
-                f"File pronti per la pubblicazione ({len(files_to_copy)} file):\n  - {file_list_str}"
+                f"File pronti per la pubblicazione ({len(files_to_copy)} file):\n  - {file_list_str}\n"
+                f"Protezione Concorrenza: Lock remoto (.publish_{slug}.lock) abilitato."
             )
+            if include_vault:
+                msg += "\nInclusione Secret Vault: ABILITATA (--include-vault)"
             stats["status"] = "dry_run_success"
             return True, msg, stats
 
-        # 5. Esecuzione effettiva della pubblicazione
+        # 5. Acquisizione Lock Remoto e Pubblicazione Atomica
+        lock_file = dest_projects_dir / f".publish_{slug}.lock"
+        remote_lock = RemoteShareLock(lock_file)
         try:
-            os.makedirs(dest_project_slug_dir, exist_ok=True)
+            remote_lock.acquire(slug)
+        except TimeoutError as te:
+            stats["status"] = "concurrency_lock_blocked"
+            return False, str(te), stats
+
+        staging_dir = dest_projects_dir / f".staging_{slug}_{os.getpid()}_{int(time.time())}"
+        try:
+            # Creazione staging folder atomica sulla share
+            if staging_dir.exists():
+                shutil.rmtree(staging_dir, ignore_errors=True)
+            staging_dir.mkdir(parents=True, exist_ok=True)
+
             for src_file, rel_path in files_to_copy:
-                target_file = dest_project_slug_dir / rel_path
-                target_file.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(src_file, target_file)
+                stg_target = staging_dir / rel_path
+                stg_target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src_file, stg_target)
+
+            # Trasferimento atomico nello storage definitivo
+            dest_project_slug_dir.mkdir(parents=True, exist_ok=True)
+            for src_file, rel_path in files_to_copy:
+                stg_file = staging_dir / rel_path
+                final_target = dest_project_slug_dir / rel_path
+                final_target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(stg_file, final_target)
                 stats["files_copied"] += 1
-                stats["bytes_copied"] += src_file.stat().st_size
+                stats["bytes_copied"] += final_target.stat().st_size
+
+            # Pulizia staging
+            shutil.rmtree(staging_dir, ignore_errors=True)
 
             msg = (
                 f"[SUCCESSO] Progetto '{slug}' pubblicato con successo!\n"
                 f"  Sorgente: {source_dir}\n"
                 f"  Destinazione centrale: {dest_project_slug_dir}\n"
                 f"  File sincronizzati: {stats['files_copied']} ({stats['bytes_copied'] / 1024:.1f} KB)\n"
+                f"  Protezione Concorrenza: Lock atomico acquisito e rilasciato con successo\n"
                 f"  Quality Gate OKF v0.2: 100% CONFORME (0 errori)"
             )
+            if include_vault:
+                msg += "\n  🔐 Secret Vault: Incluso nella pubblicazione (--include-vault)"
             if warnings:
                 msg += f"\n  Avvisi informativi ({len(warnings)}):\n    - " + "\n    - ".join(warnings[:5])
             stats["status"] = "published"
@@ -229,6 +356,10 @@ class ProjectPublisher:
             msg = f"[ERRORE COPIA] Si e' verificato un errore durante la pubblicazione su '{dest_project_slug_dir}': {e}"
             stats["status"] = "error_copying"
             return False, msg, stats
+        finally:
+            if staging_dir.exists():
+                shutil.rmtree(staging_dir, ignore_errors=True)
+            remote_lock.release()
 
     def sync_engine(
         self,

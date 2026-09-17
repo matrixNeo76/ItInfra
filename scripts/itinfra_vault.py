@@ -371,3 +371,89 @@ class VaultManager:
             "unused_in_vault": unused_in_vault,
             "scanned_details": scanned
         }
+
+    def export_bundle(self, source_passphrase: str, bundle_passphrase: str, out_path: Path) -> Path:
+        """
+        Esporta i secret del vault cifrati con una passphrase di team in un file .vbundle.
+        Consente la distribuzione controllata e sicura delle credenziali tra colleghi senza dipendenze.
+        """
+        if not self.exists():
+            raise VaultError(f"Vault non trovato per il progetto '{self.slug}'.")
+        data = self._read_and_decrypt(source_passphrase)
+        secrets = data.get("secrets", {})
+
+        salt = os.urandom(16)
+        key = self._derive_key(bundle_passphrase, salt)
+        nonce = os.urandom(12)
+        aesgcm = AESGCM(key)
+
+        bundle_payload = {
+            "type": "itinfra-vault-bundle",
+            "version": "1.0",
+            "project_slug": self.slug,
+            "exported_at": datetime.now(timezone.utc).isoformat(),
+            "secret_count": len(secrets),
+            "secrets": secrets
+        }
+        plaintext = json.dumps(bundle_payload).encode("utf-8")
+        ciphertext = aesgcm.encrypt(nonce, plaintext, None)
+
+        envelope = {
+            "type": "itinfra-vault-bundle",
+            "version": "1.0",
+            "project_slug": self.slug,
+            "cipher": "AES-256-GCM",
+            "kdf": "PBKDF2-HMAC-SHA256",
+            "iterations": 100000,
+            "salt": salt.hex(),
+            "nonce": nonce.hex(),
+            "ciphertext": ciphertext.hex(),
+            "exported_at": datetime.now(timezone.utc).isoformat()
+        }
+
+        out_path = Path(out_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(envelope, indent=2), encoding="utf-8")
+        return out_path
+
+    def import_bundle(self, bundle_path: Path, bundle_passphrase: str, target_passphrase: str, merge: bool = True) -> int:
+        """
+        Importa un file .vbundle cifrato, integrandone i secret nel vault locale del progetto.
+        """
+        bundle_path = Path(bundle_path)
+        if not bundle_path.exists():
+            raise VaultError(f"File bundle non trovato: {bundle_path}")
+
+        try:
+            envelope = json.loads(bundle_path.read_text(encoding="utf-8"))
+            salt = bytes.fromhex(envelope["salt"])
+            nonce = bytes.fromhex(envelope["nonce"])
+            ciphertext = bytes.fromhex(envelope["ciphertext"])
+        except Exception as e:
+            raise VaultError(f"Formato bundle non valido: {e}")
+
+        key = self._derive_key(bundle_passphrase, salt)
+        aesgcm = AESGCM(key)
+        try:
+            plaintext = aesgcm.decrypt(nonce, ciphertext, None)
+            bundle_data = json.loads(plaintext.decode("utf-8"))
+        except Exception:
+            raise VaultError("Decifratura del bundle fallita: passphrase del bundle errata.")
+
+        imported_secrets = bundle_data.get("secrets", {})
+
+        if not self.exists():
+            self.init_vault(target_passphrase)
+
+        with FileLock(self.lock_file):
+            current_data = self._read_and_decrypt(target_passphrase)
+            current_secrets = current_data.get("secrets", {})
+            if merge:
+                current_secrets.update(imported_secrets)
+            else:
+                current_secrets = imported_secrets
+
+            current_data["secrets"] = current_secrets
+            self._encrypt_and_write(current_data, target_passphrase)
+
+        return len(imported_secrets)

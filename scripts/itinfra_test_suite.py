@@ -115,6 +115,11 @@ class SystemTestSuiteRunner:
         results.append(t13)
         self._print_module_summary(t13)
 
+        # 14. Test Modulo Resiliency & Enterprise Hardening (Release v0.9.12)
+        t14 = self._test_resiliency_and_hardening()
+        results.append(t14)
+        self._print_module_summary(t14)
+
         elapsed_total = round((time.time() - start_time) * 1000, 2)
         passed_count = sum(1 for r in results if r["status"] in ("PASS", "WARN"))
         fail_count = sum(1 for r in results if r["status"] == "FAIL")
@@ -711,6 +716,106 @@ sla_baseline:
             "details": details
         }
 
+
+
+
+    def _test_resiliency_and_hardening(self) -> Dict[str, Any]:
+        """Test Modulo 14: Resiliency, Typo Guard, Remote Lock, Reconcile, Interview & Vault Team Bundle (Release v0.9.12)."""
+        t0 = time.time()
+        from scripts.itinfra_scaffold import ProjectScaffolder
+        from scripts.itinfra_publish import RemoteShareLock
+        from scripts.itinfra_reconcile import ProjectReconciler
+        from scripts.itinfra_interview import InterviewManager
+        from scripts.itinfra_vault import VaultManager
+
+        # 1. Test Typo Guard
+        scaffolder = ProjectScaffolder(repo_root=self.repo_root)
+        similar = scaffolder.find_similar_slug("demo-auire")
+        assert "demo-aure" in similar, f"Typo guard non ha rilevato demo-aure in {similar}"
+
+        ok_typo, msg_typo, _ = scaffolder.scaffold("demo-auire", force=False)
+        assert not ok_typo, "Scaffolding doveva fallire per typo guard"
+        assert "[TYPO GUARD]" in msg_typo, f"Messaggio typo guard mancante: {msg_typo}"
+        assert not (self.projects_dir / "demo-auire").exists(), "Cartella orfana demo-auire non doveva essere creata"
+
+        # 2. Test Remote Share Lock Concurrency
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            lock_path = Path(tmp_dir) / ".test_publish.lock"
+            lock1 = RemoteShareLock(lock_path, timeout=0.5, poll_interval=0.1)
+            lock2 = RemoteShareLock(lock_path, timeout=0.5, poll_interval=0.1)
+
+            assert lock1.acquire("test-slug"), "Lock1 non acquisito"
+            assert lock_path.exists(), "File lock remoto non creato su disco"
+
+            lock2_blocked = False
+            try:
+                lock2.acquire("test-slug")
+            except TimeoutError:
+                lock2_blocked = True
+            assert lock2_blocked, "Lock2 doveva essere bloccato per concorrenza"
+
+            lock1.release()
+            assert not lock_path.exists(), "File lock non rimosso dopo release"
+            assert lock2.acquire("test-slug"), "Lock2 non ha potuto acquisire dopo rilascio"
+            lock2.release()
+
+        # 3. Test Reverse Reconciliation
+        reconciler = ProjectReconciler(repo_root=self.repo_root)
+        rec_ok, rec_msg, drift_data = reconciler.reconcile("demo-aure", dry_run=True)
+        assert rec_ok, f"Riconciliazione fallita: {rec_msg}"
+        assert drift_data["deviations_count"] >= 4, "Deviazioni LLD non estratte correttamente"
+        assert drift_data["discovered_count"] >= 10, "Asset hardware non estratti correttamente"
+
+        # 4. Test Modular Checkpointed Interview
+        interview_mgr = InterviewManager(repo_root=self.repo_root)
+        prompt_txt = interview_mgr.get_prompt_for_block("demo-aure", "network")
+        assert "INTERVISTA GUIDATA ITINFRA" in prompt_txt, "Template prompt non valido"
+        state = interview_mgr.load_state("demo-aure")
+        assert "completed_blocks" in state, "Stato intervista non inizializzato"
+
+        # 5. Test Vault Team Bundling
+        with tempfile.TemporaryDirectory() as tmp_vault_dir:
+            v_repo = Path(tmp_vault_dir)
+            (v_repo / "projects" / "test-vault").mkdir(parents=True, exist_ok=True)
+            v_mgr1 = VaultManager("test-vault", repo_root=v_repo)
+            v_mgr1.init_vault("Pass123!")
+            v_mgr1.set_secret("db/password", "UltraSecret999", "Pass123!")
+
+            bundle_file = v_repo / "export.vbundle"
+            v_mgr1.export_bundle("Pass123!", "TeamBundlePass!", bundle_file)
+            assert bundle_file.exists(), "File bundle non creato"
+
+            (v_repo / "projects" / "test-target").mkdir(parents=True, exist_ok=True)
+            v_mgr2 = VaultManager("test-target", repo_root=v_repo)
+            imported_count = v_mgr2.import_bundle(bundle_file, "TeamBundlePass!", "TargetPass789!")
+            assert imported_count == 1, f"Atteso 1 secret importato, ottenuto {imported_count}"
+            retrieved = v_mgr2.get_secret("db/password", "TargetPass789!")
+            assert retrieved == "UltraSecret999", f"Secret decifrato errato: {retrieved}"
+
+        details = [
+            "Fuzzy Typo Guard: prevenzione automatica creazione cartelle orfane con difflib (somiglianza >= 0.70)",
+            "Atomic SMB Remote Lock: acquisizione lock O_CREAT|O_EXCL con timeout anti-concorrenza e auto-clean",
+            f"Reverse Reconciliation Engine: estrazione verificata di {drift_data['deviations_count']} deviazioni e {drift_data['discovered_count']} asset hardware da As-Built",
+            "Modular Checkpointed Interview: gestione atomica a 5 blocchi tematici con salvataggio incrementale anti-saturazione",
+            "Vault Team Bundling: esportazione e importazione cross-tenant di secret cifrati (.vbundle) con passphrase di team"
+        ]
+
+        return {
+            "id": "MOD-14",
+            "name": "Resiliency, Typo Guard & Reverse Reconciliation Engine",
+            "category": "Affidabilità & Hardening",
+            "status": "PASS",
+            "duration_ms": round((time.time() - t0) * 1000, 2),
+            "summary": "Protezione contro typo e cartelle orfane, lock atomico anti-race su storage centrale, riconciliazione inversa As-Built, intervista modulare e scambio secret cifrati.",
+            "metrics": {
+                "typo_guard": "ACTIVE",
+                "concurrency_lock": "VERIFIED",
+                "deviations_reconciled": drift_data["deviations_count"],
+                "hardware_discovered": drift_data["discovered_count"],
+                "vault_bundling": "VERIFIED"
+            },
+            "details": details
+        }
 
 
 def generate_system_test_html(summary_data: Dict[str, Any], output_path: Path) -> Path:

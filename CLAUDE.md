@@ -123,7 +123,9 @@ Claude Code dispone dell'esecuzione di comandi da terminale (`Bash`). Usala atti
 - Memoria locale ibrida, Global Scratchpad e Trust Signals (Release v0.6 & v0.8): `python scripts/itinfra.py memory [init|log|show|merge|consolidate|prune] <slug>` e `python scripts/itinfra.py memory [init|log|show|prune] --global`
 - Global Enterprise Asset & Entity Knowledge Graph (Release v0.7): `python scripts/itinfra.py inventory [find|list-hardware|summary]`
 - Enterprise System Test Suite & Verification Dashboard (Release v0.8): `python scripts/itinfra.py test-suite [--report-html]`
-- Architettura Local Workspace, Central Publish & Continuous Delivery (Release v0.9 & v0.9.5): `python scripts/itinfra.py publish <slug>`, `python scripts/itinfra.py sync-engine`, `python scripts/itinfra.py check-share` e `python scripts/itinfra.py deploy-share`
+- Reverse Reconciliation da As-Built a Manifesto (Release v0.9.12): `python scripts/itinfra.py reconcile <slug> [--from-doc <file>] [--dry-run]`
+- Intervista guidata modulare a checkpoint atomici (Release v0.9.12): `python scripts/itinfra.py interview <slug> [--status|--prompt <block>|--block <block> --set key=val]`
+- Architettura Local Workspace & Central Publish con Quality Gate e Remote Lock (Release v0.9 & v0.9.12): `python scripts/itinfra.py publish <slug>`, `python scripts/itinfra.py sync-engine`, `python scripts/itinfra.py check-share` e `python scripts/itinfra.py deploy-share`
 
 ### Anti-pattern da evitare (Zero-Hallucination Policy)
 

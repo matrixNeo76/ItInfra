@@ -426,6 +426,27 @@ timeline
 
 ---
 
+### ✅ Release v0.9.12 — Resiliency, Typo Guard, Reverse Reconciliation & Concurrency Hardening (Completato)
+- [x] **Fuzzy Typo Guard (`it start` & `it scaffold`):**
+  - Integrazione nativa `difflib.get_close_matches` ($\ge 0.70$) per intercettare errori di digitazione su slug inesistenti, prevenendo la creazione accidentale di cartelle e template orfani.
+  - Flag `--force` per confermare intenzionalmente la creazione di progetti simili.
+- [x] **Reverse Reconciliation Engine (`it reconcile <slug>`):**
+  - Motore di riconciliazione inversa bidirezionale: parsing di `06-As-Built.md` (§3 Deviazioni, §4 Hardware, §5 IP), calcolo del Drift Report rispetto a `project-manifest.yaml` e backporting atomico dei parametri verificati sul campo.
+  - Modalità `--dry-run` e tracciamento automatico nello scratchpad di memoria.
+- [x] **Modular Checkpointed Interview (`it interview <slug>`):**
+  - Ristrutturazione della raccolta requisiti in 5 blocchi logici atomici (`scope`, `network`, `compute`, `security`, `atp`) per prevenire la saturazione della finestra di contesto (Context Window Saturation).
+  - Salvataggio incrementale delle risposte su disco (`_interview_state.json`, `_scratchpad.md` e manifesto).
+- [x] **Atomic SMB Remote Lock & Staging-then-Swap (`it publish <slug>`):**
+  - Protezione distribuita da scritture concorrenti su share di rete tramite lockfile remoto atomico `O_CREAT | O_EXCL` (`.publish_<slug>.lock`) con attributi `user@host` e TTL anti-stale (180s).
+  - Cartella di staging temporanea remota e swap atomico dei file al termine della copia.
+- [x] **Vault Team Governance & Secure Bundling (`it vault export-bundle / import-bundle`):**
+  - Esportazione e importazione cross-workstation di secret cifrati (.vbundle) con passphrase di team (PBKDF2 + AES-256-GCM).
+  - Opzione `--include-vault` controllata per la pubblicazione su storage centrale.
+- [x] **Enterprise System Test Suite (MOD-14):**
+  - Collaudo end-to-end su tutti i 14 moduli architetturali con 100% Pass Rate.
+
+---
+
 ### 🔮 Release v0.10 — Advanced Topology Engine, Offline Exporters & Automated CI/CD (Pianificato Q1 2027)
 - [ ] **Architettura 100% Offline-First & Zero-Dipendenze (Design Philosophy Confermato):**
   - Mantenimento dell'infrastruttura snella basata su filesystem locale, Python standard e Git/SMB. Nessuna dipendenza da server MCP esterni, demoni o microservizi REST API da manutenere.

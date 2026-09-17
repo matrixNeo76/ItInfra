@@ -1647,6 +1647,41 @@ def cmd_vault(args) -> int:
         print()
         return 0
 
+    elif action == "export-bundle":
+        out_path = Path(args.out)
+        if not passphrase:
+            passphrase = getpass.getpass("Inserisci la Master Passphrase del Vault locale: ")
+        bundle_pass = getattr(args, "bundle_pass", None) or os.environ.get("ITINFRA_BUNDLE_PASS")
+        if not bundle_pass:
+            bundle_pass = getpass.getpass("Inserisci la Passphrase di Team per cifrare il Bundle: ")
+            confirm = getpass.getpass("Conferma la Passphrase di Team: ")
+            if bundle_pass != confirm:
+                print(colorize("ERRORE: Le passphrase di team non coincidono.", COLOR_RED))
+                return 1
+        try:
+            bpath = vault.export_bundle(passphrase, bundle_pass, out_path)
+            print(colorize(f"[OK] Bundle cifrato esportato con successo in: {bpath}", COLOR_GREEN + COLOR_BOLD))
+            print(colorize("Condividi questo bundle e la relativa passphrase in modo sicuro con i colleghi del team.", COLOR_CYAN))
+            return 0
+        except Exception as e:
+            print(colorize(f"ERRORE export bundle: {e}", COLOR_RED))
+            return 1
+
+    elif action == "import-bundle":
+        in_path = Path(args.bundle_in)
+        bundle_pass = getattr(args, "bundle_pass", None) or os.environ.get("ITINFRA_BUNDLE_PASS")
+        if not bundle_pass:
+            bundle_pass = getpass.getpass("Inserisci la Passphrase di Team del Bundle: ")
+        if not passphrase:
+            passphrase = getpass.getpass("Inserisci la Master Passphrase del Vault locale (target): ")
+        try:
+            count = vault.import_bundle(in_path, bundle_pass, passphrase, merge=True)
+            print(colorize(f"[OK] Importati con successo {count} secret nel vault locale di '{slug}'!", COLOR_GREEN + COLOR_BOLD))
+            return 0
+        except Exception as e:
+            print(colorize(f"ERRORE import bundle: {e}", COLOR_RED))
+            return 1
+
     return 0
 
 def cmd_worktree(args) -> int:
@@ -2337,7 +2372,8 @@ def cmd_publish(args: argparse.Namespace) -> int:
         slug=args.slug,
         target_share=args.dest,
         dry_run=args.dry_run,
-        force=args.force
+        force=args.force,
+        include_vault=getattr(args, "include_vault", False)
     )
     if success:
         print(colorize(msg, COLOR_GREEN if not args.dry_run else COLOR_CYAN))
@@ -2485,7 +2521,35 @@ def cmd_scaffold(args: argparse.Namespace) -> int:
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         from itinfra_scaffold import cmd_scaffold as run_scaffold
 
-    return run_scaffold(args)
+def cmd_reconcile(args: argparse.Namespace) -> int:
+    """Handler per la Reverse Reconciliation da As-Built verso il manifesto (Release v0.9.12)."""
+    try:
+        from itinfra_reconcile import ProjectReconciler
+    except ImportError:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from itinfra_reconcile import ProjectReconciler
+
+    repo_root = Path(__file__).resolve().parent.parent
+    reconciler = ProjectReconciler(repo_root=repo_root)
+    ok, msg, _ = reconciler.reconcile(
+        slug=args.slug.strip().lower(),
+        source_doc=getattr(args, "from_doc", None),
+        dry_run=getattr(args, "dry_run", False)
+    )
+    print(msg)
+    return 0 if ok else 1
+
+def cmd_interview(args: argparse.Namespace) -> int:
+    """Handler per la Checkpointed Modular Interview (Release v0.9.12)."""
+    try:
+        from itinfra_interview import cmd_interview as run_interview
+    except ImportError:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from itinfra_interview import cmd_interview as run_interview
+
+    return run_interview(args)
 
 def cmd_start(args: argparse.Namespace) -> int:
     """Handler unificato per avviare l'onboarding di un progetto o l'ambiente ITInfra (Release v0.9.11)."""
@@ -2513,6 +2577,28 @@ def cmd_start(args: argparse.Namespace) -> int:
     print(colorize("\n" + "=" * 68, COLOR_BOLD + COLOR_CYAN))
     print(f"  🚀 ITINFRA ONBOARDING UNIFICATO: '{slug}'")
     print("=" * 68)
+
+    force = getattr(args, "force", False)
+
+    # Typo Guard: intercetta errori di digitazione verso progetti esistenti
+    if not target_dir.exists() and not force:
+        try:
+            from itinfra_scaffold import ProjectScaffolder
+            scaffolder = ProjectScaffolder(repo_root=repo_root)
+            similar = scaffolder.find_similar_slug(slug)
+            if similar:
+                print(colorize("\n" + "=" * 68, COLOR_BOLD + COLOR_YELLOW))
+                print("  ⚠️ [TYPO GUARD] ATTENZIONE: POSSIBILE ERRORE DI DIGITAZIONE")
+                print("=" * 68)
+                print(f"Il progetto '{slug}' non esiste. Sono stati rilevati progetti con nome simile:")
+                for sim in similar:
+                    print(f"  • {sim}  ->  (Usa: it start {sim})")
+                print(f"\nSe intendevi davvero creare da zero un nuovo progetto chiamato '{slug}', aggiungi il flag '--force':")
+                print(f"  it start {slug} --force")
+                print("=" * 68 + "\n")
+                return 1
+        except Exception:
+            pass
 
     # 1. Inizializzazione automatica del manifesto
     if not target_dir.exists() or not manifest_target.exists():
@@ -2879,6 +2965,18 @@ def main():
     v_audit.add_argument("project_slug", help="Slug del progetto")
     v_audit.add_argument("--passphrase", help="Master passphrase opzionale per verifica incrociata dei secret")
 
+    v_exp = sub_vault.add_parser("export-bundle", help="Esporta i secret in un bundle cifrato (.vbundle) per il team (Release v0.9.12)")
+    v_exp.add_argument("project_slug", help="Slug del progetto")
+    v_exp.add_argument("--out", required=True, help="Percorso del file .vbundle di output")
+    v_exp.add_argument("--passphrase", help="Master passphrase del vault locale")
+    v_exp.add_argument("--bundle-pass", help="Passphrase condivisa di team per cifrare il bundle")
+
+    v_imp = sub_vault.add_parser("import-bundle", help="Importa i secret da un bundle cifrato (.vbundle) (Release v0.9.12)")
+    v_imp.add_argument("project_slug", help="Slug del progetto")
+    v_imp.add_argument("--in", dest="bundle_in", required=True, help="Percorso del file .vbundle da importare")
+    v_imp.add_argument("--bundle-pass", help="Passphrase condivisa di team utilizzata per cifrare il bundle")
+    v_imp.add_argument("--passphrase", help="Master passphrase del vault locale di destinazione")
+
     # Comando worktree
     p_wt = subparsers.add_parser("worktree", help="Gestione Git Worktrees per agenti AI concorrenti")
     sub_wt = p_wt.add_subparsers(dest="wt_action", help="Azione worktree", required=True)
@@ -2987,6 +3085,7 @@ def main():
     p_pub.add_argument("--dest", default=None, help=f"Percorso della share centrale (default: '{DEFAULT_CENTRAL_SHARE}')")
     p_pub.add_argument("--dry-run", action="store_true", help="Simula il Quality Gate e la pubblicazione senza copiare file")
     p_pub.add_argument("--force", action="store_true", help="Forza la sovrascrittura anche se il progetto remoto e' approvato")
+    p_pub.add_argument("--include-vault", action="store_true", help="Include il file cifrato dei secret (.vault.enc) nella pubblicazione sulla share")
 
     # Comando sync-engine (Release v0.9)
     p_sync = subparsers.add_parser("sync-engine", help="Sincronizza e aggiorna template, script e guide dalla share master (Release v0.9)")
@@ -3015,11 +3114,26 @@ def main():
     p_scaf.add_argument("--dry-run", action="store_true", help="Simula lo scaffolding senza scrivere su disco")
     p_scaf.add_argument("--force", action="store_true", help="Forza la riscrittura dei template esistenti")
 
+    # Comando reconcile (Release v0.9.12)
+    p_rec = subparsers.add_parser("reconcile", help="Riconcilia a ritroso le modifiche di 06-As-Built.md nel manifesto di progetto (Release v0.9.12)")
+    p_rec.add_argument("slug", help="Slug del progetto da riconciliare")
+    p_rec.add_argument("--from-doc", default=None, help="Documento As-Built alternativo (default: 06-As-Built.md)")
+    p_rec.add_argument("--dry-run", action="store_true", help="Simula la riconciliazione e visualizza il Drift Report senza scrivere")
+
+    # Comando interview (Release v0.9.12)
+    p_int = subparsers.add_parser("interview", help="Conduce l'intervista guidata a checkpoint atomici salvando lo stato su disco (Release v0.9.12)")
+    p_int.add_argument("slug", help="Slug del progetto da intervistare")
+    p_int.add_argument("--status", action="store_true", help="Mostra lo stato di avanzamento dei 5 blocchi di intervista")
+    p_int.add_argument("--prompt", choices=["scope", "network", "compute", "security", "atp"], help="Genera il prompt per uno specifico blocco")
+    p_int.add_argument("--block", choices=["scope", "network", "compute", "security", "atp"], help="Seleziona il blocco tematico attivo")
+    p_int.add_argument("--set", nargs="+", help="Salva una o più risposte nel formato chiave=valore")
+
     # Comando start (Release v0.9.11)
     p_start = subparsers.add_parser("start", help="Avvia l'onboarding completo del progetto (init + scaffold + ui) o mostra le opzioni di avvio (Release v0.9.11)")
     p_start.add_argument("slug", nargs="?", default=None, help="Slug del progetto da avviare (opzionale)")
     p_start.add_argument("--client", default=None, help="Nome del cliente (opzionale)")
     p_start.add_argument("--name", default=None, help="Titolo del progetto (opzionale)")
+    p_start.add_argument("--force", action="store_true", help="Forza la creazione anche se esistono progetti con nome simile (Typo Guard)")
     p_start.add_argument("--open", action="store_true", help="Apre la dashboard nel browser predefinito")
 
     args = parser.parse_args()
@@ -3074,6 +3188,10 @@ def main():
         return cmd_ui(args)
     elif args.command == "scaffold":
         return cmd_scaffold(args)
+    elif args.command == "reconcile":
+        return cmd_reconcile(args)
+    elif args.command == "interview":
+        return cmd_interview(args)
     elif args.command == "start":
         return cmd_start(args)
     else:
