@@ -31,6 +31,7 @@ related_docs:
   - "guide-global-memory-system-test-01"
   - "guide-local-workspace-central-publish-01"
   - "guide-onboarding-tecnici-antigravity-01"
+  - "guide-pipeline-creazione-guidata-antigravity-01"
   - "guide-itinfra-repository-roadmap-v02"
 depends_on: []
 classification: "public"
@@ -114,6 +115,11 @@ relations:
     relationType: "documents"
     weight: 0.95
     description: "Specifica dell'architettura di Continuous Delivery, Client Startup Auto-Sync, VS Code Tasks e Generative UI"
+  - targetTitle: "Guida Operativa — Pipeline di Creazione Guidata OKF v0.2 con Antigravity"
+    targetId: "guide-pipeline-creazione-guidata-antigravity-01"
+    relationType: "documents"
+    weight: 1.0
+    description: "Architettura dettagliata e diagramma della pipeline deterministica end-to-end per la creazione documentale OKF v0.2 con Antigravity"
   - targetTitle: "Visione Strategica e Roadmap Esecutiva ITInfra"
     targetId: "guide-itinfra-repository-roadmap-v02"
     relationType: "documents"
@@ -151,12 +157,14 @@ graph TD
     DOCS --> PUB[11-GUIDA-LOCAL-WORKSPACE-CENTRAL-PUBLISH.md<br/>Local Workspace & Central Publish]
     DOCS --> ONB[12-GUIDA-ONBOARDING-TECNICI-ANTIGRAVITY.md<br/>Onboarding Client Antigravity]
     DOCS --> INTER[13-SPECIFICA-CLIENT-INTERACTIVE-AUTO-DISTRIBUTION.md<br/>Client Interactivity & Auto-Dist]
+    DOCS --> PIPE[14-PIPELINE-CREAZIONE-GUIDATA-ANTIGRAVITY-OKF.md<br/>Pipeline Creazione Guidata Antigravity]
     
     CLI -.-> CLI_PY[scripts/itinfra.py]
     GLOBAL -.-> INV_CLI[scripts/itinfra_inventory.py]
     TEST -.-> TEST_PY[scripts/itinfra_test_suite.py]
     PUB -.-> PUB_PY[scripts/itinfra_publish.py]
     INTER -.-> DEPLOY_PY[scripts/itinfra_deploy.py]
+    PIPE -.-> SCAF_PY[scripts/itinfra_scaffold.py]
     ONB -.-> SKILL_SETUP[.agents/skills/itinfra-setup/]
     TROUBLE -.-> SKILL_TB[.agents/skills/itinfra-troubleshooter/]
     AGENT -.-> SKILL[.agents/skills/itinfra-assistant/]
@@ -183,6 +191,7 @@ graph TD
 | [`11-GUIDA-LOCAL-WORKSPACE-CENTRAL-PUBLISH.md`](./11-GUIDA-LOCAL-WORKSPACE-CENTRAL-PUBLISH.md) | `guide` | Architettura Local Workspace & Central Publish, setup Windows 11 su SSD locale e Quality Gate pre-publish. |
 | [`12-GUIDA-ONBOARDING-TECNICI-ANTIGRAVITY.md`](./12-GUIDA-ONBOARDING-TECNICI-ANTIGRAVITY.md) | `guide` | Manuale di benvenuto e setup rapido per client Windows 11, automazione One-Click e skill itinfra-setup. |
 | [`13-SPECIFICA-CLIENT-INTERACTIVE-AUTO-DISTRIBUTION.md`](./13-SPECIFICA-CLIENT-INTERACTIVE-AUTO-DISTRIBUTION.md) | `specification` | Architettura di Continuous Delivery automatica su share master, Client Startup Auto-Sync, VS Code Tasks GUI e Generative UI. |
+| [`14-PIPELINE-CREAZIONE-GUIDATA-ANTIGRAVITY-OKF.md`](./14-PIPELINE-CREAZIONE-GUIDATA-ANTIGRAVITY-OKF.md) | `guide` | Architettura e diagramma della pipeline di creazione guidata OKF v0.2 con Google Antigravity, auto-scaffolding e Zero-Hallucination. |
 
 ---
 

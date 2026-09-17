@@ -56,7 +56,8 @@ ItInfra/
 │   ├── 10-GUIDA-GLOBAL-MEMORY-SYSTEM-TEST.md    ← Global Staging Memory e Enterprise System Test Suite
 │   ├── 11-GUIDA-LOCAL-WORKSPACE-CENTRAL-PUBLISH.md ← Architettura client locale e publishing su share centrale
 │   ├── 12-GUIDA-ONBOARDING-TECNICI-ANTIGRAVITY.md ← Onboarding immediato e comandi a zero attrito
-│   └── 13-SPECIFICA-CLIENT-INTERACTIVE-AUTO-DISTRIBUTION.md ← Specifica distribuzione automatizzata
+│   ├── 13-SPECIFICA-CLIENT-INTERACTIVE-AUTO-DISTRIBUTION.md ← Specifica distribuzione automatizzata
+│   └── 14-PIPELINE-CREAZIONE-GUIDATA-ANTIGRAVITY-OKF.md ← Pipeline di creazione guidata OKF v0.2 con Antigravity
 │
 ├── projects/                          ← Registro progetti e manifest globali
 │   ├── _schema/                       ← Schema JSON formale del manifest
