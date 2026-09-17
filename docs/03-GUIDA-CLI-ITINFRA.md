@@ -286,24 +286,33 @@ python scripts/itinfra.py export-html severino-srl
 
 ---
 
-### 3.8 `vault` — Local Encrypted Secret Vault (AES-256-GCM)
-Gestisce l'archivio locale dei secret cifrati `projects/<slug>/.vault.enc` protetto da PBKDF2-HMAC-SHA256 (100k iterazioni), AES-256-GCM e lock atomico `.vault.lock`.
+### 3.8 `vault` — Local Encrypted Secret Vault (AES-256-GCM) & Team Bundling
+Gestisce l'archivio locale dei secret cifrati `projects/<slug>/.vault.enc` protetto da PBKDF2-HMAC-SHA256 (100k iterazioni), AES-256-GCM, lock atomico `.vault.lock` e direttiva anti-leak rigorosa (zero tracce nella shell history o nella chat LLM):
 
 ```bash
 # Inizializza il vault per un progetto:
 python scripts/itinfra.py vault init <slug> [--passphrase "<pass>"] [--overwrite]
 
-# Salva o aggiorna un secret cifrato:
-python scripts/itinfra.py vault set <slug> <key> [--value "<val>"] [--passphrase "<pass>"]
+# Salva o aggiorna un secret cifrato (mascherato interattivo anti-leak con getpass):
+python scripts/itinfra.py vault set <slug> <key>
 
-# Recupera e decifra un secret:
-python scripts/itinfra.py vault get <slug> <key> [--passphrase "<pass>"]
+# Salva tramite standard input sicuro (zero tracce nella shell history):
+Get-Content secret.txt | python scripts/itinfra.py vault set <slug> <key>
 
-# Elenca le chiavi censite nel vault:
-python scripts/itinfra.py vault list <slug> [--passphrase "<pass>"]
+# Recupera e decifra un secret nel terminale locale:
+python scripts/itinfra.py vault get <slug> <key>
+
+# Elenca le chiavi censite nel vault (nomi dei path, mai i valori):
+python scripts/itinfra.py vault list <slug>
 
 # Esegue l'audit dei puntatori vault:// nei documenti Markdown:
-python scripts/itinfra.py vault audit <slug> [--passphrase "<pass>"]
+python scripts/itinfra.py vault audit <slug>
+
+# Esporta bundle cifrato (.vbundle) con passphrase di team per scambio sicuro:
+python scripts/itinfra.py vault export-bundle <slug> --out team.vbundle
+
+# Importa bundle cifrato nel vault locale:
+python scripts/itinfra.py vault import-bundle <slug> --in team.vbundle
 ```
 
 ---
@@ -491,8 +500,9 @@ python scripts/itinfra.py test-suite --out exports/system-audit.html
 
 ---
 
-### 3.18 `publish` — Central Publisher con Pre-Flight Quality Gate (Release v0.9)
-Pubblica in modo atomico il progetto locale su storage master centrale (`\\fileserv01\dati01\workaure`) isolando le sessioni locali di lavoro da percorsi di rete instabili o lenti. Esegue prima un Quality Gate bloccante a 3 stadi (linter OKF v0.2 a 0 errori, strict grounding audit e scansione anti-leak credenziali in chiaro):
+### 3.18 `publish` — Central Publisher con Remote Lock & Drift Detection (Release v0.9 / v0.9.13)
+Pubblica in modo atomico il progetto locale su storage master centrale (`\\fileserv01\dati01\workaure`). 
+Include protezione da lock concorrente (`.publish_<slug>.lock`), staging-then-swap atomico e fingerprinting crittografico SHA-256 (`.publish_manifest.json`) per intercettare manomissioni o modifiche remote non tracciate:
 
 ```bash
 # Pubblicazione standard sulla share centrale:
@@ -501,10 +511,10 @@ python scripts/itinfra.py publish <slug>
 # Simulazione (dry-run) per verificare Quality Gate e lista file pronti:
 python scripts/itinfra.py publish <slug> --dry-run
 
-# Pubblicazione verso percorso target personalizzato:
-python scripts/itinfra.py publish <slug> --dest "\\fileserv01\dati01\workaure"
+# Inclusione del secret vault cifrato nella pubblicazione:
+python scripts/itinfra.py publish <slug> --include-vault
 
-# Forzatura sovrascrittura di progetti remoti approvati:
+# Forzatura sovrascrittura in caso di remote drift o documenti già approved:
 python scripts/itinfra.py publish <slug> --force
 ```
 
@@ -513,7 +523,8 @@ python scripts/itinfra.py publish <slug> --force
 [SUCCESSO] Progetto 'severino-srl' pubblicato con successo!
   Sorgente: C:\itinfra\projects\severino-srl
   Destinazione centrale: \\fileserv01\dati01\workaure\projects\severino-srl
-  File sincronizzati: 19 (481.6 KB)
+  File sincronizzati: 14 (512.4 KB)
+  Protezione Concorrenza: Lock atomico acquisito e rilasciato con successo
   Quality Gate OKF v0.2: 100% CONFORME (0 errori)
 ```
 
@@ -528,32 +539,22 @@ python scripts/itinfra.py sync-engine
 
 # Simulazione differenziale (dry-run):
 python scripts/itinfra.py sync-engine --dry-run
-
-# Sincronizzazione da sorgente specifica:
-python scripts/itinfra.py sync-engine --source "\\fileserv01\dati01\workaure"
-```
-
-**Esempio di Output:**
-```text
-[SUCCESSO SYNC-ENGINE] Motore locale allineato con successo!
-  Sorgente centrale: \\fileserv01\dati01\workaure
-  File aggiornati: 0 su 37 scansionati.
 ```
 
 ---
 
-### 3.20 `start` — Onboarding All-in-One del Progetto (Release v0.9.11)
-Esegue l'intero ciclo di onboarding a passaggio singolo: inizializza il manifesto di progetto, propaga le variabili con auto-scaffold nei 10 documenti OKF v0.2 e apre il Cruscotto Esecutivo Generative UI:
+### 3.20 `start` — Onboarding All-in-One del Progetto (Release v0.9.11 / v0.9.13)
+Esegue l'intero ciclo di onboarding a passaggio singolo: inizializza il manifesto di progetto, protegge da errori di battitura con la **Typo Guard**, propaga le variabili con auto-scaffold e apre il Cruscotto Esecutivo Generative UI:
 
 ```bash
-# Avvio rapido con cliente e nome standard:
+# Avvio rapido standard:
 python scripts/itinfra.py start <slug>
 
-# Avvio con metadati espliciti:
-python scripts/itinfra.py start acme-dc --client "Acme S.p.A." --name "Modernizzazione Data Center"
+# Avvio con metadati espliciti e supporto milestone:
+python scripts/itinfra.py start acme-dc --client "Acme S.p.A." --name "Modernizzazione DC" --phase design
 
-# Avvio aprendo direttamente la dashboard nel browser predefinito:
-python scripts/itinfra.py start acme-dc --open
+# Forzatura creazione ignorando avvisi di Typo Guard:
+python scripts/itinfra.py start acme-dc --force
 
 # Da terminale rapido Windows:
 it start acme-dc
@@ -561,41 +562,79 @@ it start acme-dc
 
 ---
 
-### 3.21 `scaffold` — Propagazione Automatica e Auto-Healing (Release v0.9.10 / v0.9.11)
-Analizza `project-manifest.yaml` e propaga in modo atomico tutti i parametri certi (CIDR, VLAN, hostname, apparati hardware, prefissi vault) all'interno dei 10 documenti OKF v0.2. Se il progetto non è ancora presente, lo inizializza automaticamente senza generare errori (Auto-Healing trasparente):
+### 3.21 `scaffold` — Auto-Scaffolding & Phased Milestones (Release v0.9.10 / v0.9.13)
+Analizza `project-manifest.yaml` e propaga i parametri certi (CIDR, VLAN, host, apparati) nei documenti OKF v0.2, con supporto a milestone progressive (`--phase`):
 
 ```bash
-# Esecuzione dello scaffolding su un progetto:
+# Scaffolding completo di tutti i 10 documenti:
 python scripts/itinfra.py scaffold <slug>
+
+# Scaffolding selettivo per milestone:
+python scripts/itinfra.py scaffold <slug> --phase assessment   # Solo 01-RSD-URS.md
+python scripts/itinfra.py scaffold <slug> --phase design       # Documenti 01, 02, 03
+python scripts/itinfra.py scaffold <slug> --phase staging      # Documenti 01..05
+python scripts/itinfra.py scaffold <slug> --phase deployment   # Documenti 01..06
 
 # Simulazione preflight senza scrittura su disco:
 python scripts/itinfra.py scaffold <slug> --dry-run
-
-# Forzatura riscrittura template esistenti:
-python scripts/itinfra.py scaffold <slug> --force
-
-# Da terminale rapido:
-it scaffold <slug>
 ```
 
 ---
 
 ### 3.22 `ui` / `dashboard` — Cruscotto Esecutivo Generative UI (Release v0.9.9)
-Genera e visualizza l'Enterprise Cockpit Generative UI con design token scuri e visualizzazione sinottica della matrice a 10 documenti per tutti i progetti:
+Genera e visualizza l'Enterprise Cockpit Generative UI con design token scuri e matrice sinottica dei 10 documenti:
 
 ```bash
-# Genera la dashboard e stampa il tag <agent-embed> per la chat Antigravity:
 python scripts/itinfra.py ui
-
-# Genera e apre la dashboard nel browser web:
 python scripts/itinfra.py ui --open
-
-# Salvataggio in un percorso personalizzato:
-python scripts/itinfra.py ui --out "C:/Users/tecnico/dashboard.html"
-
-# Da terminale rapido:
-it ui
 ```
 
+---
 
+### 3.23 `reconcile` — Reverse Reconciliation Engine (Release v0.9.12)
+Estrae variazioni, apparati reali e subnet da `06-As-Built.md` (§3 Deviazioni, §4 Hardware, §5 IP e blocchi ````yaml:inventory`), genera il Drift Report rispetto al manifesto e sincronizza a ritroso `project-manifest.yaml`:
 
+```bash
+# Simulazione e generazione Drift Report a video:
+python scripts/itinfra.py reconcile <slug> --dry-run
+
+# Riconciliazione effettiva e aggiornamento automatico del manifesto:
+python scripts/itinfra.py reconcile <slug>
+
+# Riconciliazione da documento As-Built specifico:
+python scripts/itinfra.py reconcile <slug> --from-doc projects/<slug>/06-As-Built-Collaudato.md
+```
+
+---
+
+### 3.24 `interview` — Intervista Modulare a Checkpoint Atomici (Release v0.9.12)
+Guida la raccolta requisiti suddividendola in 5 blocchi logici (`scope`, `network`, `compute`, `security`, `atp`), salvando l'avanzamento incrementale su disco (`_interview_state.json`):
+
+```bash
+# Visualizza lo stato di completamento dei 5 blocchi:
+python scripts/itinfra.py interview <slug> --status
+
+# Genera il prompt per un blocco specifico da incollare o inviare in chat:
+python scripts/itinfra.py interview <slug> --prompt network
+
+# Registra una risposta tecnica nel blocco attivo:
+python scripts/itinfra.py interview <slug> --block network --set dc_ip="10.100.10.10"
+```
+
+---
+
+### 3.25 `check-share` — Diagnostica e Verifica Permessi Share Master (Release v0.9.1)
+Verifica la connettività di rete LAN/VPN e testa i permessi di lettura su cartelle core (`scripts/`, `templates/`, `docs/`) e di scrittura su `projects/`:
+
+```bash
+python scripts/itinfra.py check-share
+```
+
+---
+
+### 3.26 `deploy-share` — Distribuzione Differenziale su Share Master (Release v0.9.5)
+Distribuisce in modo differenziale e atomico template, guide e script verso la share master centrale `\\fileserv01\dati01\workaure`:
+
+```bash
+python scripts/itinfra.py deploy-share [--dry-run]
+```

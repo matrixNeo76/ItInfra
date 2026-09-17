@@ -163,13 +163,13 @@ Su qualsiasi workstation client della rete LAN o VPN:
 
 ---
 
-## 5. Comando `publish`: Meccanismo di Pubblicazione e Quality Gate
+## 5. Comando `publish`: Meccanismo di Pubblicazione, Quality Gate & Drift Guard (Release v0.9 / v0.9.13)
 
-Quando la documentazione di un cliente è completata (o al passaggio di milestone):
+Quando la documentazione di un cliente è completata o pronta per il rilascio di milestone:
 
 ### Sintassi del Comando
 ```powershell
-python scripts/itinfra.py publish <slug> [--dest <path>] [--dry-run] [--force]
+python scripts/itinfra.py publish <slug> [--dest <path>] [--dry-run] [--force] [--include-vault]
 ```
 
 ### Parametri e Opzioni
@@ -178,19 +178,26 @@ python scripts/itinfra.py publish <slug> [--dest <path>] [--dry-run] [--force]
 | `<slug>` | Nome univoco della cartella progetto in `projects/` da pubblicare |
 | `--dest` | *(Opzionale)* Sovrascrive il percorso della share centrale configurata in `.itinfra_config.json` |
 | `--dry-run` | Esegue il Quality Gate completo e mostra l'elenco dei file pronti senza copiare nulla sul server |
-| `--force` | Forza la sovrascrittura nel caso in cui il progetto remoto contenga documenti già in stato `approved` |
+| `--force` | Forza la sovrascrittura in caso di progetti approvati o conflitti di drift rilevati sulla share |
+| `--include-vault` | Include il file cifrato dei secret (`.vault.enc`) nella cartella remota pubblicata |
 
-### I 3 Controlli del Pre-Flight Quality Gate
-1. **Linter OKF v0.2:** Tutti i documenti markdown in `projects/<slug>/` vengono analizzati con `OKFValidator`. Se viene rilevato anche un solo errore di schema, `id`, `tags` o formattazione, la pubblicazione viene respinta.
-2. **Strict Grounding Audit:** Verifica semantica dell'assenza di placeholder illegali o parametri di rete incongruenti.
-3. **Scansione Anti-Leak:** Ispezione di tutte le righe dei documenti alla ricerca di password in chiaro (es. `admin_password: "..."`). Le credenziali DEVONO essere referenziate tramite schema `vault://it/projects/<slug>/...` oppure valorizzate come `<DA-RICHIEDERE>`.
+### Controlli del Pre-Flight Quality Gate
+1. **Linter OKF v0.2 & Mermaid Syntax Linter:** Tutti i documenti Markdown in `projects/<slug>/` vengono analizzati con `OKFValidator`. Vengono controllati schema OKF v0.2, campi obbligatori e diagrammi Mermaid (24 tipi canonici e parentesi bilanciate).
+2. **Strict Grounding Audit:** Verifica semantica dell'assenza di placeholder illegali o subnet incongruenti, con supporto ai blocchi canonici ```yaml:inventory e ```yaml:network.
+3. **Scansione Anti-Leak:** Ispezione riga per riga contro credenziali in chiaro (es. `admin_password: "..."`). Le credenziali devono usare riferimenti `vault://it/projects/<slug>/...` o `<DA-RICHIEDERE>`.
+
+### Protezioni Distribuite (Release v0.9.12 & v0.9.13)
+- **Lock Remoto Distribuito (`RemoteShareLock`):** Acquisizione atomica O_CREAT|O_EXCL del lockfile `.publish_<slug>.lock` sulla share prima del trasferimento per prevenire scritture concorrenti.
+- **Rilevamento del Drift Remoto (`.publish_manifest.json`):** Generazione automatica dell'impronta crittografica SHA-256 di tutti i file sincronizzati. Se un file sulla share master è stato modificato out-of-band, il comando blocca il publish segnalando `[CONFLITTO REMOTO RILEVATO]`.
+- **Staging-then-Swap Atomico:** Scrittura preliminare su `.staging_<slug>_<pid>_<ts>` e trasferimento finale atomico per prevenire corruzioni da disconnessioni di rete.
 
 ### Esempio di Risultato di Successo
-```
+```text
 [SUCCESSO] Progetto 'severino-srl' pubblicato con successo!
   Sorgente: C:\itinfra\projects\severino-srl
   Destinazione centrale: \\fileserv01\dati01\workaure\projects\severino-srl
-  File sincronizzati: 19 (481.6 KB)
+  File sincronizzati: 14 (512.4 KB)
+  Protezione Concorrenza: Lock atomico acquisito e rilasciato con successo
   Quality Gate OKF v0.2: 100% CONFORME (0 errori)
 ```
 
