@@ -372,16 +372,46 @@ Il progetto si è evoluto da una raccolta iniziale di template statici a un **ec
 7. **v0.8 Global Staging Memory & Enterprise System Test Suite:**
    - Staging scratchpad globale ([`projects/_global_scratchpad.md`](./projects/_global_scratchpad.md)) per la condivisione aziendale di best practice, limitazioni hardware note e linee guida vendor (`memory --global`).
    - Sanitizer preventivo anti-leakage che blocca categoricamente qualsiasi secret o credenziale con `PermissionError`.
-   - **Enterprise System Test Suite** (`scripts/itinfra_test_suite.py` / `itinfra.py test-suite`): batteria di collaudo automatizzata end-to-end che testa programmaticamente tutti i 10 moduli del sistema con **Pass Rate 100%**.
+   - **Enterprise System Test Suite** (`scripts/itinfra_test_suite.py` / `itinfra.py test-suite`): batteria di collaudo automatizzata end-to-end con **Pass Rate 100%**.
    - **Unified Verification Dashboard** ([`projects/system-test-report.html`](./projects/system-test-report.html)): report HTML offline consolidato **100% Zero-CDN** con scorecard KPI esecutive e log diagnostici.
+
+8. **v0.9 — Local Workspace & Central Publish Architecture:**
+   - Disaccoppiamento tra workspace locale ad alte prestazioni (SSD) e storage master centrale SMB (`\\fileserv01\dati01\workaure`).
+   - Modulo `scripts/itinfra_publish.py` con Quality Gate pre-publish atomico, lock distribuito anti-collisione (`.publish_<slug>.lock`) e CLI `publish`, `sync-engine`.
+
+9. **v0.9.5 — Client Interactivity & Continuous Delivery:**
+   - Wrapper CLI rapido a zero attrito `it.cmd` (`it status`, `it publish`, `it start`, `it check`).
+   - Diagnostica di rete preventiva `check-share` e distribuzione differenziale master `deploy-share`.
+
+10. **v0.9.9 — Enterprise Generative UI & Executive Cockpit:**
+    - Cruscotto esecutivo offline `enterprise_dashboard.html` (`it ui`) con design token scuri, telemetria in tempo reale e matrice interattiva dei 10 documenti OKF v0.2.
+
+11. **v0.9.10 — Auto-Scaffolding Engine & Manifest Propagation:**
+    - Motore `scripts/itinfra_scaffold.py` (`it scaffold <slug>`) per generare e allineare istantaneamente i 10 documenti dal manifesto, preservando Zero-Hallucination.
+
+12. **v0.9.11 — All-in-One Onboarding & Zero-Friction Desktop Flow:**
+    - Comando universale `it start <slug>` (init + auto-scaffold + cruscotto UI) e auto-healing trasparente in caso di manifesto assente.
+
+13. **v0.9.12 — Resiliency, Typo Guard & Reverse Reconciliation:**
+    - Fuzzy Typo Guard con `difflib` ($\ge 0.70$) contro cartelle orfane, motore di riconciliazione inversa `it reconcile <slug>`, intervista guidata a checkpoint `it interview <slug>` e secret team bundling `.vbundle`.
+
+14. **v0.9.13 — Enterprise Integrity, Mermaid Linter, Anti-Leak & Remote Drift Guard:**
+    - Validazione sintattica offline per blocchi ```mermaid, blocchi canonici strutturati ```yaml:inventory e ```yaml:network, scaffolding a milestone (`--phase`), rilevamento conflitti out-of-band con `.publish_manifest.json` e direttiva vincolante `DIVIETO ASSOLUTO CHAT LEAKAGE`.
+
+15. **v0.9.14 — Remote Resiliency, Vault TTL, VPN FastPath & Semantic Drift Guard:**
+    - **Dead Lock SMB Auto-Break**: lock con TTL di 300s, risoluzione automatica lock orfani post-crash e opzione CLI `--break-lock`.
+    - **Vault Bundle TTL & Key Rotation**: scadenza temporale certificata (default 168h/7d, `--ttl-hours`, `--force-expired`) per conformità NIS2/ISO 27001 e re-encryption totale `it vault rotate-key <slug>`.
+    - **SMB/VPN Stat-First Fast Path**: verifica immediata di dimensione e timestamp mtime in `.publish_manifest.json` per evitare hash byte-a-byte su VPN lente.
+    - **D3 Semantic Drift Guard**: controllo incrociato tra dispositivi in blocchi YAML strutturati ed entità/relazioni del frontmatter con avviso proattivo `[WARN: Unmapped Entity in OKF Graph]`.
+    - **Enterprise Test Suite 16/16**: collaudo a 16 moduli integrati con 100% Pass Rate.
 
 ---
 
-### 🔮 Tabella di Marcia Futura: Prossimi Traguardi (v0.9+ / v1.0)
+### 🔮 Tabella di Marcia Futura: Prossimi Traguardi (v0.10+ / v1.0)
 
-I prossimi sviluppi mirano all'apertura verso l'ecosistema esterno di protocolli agentici (MCP), automazione CI/CD avanzata e integrazione bidirezionale con i sistemi IPAM/DCIM:
+I prossimi sviluppi mirano all'espansione delle topologie complesse e all'automazione avanzata mantenendo l'architettura 100% Offline-First:
 
-#### 🚀 Release v0.9 — MCP Server, Advanced Topology & Automated CI/CD (Pianificato Q1 2027)
+#### 🚀 Release v0.10 — Advanced Topology Engine & Automated CI/CD (Pianificato Q1 2027)
 - [ ] **Server MCP Standalone (`scripts/itinfra_mcp.py`):**
   - Esposizione di tutti i tool della suite (init, status, validate, audit-consistency, memory, inventory, troubleshoot, test-suite) come **Server Model Context Protocol (MCP)** standard.
   - Integrazione nativa headless con Claude Desktop, Cursor MCP, Windsurf, Roo Code e agenti LLM esterni.

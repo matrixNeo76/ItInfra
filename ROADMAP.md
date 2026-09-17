@@ -466,6 +466,26 @@ timeline
 
 ---
 
+### ✅ Release v0.9.14 — Remote Resiliency, Vault TTL, VPN FastPath & Semantic Drift Guard (Completato)
+- [x] **Dead Lock SMB Auto-Break & Stale Lock Protection (`RemoteShareLock`):**
+  - Arricchimento dei metadati di lock su share centrale con `ttl_sec: 300` (5 minuti), hostname, PID e utente.
+  - Risoluzione automatica di lock orfani generati da crash improvvisi del client, interruzioni di corrente o disconnessioni di rete: se l'età del lock supera il TTL, il lockfile viene automaticamente rimosso e riacquisito in sicurezza.
+  - Opzione esplicita da terminale `it publish <slug> --break-lock` per consentire ai sistemisti di forzare la rimozione del lock in caso di emergenza.
+- [x] **Vault Bundle Expiration TTL & Key Rotation (`it vault rotate-key`):**
+  - Integrazione di scadenza temporale `expires_at` nei file `.vbundle` esportati (`--ttl-hours`, default 168 ore / 7 giorni) in piena aderenza ai requisiti di tracciabilità e obsolescenza controllata NIS2 e ISO/IEC 27001.
+  - Rifiuto categorico di importazione di bundle scaduti a tutela dell'integrità del vault, con override esplicito autorizzato tramite `--force-expired`.
+  - Comando di rotazione crittografica `it vault rotate-key <slug> [--new-passphrase <pass>]`: ri-cifra l'intero vault locale con un nuovo salt crittografico PBKDF2 (16 bytes casuali) e nuovi nonce AES-256-GCM freschi, aggiornando metadati di rotazione e contatore.
+- [x] **SMB/VPN Stat-First Fast Path (`it publish <slug>`):**
+  - Ottimizzazione ad alte prestazioni del Quality Gate remoto su connessioni geografiche o VPN: archiviazione di `size` e timestamp `mtime_epoch` in `.publish_manifest.json`.
+  - Nella verifica del drift, se la dimensione del file remoto e il timestamp coincidono con i dati registrati ($\Delta t < 2.0s$), il calcolo dell'hash SHA-256 byte-a-byte viene saltato all'istante, eliminando il collo di bottiglia I/O di rete.
+- [x] **D3 Semantic Drift Guard & Unmapped Entities Check (`audit-consistency`):**
+  - Controllo semantico incrociato tra i nodi censiti nei blocchi ```yaml:inventory / ```yaml:network e le `entities` o `relations` definite nel frontmatter OKF v0.2.
+  - Emissione automatica dell'avviso `[WARN: Unmapped Entity in OKF Graph]` per prevenire drift informativo e assicurare che tutti gli apparati fisici siano navigabili nel grafo ontologico interattivo D3.js.
+- [x] **Enterprise System Test Suite (MOD-16):**
+  - Introduzione del modulo 16 (`_test_resiliency_vault_ttl_and_vpn_fastpath`) che collauda programmaticamente auto-break lock, break-lock CLI, bundle expiry, force-expired, key rotation, Stat-First fast path e unmapped entity detection (16/16 moduli superati, 100% Pass Rate).
+
+---
+
 ### 🔮 Release v0.10 — Advanced Topology Engine, Offline Exporters & Automated CI/CD (Pianificato Q1 2027)
 - [ ] **Architettura 100% Offline-First & Zero-Dipendenze (Design Philosophy Confermato):**
   - Mantenimento dell'infrastruttura snella basata su filesystem locale, Python standard e Git/SMB. Nessuna dipendenza da server MCP esterni, demoni o microservizi REST API da manutenere.

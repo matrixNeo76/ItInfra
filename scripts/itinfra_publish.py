@@ -36,12 +36,23 @@ class RemoteShareLock:
     Gestore del lock atomico e distribuito sulla share centrale / storage SMB.
     Previene race condition, corruzione dei file e scritture concorrenti durante la pubblicazione.
     """
-    def __init__(self, lock_path: Path, timeout: float = 15.0, poll_interval: float = 0.5, stale_timeout: float = 180.0):
+    def __init__(self, lock_path: Path, timeout: float = 15.0, poll_interval: float = 0.5, stale_timeout: float = 300.0):
         self.lock_path = lock_path
         self.timeout = timeout
         self.poll_interval = poll_interval
         self.stale_timeout = stale_timeout
         self.acquired = False
+
+    def break_lock(self) -> bool:
+        """Forza la rimozione del file lock orfano sulla share centrale (Release v0.9.14)."""
+        if self.lock_path.exists():
+            try:
+                self.lock_path.unlink()
+                self.acquired = False
+                return True
+            except OSError:
+                return False
+        return False
 
     def acquire(self, slug: str) -> bool:
         start_time = time.time()
@@ -67,6 +78,7 @@ class RemoteShareLock:
             "hostname": host,
             "pid": os.getpid(),
             "timestamp": time.time(),
+            "ttl_sec": self.stale_timeout,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
 
@@ -86,8 +98,11 @@ class RemoteShareLock:
                         except Exception:
                             pass
                         ts = lock_data.get("timestamp") or os.path.getmtime(self.lock_path)
-                        if time.time() - ts > self.stale_timeout:
+                        ttl = float(lock_data.get("ttl_sec", self.stale_timeout))
+                        if time.time() - ts > ttl:
                             try:
+                                import sys
+                                print(f"  [AVVISO STALE-LOCK] Lock orfano rilevato su '{self.lock_path}' (> {ttl:.0f}s). Rimozione e acquisizione...", file=sys.stderr)
                                 self.lock_path.unlink()
                                 continue
                             except OSError:
@@ -102,7 +117,7 @@ class RemoteShareLock:
                         f"[BLOCCO CONCORRENZA] La destinazione su share centrale per '{slug}' è bloccata da {holder}.\n"
                         f"  Lockfile: {self.lock_path}\n"
                         f"  Acquisito il: {created}\n"
-                        f"  Riprovare al termine della pubblicazione concorrente o rimuovere il lock se orfano."
+                        f"  Riprovare al termine della pubblicazione concorrente o usare '--break-lock' se orfano."
                     )
                 time.sleep(self.poll_interval)
 
@@ -222,7 +237,8 @@ class ProjectPublisher:
         target_share: Optional[str] = None,
         dry_run: bool = False,
         force: bool = False,
-        include_vault: bool = False
+        include_vault: bool = False,
+        break_lock: bool = False
     ) -> Tuple[bool, str, Dict[str, Any]]:
         """
         Pubblica in modo atomico il progetto locale su storage centrale con lock distribuito anti-race
@@ -282,17 +298,33 @@ class ProjectPublisher:
                 except Exception:
                     pass
 
-            # Rilevamento modifiche non tracciate / Drift sulla share remota (Release v0.9.13)
+            # Rilevamento modifiche non tracciate / Drift sulla share remota (Release v0.9.13 & v0.9.14)
             remote_manifest_file = dest_project_slug_dir / ".publish_manifest.json"
             if remote_manifest_file.exists():
                 try:
                     with open(remote_manifest_file, "r", encoding="utf-8") as f:
                         remote_manifest = json.load(f)
                     recorded_files = remote_manifest.get("files", {})
-                    for rel_str, recorded_sha in recorded_files.items():
+                    for rel_str, rec_info in recorded_files.items():
                         r_file = dest_project_slug_dir / rel_str
                         l_file = self.workspace_root / "projects" / slug / rel_str
                         if r_file.exists():
+                            # Supporta sia stringa SHA (v0.9.13) che dict con stat (v0.9.14)
+                            recorded_sha = rec_info if isinstance(rec_info, str) else rec_info.get("sha256")
+                            
+                            # Stat-First Fast Path per evitare I/O SHA-256 pesante su SMB/VPN (Release v0.9.14)
+                            if isinstance(rec_info, dict):
+                                rec_size = rec_info.get("size")
+                                rec_mtime = rec_info.get("mtime_epoch")
+                                try:
+                                    r_stat = r_file.stat()
+                                    if rec_size is not None and rec_mtime is not None:
+                                        if r_stat.st_size == rec_size and abs(r_stat.st_mtime - rec_mtime) < 2.0:
+                                            # File remoto invariato per dimensione e timestamp: skip calcolo hash byte-a-byte
+                                            continue
+                                except OSError:
+                                    pass
+
                             curr_remote_sha = self._hash_file(r_file)
                             if curr_remote_sha != recorded_sha:
                                 curr_local_sha = self._hash_file(l_file) if l_file.exists() else None
@@ -301,7 +333,7 @@ class ProjectPublisher:
                                         f"[CONFLITTO REMOTO RILEVATO] Il file '{rel_str}' sulla share remota e' stato "
                                         f"modificato direttamente al di fuori della pipeline locale!\n"
                                         f"  SHA remoto attuale: {curr_remote_sha[:10]}\n"
-                                        f"  SHA registrato al publish: {recorded_sha[:10]}\n"
+                                        f"  SHA registrato al publish: {recorded_sha[:10] if recorded_sha else 'n/d'}\n"
                                         f"  SHA locale: {curr_local_sha[:10] if curr_local_sha else 'assente'}\n"
                                         f"Sovrascrivendo la cartella andrebbero perse le modifiche apportate sulla share.\n"
                                         f"Utilizzare '--force' per forzare la sovrascrittura o riconciliare prima i file."
@@ -346,6 +378,8 @@ class ProjectPublisher:
         # 5. Acquisizione Lock Remoto e Pubblicazione Atomica
         lock_file = dest_projects_dir / f".publish_{slug}.lock"
         remote_lock = RemoteShareLock(lock_file)
+        if break_lock:
+            remote_lock.break_lock()
         try:
             remote_lock.acquire(slug)
         except TimeoutError as te:
@@ -364,7 +398,7 @@ class ProjectPublisher:
                 stg_target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(src_file, stg_target)
 
-            # Genera .publish_manifest.json per tracciare gli hash dei file pubblicati
+            # Genera .publish_manifest.json per tracciare gli hash e stat dei file pubblicati (Stat-First Fast Path)
             import getpass, socket
             user_str = "unknown"
             try:
@@ -379,7 +413,19 @@ class ProjectPublisher:
                 "files": {}
             }
             for src_file, rel_path in files_to_copy:
-                manifest_data["files"][str(rel_path).replace("\\", "/")] = self._hash_file(src_file)
+                try:
+                    st = src_file.stat()
+                    manifest_data["files"][str(rel_path).replace("\\", "/")] = {
+                        "sha256": self._hash_file(src_file),
+                        "size": st.st_size,
+                        "mtime_epoch": st.st_mtime
+                    }
+                except OSError:
+                    manifest_data["files"][str(rel_path).replace("\\", "/")] = {
+                        "sha256": self._hash_file(src_file),
+                        "size": 0,
+                        "mtime_epoch": 0.0
+                    }
 
             manifest_path = staging_dir / ".publish_manifest.json"
             manifest_path.write_text(json.dumps(manifest_data, indent=2), encoding="utf-8")

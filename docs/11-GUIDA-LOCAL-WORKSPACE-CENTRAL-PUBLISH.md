@@ -169,7 +169,7 @@ Quando la documentazione di un cliente è completata o pronta per il rilascio di
 
 ### Sintassi del Comando
 ```powershell
-python scripts/itinfra.py publish <slug> [--dest <path>] [--dry-run] [--force] [--include-vault]
+python scripts/itinfra.py publish <slug> [--dest <path>] [--dry-run] [--force] [--include-vault] [--break-lock]
 ```
 
 ### Parametri e Opzioni
@@ -180,15 +180,17 @@ python scripts/itinfra.py publish <slug> [--dest <path>] [--dry-run] [--force] [
 | `--dry-run` | Esegue il Quality Gate completo e mostra l'elenco dei file pronti senza copiare nulla sul server |
 | `--force` | Forza la sovrascrittura in caso di progetti approvati o conflitti di drift rilevati sulla share |
 | `--include-vault` | Include il file cifrato dei secret (`.vault.enc`) nella cartella remota pubblicata |
+| `--break-lock` | Forza la rimozione del lockfile centrale se orfano o bloccato da un processo interrotto |
 
 ### Controlli del Pre-Flight Quality Gate
 1. **Linter OKF v0.2 & Mermaid Syntax Linter:** Tutti i documenti Markdown in `projects/<slug>/` vengono analizzati con `OKFValidator`. Vengono controllati schema OKF v0.2, campi obbligatori e diagrammi Mermaid (24 tipi canonici e parentesi bilanciate).
-2. **Strict Grounding Audit:** Verifica semantica dell'assenza di placeholder illegali o subnet incongruenti, con supporto ai blocchi canonici ```yaml:inventory e ```yaml:network.
+2. **Strict Grounding & Semantic Drift Audit:** Verifica semantica dell'assenza di placeholder illegali o subnet incongruenti, con supporto ai blocchi canonici ```yaml:inventory e ```yaml:network e avviso per apparati non mappati nel grafo OKF v0.2 (`[WARN: Unmapped Entity in OKF Graph]`).
 3. **Scansione Anti-Leak:** Ispezione riga per riga contro credenziali in chiaro (es. `admin_password: "..."`). Le credenziali devono usare riferimenti `vault://it/projects/<slug>/...` o `<DA-RICHIEDERE>`.
 
-### Protezioni Distribuite (Release v0.9.12 & v0.9.13)
-- **Lock Remoto Distribuito (`RemoteShareLock`):** Acquisizione atomica O_CREAT|O_EXCL del lockfile `.publish_<slug>.lock` sulla share prima del trasferimento per prevenire scritture concorrenti.
-- **Rilevamento del Drift Remoto (`.publish_manifest.json`):** Generazione automatica dell'impronta crittografica SHA-256 di tutti i file sincronizzati. Se un file sulla share master è stato modificato out-of-band, il comando blocca il publish segnalando `[CONFLITTO REMOTO RILEVATO]`.
+### Protezioni Distribuite (Release v0.9.12, v0.9.13 & v0.9.14)
+- **Lock Remoto Distribuito con Auto-Break (`RemoteShareLock`):** Acquisizione atomica O_CREAT|O_EXCL del lockfile `.publish_<slug>.lock` sulla share con TTL di 300s. In caso di crash o interruzione di rete del client, il lock orfano viene rilevato e ripulito automaticamente; il flag `--break-lock` consente lo sblocco forzato manuale.
+- **Stat-First Fast Path per VPN/SMB:** Archiviazione di `size` e `mtime_epoch` in `.publish_manifest.json`. Se un file remoto non ha cambiato dimensioni e data di modifica ($\Delta t < 2.0s$), il calcolo dell'hash crittografico byte-a-byte viene saltato all'istante, riducendo a zero la latenza su connessioni geografiche.
+- **Rilevamento del Drift Remoto (`.publish_manifest.json`):** Controllo di integrità tramite impronta crittografica SHA-256 dei file sincronizzati. Se un file sulla share master è stato modificato out-of-band, il comando blocca il publish segnalando `[CONFLITTO REMOTO RILEVATO]`.
 - **Staging-then-Swap Atomico:** Scrittura preliminare su `.staging_<slug>_<pid>_<ts>` e trasferimento finale atomico per prevenire corruzioni da disconnessioni di rete.
 
 ### Esempio di Risultato di Successo

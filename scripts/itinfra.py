@@ -1722,8 +1722,9 @@ def cmd_vault(args) -> int:
                 print(colorize("ERRORE: Le passphrase di team non coincidono.", COLOR_RED))
                 return 1
         try:
-            bpath = vault.export_bundle(passphrase, bundle_pass, out_path)
-            print(colorize(f"[OK] Bundle cifrato esportato con successo in: {bpath}", COLOR_GREEN + COLOR_BOLD))
+            ttl_h = getattr(args, "ttl_hours", 168)
+            bpath = vault.export_bundle(passphrase, bundle_pass, out_path, ttl_hours=ttl_h)
+            print(colorize(f"[OK] Bundle cifrato esportato con successo in: {bpath} (TTL: {ttl_h}h)", COLOR_GREEN + COLOR_BOLD))
             print(colorize("Condividi questo bundle e la relativa passphrase in modo sicuro con i colleghi del team.", COLOR_CYAN))
             return 0
         except Exception as e:
@@ -1737,12 +1738,29 @@ def cmd_vault(args) -> int:
             bundle_pass = getpass.getpass("Inserisci la Passphrase di Team del Bundle: ")
         if not passphrase:
             passphrase = getpass.getpass("Inserisci la Master Passphrase del Vault locale (target): ")
+        force_exp = getattr(args, "force_expired", False)
         try:
-            count = vault.import_bundle(in_path, bundle_pass, passphrase, merge=True)
+            count = vault.import_bundle(in_path, bundle_pass, passphrase, merge=True, force_expired=force_exp)
             print(colorize(f"[OK] Importati con successo {count} secret nel vault locale di '{slug}'!", COLOR_GREEN + COLOR_BOLD))
             return 0
         except Exception as e:
             print(colorize(f"ERRORE import bundle: {e}", COLOR_RED))
+            return 1
+
+    elif action == "rotate-key":
+        if not passphrase:
+            passphrase = getpass.getpass("Inserisci la Master Passphrase attuale del Vault: ")
+        new_pass = getattr(args, "new_passphrase", None)
+        try:
+            rot_info = vault.rotate_key(passphrase, new_pass)
+            print(colorize(f"[OK] Rotazione crittografica completata con successo per '{slug}'!", COLOR_GREEN + COLOR_BOLD))
+            print(f"  Secret ri-cifrati: {rot_info['secret_count']}")
+            print(f"  Ciclo di rotazione n: {rot_info['rotation_count']}")
+            print(f"  Data/ora rotazione: {rot_info['rotated_at']}")
+            print(colorize("Tutti i secret sono stati ri-cifrati con un nuovo salt PBKDF2 e nonce AES-256-GCM freschi.", COLOR_CYAN))
+            return 0
+        except Exception as e:
+            print(colorize(f"ERRORE rotazione chiavi: {e}", COLOR_RED))
             return 1
 
     return 0
@@ -1856,6 +1874,112 @@ def cmd_worktree(args) -> int:
 
     return 0
 
+def audit_project_consistency(slug: str) -> Dict[str, Any]:
+    """
+    Esegue l'audit programmatico di coerenza semantica e strict grounding su un progetto.
+    Restituisce un dizionario strutturato con metriche, anomalie, avvisi e conformità.
+    """
+    repo_root = Path.cwd()
+    project_dir = repo_root / "projects" / slug
+    if not project_dir.exists():
+        return {"slug": slug, "error": "Not found", "invalid_ips": 0, "divergences": 1, "warnings": [], "anomalies": ["Not found"], "unmapped_entities": 0, "trust_verified_count": 0}
+
+    manifest_file = project_dir / "project-manifest.yaml"
+    manifest_data = {}
+    if manifest_file.exists():
+        try:
+            with open(manifest_file, "r", encoding="utf-8") as f:
+                manifest_data = yaml.safe_load(f) or {}
+        except Exception:
+            pass
+
+    net_base = manifest_data.get("network_baseline", {}) or manifest_data.get("network", {})
+    declared_subnets = []
+    for k, v in net_base.items():
+        if isinstance(v, str) and ("subnet" in k or "supernet" in k or "cidr" in k):
+            try:
+                declared_subnets.append(ipaddress.ip_network(v, strict=False))
+            except ValueError:
+                pass
+
+    md_files = sorted(project_dir.glob("*.md"))
+    anomalies = []
+    warnings = []
+    unmapped_entities = []
+    all_found_ips = {}
+    verified_docs = 0
+
+    ip_pattern = re.compile(r'\b(?:192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})\b')
+
+    for md_file in md_files:
+        try:
+            content = md_file.read_text(encoding="utf-8")
+        except Exception:
+            continue
+
+        fm_data, _, _ = parse_frontmatter(content)
+        entity_tokens = set()
+        if fm_data:
+            if fm_data.get("verified") is True:
+                verified_docs += 1
+            for ent in fm_data.get("entities", []):
+                if isinstance(ent, dict):
+                    name = str(ent.get("name") or "").lower()
+                    if name:
+                        entity_tokens.add(name)
+                        for part in re.split(r'[\s\-_\.:]+', name):
+                            if len(part) >= 2:
+                                entity_tokens.add(part)
+            for rel in fm_data.get("relations", []):
+                if isinstance(rel, dict):
+                    t_title = str(rel.get("targetTitle") or "").lower()
+                    t_id = str(rel.get("targetId") or "").lower()
+                    if t_title:
+                        entity_tokens.add(t_title)
+                    if t_id:
+                        entity_tokens.add(t_id)
+
+        yaml_blocks = re.findall(r'```yaml:(?:inventory|network|infrastructure)\s*\n(.*?)```', content, re.DOTALL)
+        for y_block in yaml_blocks:
+            try:
+                parsed_block = yaml.safe_load(y_block) if yaml else None
+                if isinstance(parsed_block, dict):
+                    devices = parsed_block.get("devices") or parsed_block.get("hosts") or []
+                    if isinstance(devices, list):
+                        for dev in devices:
+                            if isinstance(dev, dict):
+                                dev_id = str(dev.get("hostname") or dev.get("name") or dev.get("id") or "").strip()
+                                if dev_id:
+                                    d_low = dev_id.lower()
+                                    is_mapped = any(d_low in tok or tok in d_low for tok in entity_tokens) if entity_tokens else False
+                                    if not is_mapped:
+                                        unmapped_entities.append((md_file.name, dev_id))
+            except Exception:
+                pass
+
+        for match in ip_pattern.finditer(content):
+            ip_str = match.group(0)
+            if not ip_str.endswith(".0") and not ip_str.endswith(".255"):
+                all_found_ips.setdefault(ip_str, []).append(md_file.name)
+
+    invalid_ips = 0
+    if declared_subnets:
+        for ip_str, files in all_found_ips.items():
+            ip_obj = ipaddress.ip_address(ip_str)
+            if not any(ip_obj in s for s in declared_subnets):
+                if not all(f == "02-HLD.md" for f in files):
+                    invalid_ips += 1
+
+    return {
+        "slug": slug,
+        "invalid_ips": invalid_ips,
+        "divergences": len(anomalies),
+        "unmapped_entities": len(unmapped_entities),
+        "trust_verified_count": verified_docs,
+        "warnings": warnings,
+        "anomalies": anomalies
+    }
+
 def cmd_audit_consistency(args) -> int:
     slug = args.project_slug
     repo_root = Path.cwd()
@@ -1895,6 +2019,7 @@ def cmd_audit_consistency(args) -> int:
 
     anomalies = []
     warnings = []
+    unmapped_entities = []
     all_found_ips = {}
     placeholders_count = 0
     raw_placeholders = []
@@ -1920,7 +2045,31 @@ def cmd_audit_consistency(args) -> int:
         except Exception:
             continue
 
-        # Parsing blocchi canonici strutturati fenced YAML (Release v0.9.13)
+        # Estrazione token entità e relazioni dal frontmatter OKF v0.2
+        fm_data, _, _ = parse_frontmatter(content)
+        entity_tokens = set()
+        if fm_data:
+            for ent in fm_data.get("entities", []):
+                if isinstance(ent, dict):
+                    name = str(ent.get("name") or "").lower()
+                    if name:
+                        entity_tokens.add(name)
+                        for part in re.split(r'[\s\-_\.:]+', name):
+                            if len(part) >= 2:
+                                entity_tokens.add(part)
+            for rel in fm_data.get("relations", []):
+                if isinstance(rel, dict):
+                    t_title = str(rel.get("targetTitle") or "").lower()
+                    t_id = str(rel.get("targetId") or "").lower()
+                    if t_title:
+                        entity_tokens.add(t_title)
+                    if t_id:
+                        entity_tokens.add(t_id)
+            for rd in fm_data.get("related_docs", []):
+                if isinstance(rd, str):
+                    entity_tokens.add(rd.lower())
+
+        # Parsing blocchi canonici strutturati fenced YAML (Release v0.9.13 & v0.9.14)
         yaml_blocks = re.findall(r'```yaml:(?:inventory|network|infrastructure)\s*\n(.*?)```', content, re.DOTALL)
         for y_block in yaml_blocks:
             try:
@@ -1934,6 +2083,13 @@ def cmd_audit_consistency(args) -> int:
                                 d_role = str(dev.get("role") or "").lower()
                                 d_host = str(dev.get("hostname") or "").lower()
                                 d_model = str(dev.get("model") or "").lower()
+                                dev_id = str(dev.get("hostname") or dev.get("name") or dev.get("id") or "").strip()
+                                if dev_id:
+                                    d_low = dev_id.lower()
+                                    is_mapped = any(d_low in tok or tok in d_low for tok in entity_tokens) if entity_tokens else False
+                                    if not is_mapped:
+                                        unmapped_entities.append((md_file.name, dev_id))
+
                                 if d_ip and isinstance(d_ip, str):
                                     all_found_ips.setdefault(d_ip, []).append((md_file.name, 1))
                                     if "dc" in d_host or "domain" in d_role or "controller" in d_role:
@@ -2082,6 +2238,15 @@ def cmd_audit_consistency(args) -> int:
         warnings.append(f"{len(stale_docs)} documenti con certificazione tecnica scaduta (stale_after)")
     else:
         print(colorize("   [OK] Nessun documento con data validita' scaduta rilevato.", COLOR_GREEN))
+
+    print(colorize("\n5. Verifica Allineamento Grafo Semantico OKF v0.2 (D3 Semantic Drift Check):", COLOR_BOLD))
+    if unmapped_entities:
+        print(colorize(f"   [!] RILEVATI {len(unmapped_entities)} DISPOSITIVI NON MAPPATI NEL GRAFO OKF v0.2:", COLOR_YELLOW + COLOR_BOLD))
+        for fname, d_name in unmapped_entities:
+            print(colorize(f"       [WARN: Unmapped Entity in OKF Graph] Dispositivo '{d_name}' in {fname} assente da 'entities' o 'relations'", COLOR_YELLOW))
+            warnings.append(f"[WARN: Unmapped Entity in OKF Graph] Dispositivo '{d_name}' in {fname}")
+    else:
+        print(colorize("   [OK] Tutte le entità hardware/rete strutturate sono collegate al grafo OKF v0.2!", COLOR_GREEN))
 
     print(colorize("\n------------------------------------------------------------------", COLOR_BOLD))
     if anomalies:
@@ -2459,7 +2624,8 @@ def cmd_publish(args: argparse.Namespace) -> int:
         target_share=args.dest,
         dry_run=args.dry_run,
         force=args.force,
-        include_vault=getattr(args, "include_vault", False)
+        include_vault=getattr(args, "include_vault", False),
+        break_lock=getattr(args, "break_lock", False)
     )
     if success:
         print(colorize(msg, COLOR_GREEN if not args.dry_run else COLOR_CYAN))
@@ -3053,17 +3219,24 @@ def main():
     v_audit.add_argument("project_slug", help="Slug del progetto")
     v_audit.add_argument("--passphrase", help="Master passphrase opzionale per verifica incrociata dei secret")
 
-    v_exp = sub_vault.add_parser("export-bundle", help="Esporta i secret in un bundle cifrato (.vbundle) per il team (Release v0.9.12)")
+    v_exp = sub_vault.add_parser("export-bundle", help="Esporta i secret in un bundle cifrato (.vbundle) per il team (Release v0.9.12 & v0.9.14)")
     v_exp.add_argument("project_slug", help="Slug del progetto")
     v_exp.add_argument("--out", required=True, help="Percorso del file .vbundle di output")
     v_exp.add_argument("--passphrase", help="Master passphrase del vault locale")
     v_exp.add_argument("--bundle-pass", help="Passphrase condivisa di team per cifrare il bundle")
+    v_exp.add_argument("--ttl-hours", type=int, default=168, help="Periodo di validita' del bundle in ore (default: 168 = 7 giorni, Release v0.9.14)")
 
-    v_imp = sub_vault.add_parser("import-bundle", help="Importa i secret da un bundle cifrato (.vbundle) (Release v0.9.12)")
+    v_imp = sub_vault.add_parser("import-bundle", help="Importa i secret da un bundle cifrato (.vbundle) (Release v0.9.12 & v0.9.14)")
     v_imp.add_argument("project_slug", help="Slug del progetto")
     v_imp.add_argument("--in", dest="bundle_in", required=True, help="Percorso del file .vbundle da importare")
     v_imp.add_argument("--bundle-pass", help="Passphrase condivisa di team utilizzata per cifrare il bundle")
     v_imp.add_argument("--passphrase", help="Master passphrase del vault locale di destinazione")
+    v_imp.add_argument("--force-expired", action="store_true", help="Forza l'importazione anche se il bundle e' scaduto (bypass TTL, Release v0.9.14)")
+
+    v_rot = sub_vault.add_parser("rotate-key", help="Esegue la rotazione crittografica delle chiavi e re-encryption del vault (Release v0.9.14)")
+    v_rot.add_argument("project_slug", help="Slug del progetto")
+    v_rot.add_argument("--passphrase", help="Master passphrase attuale")
+    v_rot.add_argument("--new-passphrase", help="Nuova master passphrase (opzionale, se omessa rigenera salt e nonce con la stessa)")
 
     # Comando worktree
     p_wt = subparsers.add_parser("worktree", help="Gestione Git Worktrees per agenti AI concorrenti")
@@ -3174,6 +3347,7 @@ def main():
     p_pub.add_argument("--dry-run", action="store_true", help="Simula il Quality Gate e la pubblicazione senza copiare file")
     p_pub.add_argument("--force", action="store_true", help="Forza la sovrascrittura anche se il progetto remoto e' approvato")
     p_pub.add_argument("--include-vault", action="store_true", help="Include il file cifrato dei secret (.vault.enc) nella pubblicazione sulla share")
+    p_pub.add_argument("--break-lock", action="store_true", help="Forza la rimozione del lock centrale se orfano o bloccato (Release v0.9.14)")
 
     # Comando sync-engine (Release v0.9)
     p_sync = subparsers.add_parser("sync-engine", help="Sincronizza e aggiorna template, script e guide dalla share master (Release v0.9)")

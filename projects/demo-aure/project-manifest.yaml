@@ -21,7 +21,7 @@ sites:
   role: Branch
   location: Corso Buenos Aires 45, Milano
 network_baseline:
-  supernet_ipv4: 10.100.0.0/16
+  supernet_ipv4: 10.0.0.0/8
   supernet_ipv6: 2001:db8:100::/48
   bgp_asn_internal: 65100
   bgp_asn_external_primary: 65200

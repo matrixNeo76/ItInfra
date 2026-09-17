@@ -125,6 +125,11 @@ class SystemTestSuiteRunner:
         results.append(t15)
         self._print_module_summary(t15)
 
+        # 16. Test Modulo Remote Resiliency, Vault TTL & VPN FastPath (Release v0.9.14)
+        t16 = self._test_resiliency_vault_ttl_and_vpn_fastpath()
+        results.append(t16)
+        self._print_module_summary(t16)
+
         elapsed_total = round((time.time() - start_time) * 1000, 2)
         passed_count = sum(1 for r in results if r["status"] in ("PASS", "WARN"))
         fail_count = sum(1 for r in results if r["status"] == "FAIL")
@@ -993,6 +998,190 @@ Test doc.
                 "yaml_canonical_blocks": "VERIFIED",
                 "smb_drift_guard": "ACTIVE",
                 "anti_leak_policy": "ENFORCED"
+            },
+            "details": details
+        }
+
+    # -------------------------------------------------------------
+    # MOD-16: Remote Resiliency, Vault TTL & VPN FastPath
+    # -------------------------------------------------------------
+    def _test_resiliency_vault_ttl_and_vpn_fastpath(self) -> Dict[str, Any]:
+        """Test Modulo 16: Remote Resiliency, Vault TTL & VPN FastPath (Release v0.9.14)."""
+        t0 = time.time()
+        import tempfile
+        import json
+        import os
+        from datetime import datetime, timezone, timedelta
+        from scripts.itinfra_publish import RemoteShareLock, ProjectPublisher
+        from scripts.itinfra_vault import VaultManager, VaultError
+        from scripts.itinfra import audit_project_consistency
+
+        # 1. Test Stale Lock Auto-Break and Manual break_lock()
+        with tempfile.TemporaryDirectory() as tmp_lock_dir:
+            lock_path = Path(tmp_lock_dir) / ".publish_demo.lock"
+            stale_info = {
+                "slug": "demo",
+                "user": "crashed_process",
+                "hostname": "test-host",
+                "pid": 99999,
+                "timestamp": time.time() - 400,
+                "ttl_sec": 300,
+                "created_at": (datetime.now(timezone.utc) - timedelta(seconds=400)).isoformat()
+            }
+            lock_path.write_text(json.dumps(stale_info), encoding="utf-8")
+            assert lock_path.exists()
+
+            lock = RemoteShareLock(lock_path, timeout=2.0, stale_timeout=300)
+            acq_ok = lock.acquire("demo")
+            assert acq_ok, "Acquisizione lock dopo auto-break stale lock fallita"
+            assert lock.acquired, "Lock non marcato come acquired"
+            lock.release()
+
+            # Test break_lock()
+            lock_path.write_text(json.dumps(stale_info), encoding="utf-8")
+            break_ok = lock.break_lock()
+            assert break_ok, "break_lock non ha rimosso il lock"
+            assert not lock_path.exists(), "Lockfile ancora presente dopo break_lock"
+
+        # 2. Test Vault TTL Expiration, Force-Expired and Rotate-Key
+        with tempfile.TemporaryDirectory() as tmp_vault_dir:
+            vault_root = Path(tmp_vault_dir)
+            v_mgr = VaultManager("test-ttl", repo_root=vault_root)
+            v_mgr.init_vault("MasterKey123!")
+            v_mgr.set_secret("db/password", "UltraSecret999!", "MasterKey123!")
+
+            # Export bundle scaduto (ttl_hours = -2)
+            bundle_expired_path = vault_root / "expired.vbundle"
+            v_mgr.export_bundle("MasterKey123!", "TeamPass456!", bundle_expired_path, ttl_hours=-2)
+            assert bundle_expired_path.exists()
+
+            # Import bundle scaduto deve sollevare VaultError
+            v_target = VaultManager("target-ttl", repo_root=vault_root)
+            expired_rejected = False
+            try:
+                v_target.import_bundle(bundle_expired_path, "TeamPass456!", "TargetPass789!", force_expired=False)
+            except VaultError as ve:
+                if "SCADUTO" in str(ve):
+                    expired_rejected = True
+            assert expired_rejected, "Import di bundle scaduto non bloccato da TTL"
+
+            # Import bundle con --force-expired deve avere successo
+            imported_cnt = v_target.import_bundle(bundle_expired_path, "TeamPass456!", "TargetPass789!", force_expired=True)
+            assert imported_cnt == 1, f"Atteso 1 secret importato con force_expired, trovati {imported_cnt}"
+            rec_sec = v_target.get_secret("db/password", "TargetPass789!")
+            assert rec_sec == "UltraSecret999!", "Secret importato con force_expired non integro"
+
+            # Test rotate_key
+            rot_info = v_mgr.rotate_key("MasterKey123!", "NewMasterKey999!")
+            assert rot_info["rotation_count"] == 1, "Rotation count non incrementato"
+            sec_rotated = v_mgr.get_secret("db/password", "NewMasterKey999!")
+            assert sec_rotated == "UltraSecret999!", "Secret non decifrabile dopo key rotation"
+
+        # 3. Test Stat-First Fast Path in publish_project
+        with tempfile.TemporaryDirectory() as tmp_ws:
+            ws_path = Path(tmp_ws)
+            p_dir = ws_path / "projects" / "test-fastpath"
+            p_dir.mkdir(parents=True, exist_ok=True)
+            (p_dir / "01-RSD-URS.md").write_text("""---
+okf_version: "0.2"
+id: specification-test-fastpath-01
+title: "Test Fastpath"
+type: specification
+domain: "IT Infrastructure"
+tags:
+  - okf-v0.2
+  - test
+entities:
+  - name: "srv-app01"
+    type: concept
+    description: "App server"
+relations: []
+status: draft
+version: "0.1.0"
+---
+# Test Doc
+Content for fast path testing.
+""", encoding="utf-8")
+
+            with tempfile.TemporaryDirectory() as tmp_share:
+                pub = ProjectPublisher(workspace_root=ws_path)
+                pub_ok, pub_msg, _ = pub.publish_project("test-fastpath", target_share=tmp_share, force=True)
+                assert pub_ok, f"Publish fallito: {pub_msg}"
+
+                man_file = Path(tmp_share) / "projects" / "test-fastpath" / ".publish_manifest.json"
+                assert man_file.exists(), ".publish_manifest.json non generato"
+                man_data = json.loads(man_file.read_text(encoding="utf-8"))
+                file_entry = man_data["files"]["01-RSD-URS.md"]
+                assert isinstance(file_entry, dict), "L'entry del file nel manifest deve essere un dizionario con stat"
+                assert "size" in file_entry and "mtime_epoch" in file_entry and "sha256" in file_entry, "Campi stat mancanti nel manifest"
+
+                # 2° publish deve usare Stat-First Fast Path e completare senza conflitti
+                pub2_ok, pub2_msg, _ = pub.publish_project("test-fastpath", target_share=tmp_share, force=False)
+                assert pub2_ok, f"Secondo publish con Stat-First Fast Path fallito: {pub2_msg}"
+
+        # 4. Test Semantic Drift & Unmapped Entities in OKF Graph
+        with tempfile.TemporaryDirectory() as tmp_audit_ws:
+            a_dir = Path(tmp_audit_ws) / "projects" / "audit-test"
+            a_dir.mkdir(parents=True, exist_ok=True)
+            (a_dir / "project-manifest.yaml").write_text("""project_slug: audit-test
+customer: Test
+network_baseline:
+  lan_subnet: "192.168.1.0/24"
+""", encoding="utf-8")
+
+            # Documento con dispositivo in ```yaml:inventory NON mappato in entities
+            (a_dir / "01-RSD-URS.md").write_text("""---
+okf_version: "0.2"
+id: specification-audit-test-01
+title: "Test Audit"
+type: specification
+domain: "IT Infrastructure"
+tags:
+  - okf-v0.2
+entities:
+  - name: "Active Directory"
+    type: concept
+    description: "Dominio"
+relations: []
+status: draft
+version: "0.1.0"
+---
+# Inventory
+```yaml:inventory
+devices:
+  - hostname: "sw-unmapped-core01"
+    role: "Switch Core"
+    ip: "192.168.1.2"
+```
+""", encoding="utf-8")
+
+            old_cwd = os.getcwd()
+            try:
+                os.chdir(tmp_audit_ws)
+                audit_res = audit_project_consistency("audit-test")
+                assert audit_res["unmapped_entities"] >= 1, f"Atteso almeno 1 unmapped entity per sw-unmapped-core01, rilevati: {audit_res['unmapped_entities']}"
+            finally:
+                os.chdir(old_cwd)
+
+        details = [
+            "Remote Lock Auto-Break & CLI --break-lock: risoluzione automatica lock orfani su crash/timeout e rimozione forzata manuale",
+            "Vault Bundle TTL (168h) & Key Rotation: scadenza crittografica certificata (NIS2/ISO 27001), bypass con --force-expired e re-encrypt rotate-key",
+            "SMB/VPN Stat-First Fast Path: archiviazione size e mtime_epoch in .publish_manifest.json per bypass dell'I/O pesante SHA-256 su VPN",
+            "Semantic Drift & Unmapped Entity Guard: rilevamento proattivo [WARN: Unmapped Entity in OKF Graph] per allineamento perfetto con D3"
+        ]
+
+        return {
+            "id": "MOD-16",
+            "name": "Remote Resiliency, Vault TTL & VPN FastPath",
+            "category": "Integrità & Sicurezza",
+            "status": "PASS",
+            "duration_ms": round((time.time() - t0) * 1000, 2),
+            "summary": "Auto-break lock SMB orfani, scadenza temporale e rotazione chiavi Vault, Stat-First fast path per VPN e controllo unmapped entities nel grafo D3.",
+            "metrics": {
+                "lock_autobreak": "VERIFIED",
+                "vault_ttl_and_rotation": "VERIFIED",
+                "vpn_stat_fastpath": "ACTIVE",
+                "unmapped_entity_guard": "ACTIVE"
             },
             "details": details
         }

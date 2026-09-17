@@ -249,18 +249,21 @@ Prima di promuovere un documento a `status: in-review` o `approved`:
 1. **Linter OKF v0.2 & Mermaid Syntax Linter**: `it validate projects/<slug>/<file>.md`
    - Valida la presenza dei campi canonici OKF v0.2 (`okf_version`, `entities`, `relations`).
    - Verifica la conformità sintattica dei diagrammi ```mermaid (24 tipi canonici), il bilanciamento delle parentesi `[ ]`, `( )`, `{ }` e le best practice di escaping delle label.
-2. **Audit Coerenza Semantica & Blocchi Canonici YAML**: `it audit-consistency <slug>`
+2. **Audit Coerenza Semantica & Semantic Drift Guard**: `it audit-consistency <slug>`
    - Parsing prioritario dei blocchi ```yaml:inventory e ```yaml:network che eliminano la fragilità delle regex sulle tabelle Markdown.
    - Controlla che le subnet dichiarate nel manifesto coincidano con l'LLD e l'As-Built.
+   - **D3 Semantic Drift Check**: Rileva dispositivi nei blocchi YAML non ancora censiti nel grafo OKF v0.2 ed emette `[WARN: Unmapped Entity in OKF Graph]`.
 3. **Enterprise Test Suite**: `it test-suite`
-   - Esegue tutti i **15 moduli di collaudo del sistema** garantendo il 100% di conformità.
+   - Esegue tutti i **16 moduli di collaudo del sistema** garantendo il 100% di conformità.
 
-### Fase 7: Pubblicazione Master Centrale & Remote Drift Guard
+### Fase 7: Pubblicazione Master Centrale, Lock Resiliente & VPN Fast Path
 Quando il progetto è completato e validato:
 - L'operatore lancia `it publish <slug>`.
-- **Remote Lock Distribuito**: Il publisher acquisisce un lock atomico `O_CREAT | O_EXCL` (`.publish_<slug>.lock`) sulla share SMB per prevenire collisioni e scritture concorrenti.
+- **Remote Lock Distribuito con Auto-Break**: Il publisher acquisisce un lock atomico `O_CREAT | O_EXCL` (`.publish_<slug>.lock`) sulla share SMB con TTL di 300s. Se un processo concorrente precedente è crashato lasciando un lock orfano, il publisher lo rimuove automaticamente; in casi straordinari, l'operatore può forzare la rimozione con `--break-lock`.
+- **Stat-First Fast Path per VPN/SMB**: Il motore archivia `size` e timestamp `mtime_epoch` in `.publish_manifest.json`. Se il file remoto coincide in dimensioni e timestamp, evita il ricalcolo SHA-256 byte-a-byte, garantendo pubblicazioni istantanee anche su connessioni geografiche lente.
 - **Remote Drift Detection**: Il motore confronta i file remoti con l'impronta registrata in `.publish_manifest.json` (SHA-256). Se rileva modifiche manuali o non coordinate sulla share master, **blocca la pubblicazione** con `[CONFLITTO REMOTO RILEVATO]` a tutela del lavoro svolto, a meno del flag esplicito `--force`.
 - **Staging-then-Swap Atomico**: I file vengono copiati in una cartella di staging temporanea remota e spostati in blocco nella cartella definitiva, azzerando il rischio di corruzione da disconnessioni di rete.
+- **Vault Team Bundling & TTL**: I secret possono essere scambiati via `.vbundle` con scadenza temporale (default 168h / 7 giorni) conforme a NIS2/ISO 27001 (`--ttl-hours`, bypass con `--force-expired`) e ri-cifrati atomicamente con `it vault rotate-key <slug>`.
 
 ### Fase 8: Riconciliazione Inversa da As-Built a Manifesto
 Durante o dopo l'installazione sul campo (Fasi 4 e 5), le configurazioni reali possono divergere dal design iniziale:

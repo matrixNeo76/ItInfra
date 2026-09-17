@@ -16,7 +16,7 @@ import sys
 import json
 import time
 import subprocess
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
 
@@ -372,10 +372,17 @@ class VaultManager:
             "scanned_details": scanned
         }
 
-    def export_bundle(self, source_passphrase: str, bundle_passphrase: str, out_path: Path) -> Path:
+    def export_bundle(
+        self,
+        source_passphrase: str,
+        bundle_passphrase: str,
+        out_path: Path,
+        ttl_hours: int = 168
+    ) -> Path:
         """
         Esporta i secret del vault cifrati con una passphrase di team in un file .vbundle.
         Consente la distribuzione controllata e sicura delle credenziali tra colleghi senza dipendenze.
+        Supporta TTL di scadenza (default 168h / 7 giorni) conforme a requisiti NIS2 e ISO 27001.
         """
         if not self.exists():
             raise VaultError(f"Vault non trovato per il progetto '{self.slug}'.")
@@ -387,11 +394,16 @@ class VaultManager:
         nonce = os.urandom(12)
         aesgcm = AESGCM(key)
 
+        now_utc = datetime.now(timezone.utc)
+        expires_at = (now_utc + timedelta(hours=ttl_hours)).isoformat()
+
         bundle_payload = {
             "type": "itinfra-vault-bundle",
             "version": "1.0",
             "project_slug": self.slug,
-            "exported_at": datetime.now(timezone.utc).isoformat(),
+            "exported_at": now_utc.isoformat(),
+            "expires_at": expires_at,
+            "ttl_hours": ttl_hours,
             "secret_count": len(secrets),
             "secrets": secrets
         }
@@ -408,7 +420,9 @@ class VaultManager:
             "salt": salt.hex(),
             "nonce": nonce.hex(),
             "ciphertext": ciphertext.hex(),
-            "exported_at": datetime.now(timezone.utc).isoformat()
+            "exported_at": now_utc.isoformat(),
+            "expires_at": expires_at,
+            "ttl_hours": ttl_hours
         }
 
         out_path = Path(out_path)
@@ -416,9 +430,17 @@ class VaultManager:
         out_path.write_text(json.dumps(envelope, indent=2), encoding="utf-8")
         return out_path
 
-    def import_bundle(self, bundle_path: Path, bundle_passphrase: str, target_passphrase: str, merge: bool = True) -> int:
+    def import_bundle(
+        self,
+        bundle_path: Path,
+        bundle_passphrase: str,
+        target_passphrase: str,
+        merge: bool = True,
+        force_expired: bool = False
+    ) -> int:
         """
         Importa un file .vbundle cifrato, integrandone i secret nel vault locale del progetto.
+        Verifica la scadenza temporale (TTL) del bundle salvo esplicito flag force_expired.
         """
         bundle_path = Path(bundle_path)
         if not bundle_path.exists():
@@ -432,6 +454,20 @@ class VaultManager:
         except Exception as e:
             raise VaultError(f"Formato bundle non valido: {e}")
 
+        # Controllo TTL di scadenza sull'envelope esterno (Release v0.9.14)
+        expires_at_str = envelope.get("expires_at")
+        if expires_at_str:
+            try:
+                exp_dt = datetime.fromisoformat(expires_at_str)
+                if datetime.now(timezone.utc) > exp_dt and not force_expired:
+                    raise VaultError(
+                        f"Il bundle cifrato '{bundle_path.name}' e' SCADUTO il {expires_at_str}!\n"
+                        f"Per motivi di sicurezza e conformita' (NIS2/ISO 27001), i bundle hanno una validita' temporale limitata.\n"
+                        f"Richiedere un nuovo bundle o utilizzare il flag '--force-expired' per forzare l'importazione."
+                    )
+            except ValueError:
+                pass
+
         key = self._derive_key(bundle_passphrase, salt)
         aesgcm = AESGCM(key)
         try:
@@ -439,6 +475,20 @@ class VaultManager:
             bundle_data = json.loads(plaintext.decode("utf-8"))
         except Exception:
             raise VaultError("Decifratura del bundle fallita: passphrase del bundle errata.")
+
+        # Controllo di sicurezza anti-tampering sul TTL all'interno del payload cifrato
+        payload_exp = bundle_data.get("expires_at")
+        if payload_exp:
+            try:
+                exp_dt = datetime.fromisoformat(payload_exp)
+                if datetime.now(timezone.utc) > exp_dt and not force_expired:
+                    raise VaultError(
+                        f"Il bundle cifrato '{bundle_path.name}' e' SCADUTO il {payload_exp}!\n"
+                        f"Per motivi di sicurezza e conformita' (NIS2/ISO 27001), i bundle hanno una validita' temporale limitata.\n"
+                        f"Richiedere un nuovo bundle o utilizzare il flag '--force-expired' per forzare l'importazione."
+                    )
+            except ValueError:
+                pass
 
         imported_secrets = bundle_data.get("secrets", {})
 
@@ -457,3 +507,34 @@ class VaultManager:
             self._encrypt_and_write(current_data, target_passphrase)
 
         return len(imported_secrets)
+
+    def rotate_key(self, current_passphrase: str, new_passphrase: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Esegue la rotazione crittografica delle chiavi del vault (Release v0.9.14):
+        - Decifra tutti i secret con la passphrase corrente
+        - Genera un nuovo salt crittografico casuale (16 bytes)
+        - Rigenera chiave e nonce AES-256-GCM freschi
+        - Riacquisisce FileLock atomico e riscrive il vault con la nuova passphrase (o la medesima ri-salata).
+        """
+        if not self.exists():
+            raise VaultError(f"Vault non trovato per il progetto '{self.slug}'.")
+
+        target_pass = new_passphrase if (new_passphrase and new_passphrase.strip()) else current_passphrase
+        if not target_pass:
+            raise VaultError("La passphrase non puo' essere vuota.")
+
+        with FileLock(self.lock_file):
+            data = self._read_and_decrypt(current_passphrase)
+
+            meta = data.setdefault("_metadata", {})
+            meta["last_rotated_at"] = datetime.now(timezone.utc).isoformat()
+            meta["rotation_count"] = meta.get("rotation_count", 0) + 1
+
+            self._encrypt_and_write(data, target_pass)
+
+        return {
+            "slug": self.slug,
+            "rotated_at": meta["last_rotated_at"],
+            "rotation_count": meta["rotation_count"],
+            "secret_count": len(data.get("secrets", {}))
+        }

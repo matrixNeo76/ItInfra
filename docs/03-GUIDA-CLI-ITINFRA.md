@@ -308,11 +308,14 @@ python scripts/itinfra.py vault list <slug>
 # Esegue l'audit dei puntatori vault:// nei documenti Markdown:
 python scripts/itinfra.py vault audit <slug>
 
-# Esporta bundle cifrato (.vbundle) con passphrase di team per scambio sicuro:
-python scripts/itinfra.py vault export-bundle <slug> --out team.vbundle
+# Esporta bundle cifrato (.vbundle) con passphrase di team e TTL di scadenza (default 168h / 7d):
+python scripts/itinfra.py vault export-bundle <slug> --out team.vbundle [--ttl-hours 72]
 
-# Importa bundle cifrato nel vault locale:
-python scripts/itinfra.py vault import-bundle <slug> --in team.vbundle
+# Importa bundle cifrato nel vault locale (con verifica automatica scadenza TTL):
+python scripts/itinfra.py vault import-bundle <slug> --in team.vbundle [--force-expired]
+
+# Rotazione crittografica delle chiavi e re-encryption totale con nuovo salt PBKDF2 e IV:
+python scripts/itinfra.py vault rotate-key <slug> [--new-passphrase "<nuova_passphrase>"]
 ```
 
 ---
@@ -500,9 +503,9 @@ python scripts/itinfra.py test-suite --out exports/system-audit.html
 
 ---
 
-### 3.18 `publish` — Central Publisher con Remote Lock & Drift Detection (Release v0.9 / v0.9.13)
+### 3.18 `publish` — Central Publisher, Lock Resiliente & VPN Fast Path (Release v0.9 / v0.9.14)
 Pubblica in modo atomico il progetto locale su storage master centrale (`\\fileserv01\dati01\workaure`). 
-Include protezione da lock concorrente (`.publish_<slug>.lock`), staging-then-swap atomico e fingerprinting crittografico SHA-256 (`.publish_manifest.json`) per intercettare manomissioni o modifiche remote non tracciate:
+Include protezione da lock concorrente (`.publish_<slug>.lock`) con TTL di 300s e auto-break di lock orfani, staging-then-swap atomico e **Stat-First Fast Path** (dimensione e mtime) per evitare il ricalcolo SHA-256 byte-a-byte su VPN geografiche lente:
 
 ```bash
 # Pubblicazione standard sulla share centrale:
@@ -513,6 +516,9 @@ python scripts/itinfra.py publish <slug> --dry-run
 
 # Inclusione del secret vault cifrato nella pubblicazione:
 python scripts/itinfra.py publish <slug> --include-vault
+
+# Forzatura rimozione lockfile orfano (es. crash processo precedente):
+python scripts/itinfra.py publish <slug> --break-lock
 
 # Forzatura sovrascrittura in caso di remote drift o documenti già approved:
 python scripts/itinfra.py publish <slug> --force
