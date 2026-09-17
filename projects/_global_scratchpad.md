@@ -59,7 +59,7 @@ relations:
 <!-- Policy Zero-Leakage: VIETATO inserire secret, credenziali o IP di produzione specifici di un singolo tenant. -->
 
 ## 1. Best Practices & Design Patterns
-- [2026-09-16 10:00] [architect] [ZeroTier/VPN] Su tutti i collegamenti overlay Layer 2/Layer 3 ZeroTier verso file server Windows (SMB/DFS), configurare sempre MTU 1400 e abilitare TCP MSS Clamping (change-tcp-mss=yes) sui router di confine per evitare frammentazione e timeout di sessione. <!-- id:mem-bp01zt -->
+- [2026-09-16 10:00] [architect] [ZeroTier/VPN] Su tutti i collegamenti overlay Layer 2/Layer 3 ZeroTier verso file server Windows (SMB/DFS), configurare sempre MTU 1400 e abilitare TCP MSS Clamping (change-tcp-mss=yes) sui router di confine per evitare frammentazione e timeout di sessione. <!-- id:mem-bp01zt --> <!-- promoted:LES-NET-001 -->
 - [2026-09-16 10:15] [network-eng] [MikroTik/Switching] Negli switch della famiglia MikroTik CRS3xx (es. CRS326), mantenere sempre attivo il flag hardware offloading (hw=yes) sui bridge VLAN e configurare le regole di isolation tramite switch-rule per garantire throughput a wire-speed senza saturare la CPU. <!-- id:mem-bp02mt -->
 - [2026-09-16 10:30] [sysadmin] [Hyper-V/Virtualization] I virtual switch dedicati al traffico di produzione e cluster heartbeat devono essere configurati in Switch Embedded Teaming (SET) con algoritmo Dynamic e failover subordinato a LACP lato switch top-of-rack. <!-- id:mem-bp03hv -->
 
