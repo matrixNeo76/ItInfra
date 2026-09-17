@@ -89,8 +89,12 @@ gantt
     Shared Entity Bridges & Inventory  :done, p15, 2026-09-16, 1d
     section Fase 8: v0.8 Global Staging & Test Suite
     Global Pool & System Test Suite    :done, p16, 2026-09-16, 1d
-    section Fase 9: v0.9 MCP & Topology Engine
-    MCP Server & Advanced Topologies   :active, p17, 2026-09-17, 1d
+    section Fase 9: v0.8.1 Cognitive Bridge & SOTA Ingestion
+    Cognitive Bridge & Branding (SPEC-15..17):done, p17, 2026-09-17, 1d
+    section Fase 10: v0.9 Local Workspace & Central Publish
+    Central Publish & Auto-Distribution:done, p18, 2026-09-17, 1d
+    section Fase 11: v0.10 MCP & Topology Engine
+    MCP Server & Advanced Topologies   :active, p19, 2026-09-18, 1d
 ```
 
 ---
@@ -133,7 +137,13 @@ gantt
 - **Enterprise System Test Suite (`scripts/itinfra.py test-suite`):** collaudo end-to-end automatizzato di tutti i 10 moduli del framework con output a terminale e Pass Rate 100%.
 - **Unified Verification Dashboard (`projects/system-test-report.html`):** report HTML consolidato offline 100% Zero-CDN con KPI esecutive, tab interattivi e log diagnostico di collaudo.
 
-### Release v0.9 — Local Workspace & Central Publish Architecture (`itinfra.py publish`) (In Pianificazione / Sviluppo)
+### Release v0.8.1 — Visual Document Ingestion, Enterprise Branding & Cognitive Bridge (SPEC-15, SPEC-16, SPEC-17) (Completato)
+- **Visual Document Ingestion SOTA (`SPEC-15`):** pipeline nativa Pixel-to-Markdown per scansioni, preventivi e contratti complessi con modularizzazione OKF v0.2 multi-file (`docs/severino-sla/`, `docs/viola-preventivo/`).
+- **Audit Engine Deterministici 2026:** conformità matematica e legale automatica per contratti SLA (`ContractAuditEngine`) e computi metrici/preventivi commerciali (`QuoteAuditEngine`).
+- **Enterprise Document Templating & Official Branding (`SPEC-16`):** identità visiva Aure System con logo ufficiale integrato, esportazione multi-formato (DOCX, PDF vettoriale A4, HTML Zero-CDN).
+- **Unified Cognitive Memory Bridge (`SPEC-17`):** federazione cross-repo tra la memoria a 3 livelli di `itinfra` e il motore auto-correttivo attestato di `itinfra-business-ops` con promozione automatica da L2 Staging Scratchpad (`_global_scratchpad.md`) a Guardrail Attestati Antigravity (`.agents/rules/`).
+
+### Release v0.9 — Local Workspace & Central Publish Architecture (`itinfra.py publish`) (Completato)
 - **Disaccoppiamento Local Workspace & Central Storage (`\\fileserv01\dati01\workaure`):** i tecnici operano in locale (`C:\itinfra\`) a piena velocità SSD senza latenze SMB, timeout dei file watcher o conflitti di lock Git concorrenti.
 - **Modulo Central Publisher & Pre-Flight Quality Gate (`scripts/itinfra_publish.py`):** comando CLI `itinfra.py publish <slug>` con validazione obbligatoria prima della copia (linter formale OKF v0.2 a 0 errori, strict grounding audit semantico e scansione anti-leak credenziali).
 - **Copia Atomica Confinata:** sincronizzazione esclusiva dei file appartenenti a `projects/<slug>/`, garantendo l'assoluta inviolabilità di `scripts/`, `templates/`, `docs/`, `.git/` e dei progetti degli altri clienti.

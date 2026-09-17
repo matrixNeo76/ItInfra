@@ -57,7 +57,10 @@ ItInfra/
 │   ├── 11-GUIDA-LOCAL-WORKSPACE-CENTRAL-PUBLISH.md ← Architettura client locale e publishing su share centrale
 │   ├── 12-GUIDA-ONBOARDING-TECNICI-ANTIGRAVITY.md ← Onboarding immediato e comandi a zero attrito
 │   ├── 13-SPECIFICA-CLIENT-INTERACTIVE-AUTO-DISTRIBUTION.md ← Specifica distribuzione automatizzata
-│   └── 14-PIPELINE-CREAZIONE-GUIDATA-ANTIGRAVITY-OKF.md ← Pipeline di creazione guidata OKF v0.2 con Antigravity
+│   ├── 14-PIPELINE-CREAZIONE-GUIDATA-ANTIGRAVITY-OKF.md ← Pipeline di creazione guidata OKF v0.2 con Antigravity
+│   ├── 15-SPEC-VISUAL-DOCUMENT-INGESTION-OKF.md ← Ingestione visiva SOTA Pixel-to-Markdown e pacchetti OKF
+│   ├── 16-SPEC-ENTERPRISE-DOCUMENT-TEMPLATES-BRANDING.md ← Template aziendali, brand Aure System e rendering DOCX/PDF/HTML
+│   └── 17-SPEC-UNIFIED-COGNITIVE-MEMORY-BRIDGE.md ← Bridge cognitivo federato e auto-correzione cross-repo con itinfra-business-ops
 │
 ├── projects/                          ← Registro progetti e manifest globali
 │   ├── _schema/                       ← Schema JSON formale del manifest

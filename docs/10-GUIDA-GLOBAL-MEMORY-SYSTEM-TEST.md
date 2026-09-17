@@ -24,6 +24,7 @@ related_docs:
   - "guide-memoria-ibrida-trust-signals-v02"
   - "guide-global-enterprise-graph-v02"
   - "guide-itinfra-cli-manual-01"
+  - "SPEC-17"
 depends_on:
   - "guide-memoria-ibrida-trust-signals-v02"
   - "guide-global-enterprise-graph-v02"
@@ -149,7 +150,7 @@ python scripts/itinfra.py memory prune --global [--no-archive]
 
 ## 5. Enterprise System Test Suite (`itinfra.py test-suite`)
 
-La suite automatizzata esegue il collaudo sequenziale dei 10 moduli cardine del repository:
+La suite automatizzata esegue il collaudo sequenziale dei 16 moduli cardine del framework itinfra:
 
 | Modulo | Codice | Nome Modulo | Descrizione Collaudo |
 |---|---|---|---|
@@ -163,6 +164,12 @@ La suite automatizzata esegue il collaudo sequenziale dei 10 moduli cardine del 
 | **08** | `MOD-08` | **Global Asset Inventory** | Scansione portfolio, normalizzazione vendor e censimento apparati |
 | **09** | `MOD-09` | **Cross-Client RCA Alert** | Verifica allarmi preventivi intelligenti correlati a tecnologie con RCA |
 | **10** | `MOD-10` | **D3.js Knowledge Graph** | Verifica integrità grafo federato, archi semantici pesati e nodi ponte |
+| **11** | `MOD-11` | **Local Workspace & Central Publish** | Architettura workspace SSD locale, publishing e quality gate |
+| **12** | `MOD-12` | **Client Interactive & Auto-Dist** | Continuous delivery su share master, auto-sync e interattività |
+| **13** | `MOD-13` | **Project Scaffolding & Manifest** | Auto-scaffolding atomico e propagazione manifest |
+| **14** | `MOD-14` | **Resiliency & Reverse Reconciliation** | Protezione da typo, rollback atomico e riconciliazione inversa |
+| **15** | `MOD-15` | **Enterprise Integrity & Drift Guard** | Mermaid linter offline, anti-leak credenziali e drift detection |
+| **16** | `MOD-16` | **Remote Resiliency & VPN FastPath** | TTL vault su tunnel lenti e bypass failover per VPN ZeroTier |
 
 ### Sintassi di Esecuzione:
 ```bash
@@ -182,8 +189,8 @@ python scripts/itinfra.py test-suite --out exports/system-audit.html
 
 La dashboard HTML generata è progettata con i seguenti criteri industriali:
 - **100% Zero-CDN & Air-Gapped:** Non carica risorse esterne. Tutto il CSS e il codice JavaScript sono incorporati direttamente nel file HTML, consentendo l'ispezione in ambienti data center senza connettività internet.
-- **KPI Scorecard Esecutiva:** Visualizza ad alto impatto il Pass Rate complessivo (100%), il tempo di collaudo (es. ~1.2s), il conteggio delle allucinazioni (0) e dei secret leak (0).
-- **Accordion Interattivi & Filtri Tab:** Permette di navigare tra categorie (*Core & Compliance, Sicurezza, Automazione, Telemetria, Memoria, Inventario*) e filtrare istantaneamente tramite la barra di ricerca live.
+- **KPI Scorecard Esecutiva:** Visualizza ad alto impatto il Pass Rate complessivo (100%), il tempo di collaudo (es. ~7.3s), il conteggio delle allucinazioni (0) e dei secret leak (0).
+- **Accordion Interattivi & Filtri Tab:** Permette di navigare tra categorie (*Core & Compliance, Sicurezza, Automazione, Telemetria, Memoria, Inventario, Distribuzione, Resilienza*) e filtrare istantaneamente tramite la barra di ricerca live.
 - **Pulsante One-Click Copy:** Consente di copiare il riepilogo formattato negli appunti per verbali o comunicazioni interne.
 - **Collegamenti Rapidi:** Link diretti a `global-graph.html` e ai report di progetto offline.
 
@@ -194,5 +201,16 @@ La dashboard HTML generata è progettata con i seguenti criteri industriali:
 Prima di dichiarare completata una sessione o un rilascio:
 - [x] Lo scratchpad globale `projects/_global_scratchpad.md` supera `itinfra.py validate`.
 - [x] Il sanitizer multi-tenant blocca i secret e impedisce commistioni tra progetti.
-- [x] L'esecuzione di `python scripts/itinfra.py test-suite` restituisce `10/10 PASS (100.0%)`.
+- [x] L'esecuzione di `python scripts/itinfra.py test-suite` restituisce `16/16 PASS (100.0%)`.
 - [x] Il file `projects/system-test-report.html` è generato e visualizzabile offline in qualsiasi browser moderno.
+
+---
+
+## 8. Integrazione con Cognitive Bridge (`SPEC-17`)
+
+Lo Staging Scratchpad Globale funge da vivaio per le regole architetturali cross-progetto.
+Tramite il modulo connettore `CognitiveBridge` (`itinfra-business-ops/scripts/core/cognitive_bridge.py`):
+1. I tecnici e gli agenti leggono `projects/_global_scratchpad.md` liberamente per consultare soluzioni consolidate.
+2. Quando una voce raggiunge maturità e valore permanente (es. `mem-bp01zt` per ZeroTier MSS clamping), il comando `it-ops learn promote mem-bp01zt --code LES-NET-001` la promuove automaticamente a **Guardrail Attestato OKF v0.2**.
+3. Il file di lock atomico `projects/_global_scratchpad.lock` garantisce la mutua esclusione sia da `itinfra` che da `itinfra-business-ops`, prevenendo corruzioni concorrenti.
+

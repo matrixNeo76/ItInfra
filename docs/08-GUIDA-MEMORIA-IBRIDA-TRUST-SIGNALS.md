@@ -28,6 +28,7 @@ related_docs:
   - "index-ciclo-lavorativo-it"
   - "guide-multi-agente-worktrees-v02"
   - "guide-global-memory-system-test-01"
+  - "SPEC-17"
 depends_on:
   - "specification-itinfra-assistant-v02"
   - "index-ciclo-lavorativo-it"
@@ -238,3 +239,23 @@ Nelle conversazioni con agenti AI:
 1. **Fase di Avvio:** L'agente legge `_scratchpad.md` prima di condurre l'intervista tecnica per non porre domande a cui l'utente ha già risposto.
 2. **Durante il Dialogo:** Al raggiungimento di ogni accordo tecnico su IP, subnet, VLAN o sizing hardware, l'agente esegue automaticamente `itinfra.py memory log`.
 3. **In Chiusura:** Quando il documento tecnico è completo, l'agente propone il consolidamento esplicito (`memory consolidate`), assicurando la conformità a OKF v0.2.
+
+---
+
+## 9. Federazione Cross-Repo & Cognitive Bridge (`SPEC-17`)
+
+Le decisioni tecniche e le scoperte infrastrutturali archiviate nel pool L2 globale (`projects/_global_scratchpad.md`) possono essere promosse a **Guardrail Attestati Immutabili** condivisi tra `itinfra` e `itinfra-business-ops`.
+
+```mermaid
+flowchart LR
+    L2["itinfra<br/>_global_scratchpad.md<br/>(mem-bp01zt: MTU 1400)"] -->|"it-ops learn promote"| BRIDGE["CognitiveBridge<br/>(AtomicLock & MultiTenantSanitizer)"]
+    BRIDGE -->|"OKF v0.2 Attestato"| CONCEPT["itinfra-business-ops<br/>docs/concepts/LES-NET-001.okf.md"]
+    BRIDGE -->|"Compilazione Live"| RULE[".agents/rules/<br/>01-self-correcting-memory.md"]
+```
+
+### Flusso di Promozione da L2 a Guardrail Attestato:
+1. **Identificazione della Lesson Learned**: un pattern tecnico consolidato (es. *ZeroTier MTU 1400 / TCP MSS Clamping per evitare stalli SMB*) viene registrato in `projects/_global_scratchpad.md`.
+2. **Validazione di Sicurezza Multi-Tenant**: il modulo `validate_global_entry_safety` verifica l'assenza assoluta di dati sensibili del cliente (IP privati, FQDN, credenziali, nomi aziendali).
+3. **Promozione Attestata**: tramite la CLI di governance (`it-ops learn promote <entry_id> --code LES-NET-001 --title "..."`), la decisione viene trascritta in un nodo OKF v0.2 con metadati di confidenza, sigillo SHA-256 e status `attested`.
+4. **Attivazione Direttiva AI**: il motore `MemoryEngine` compila automaticamente la regola all'interno di `.agents/rules/01-self-correcting-memory.md`, rendendo il guardrail attivo a costo zero di token per ogni sessione di Antigravity.
+

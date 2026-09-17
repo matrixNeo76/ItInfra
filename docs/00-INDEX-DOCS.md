@@ -33,6 +33,9 @@ related_docs:
   - "guide-onboarding-tecnici-antigravity-01"
   - "guide-pipeline-creazione-guidata-antigravity-01"
   - "guide-itinfra-repository-roadmap-v02"
+  - "specification-itinfra-visual-ingestion-v01"
+  - "specification-enterprise-document-templates-branding-v01"
+  - "SPEC-17"
 depends_on: []
 classification: "public"
 retention: "permanent"
@@ -125,6 +128,21 @@ relations:
     relationType: "documents"
     weight: 0.9
     description: "Allineamento strategico e cronoprogramma evolutivo del repository"
+  - targetTitle: "Specifica Tecnica — Analisi Visiva Nativa (Pixel-to-Markdown) & OKF v0.2 Ingestion"
+    targetId: "specification-itinfra-visual-ingestion-v01"
+    relationType: "documents"
+    weight: 0.95
+    description: "Pipeline SOTA di ingestione e audit per documenti cartacei, preventivi e contratti complessi"
+  - targetTitle: "Specifica Tecnica — Enterprise Document Templating, Corporate Brand Identity & Zero-CDN Multi-Format Publishing"
+    targetId: "specification-enterprise-document-templates-branding-v01"
+    relationType: "documents"
+    weight: 0.95
+    description: "Standardizzazione visiva vettoriale, brand Aure System e motori DOCX, PDF A4 e HTML Zero-CDN"
+  - targetTitle: "Specifica Tecnica — Unified Cognitive Memory Architecture & Cross-Repository Self-Correction Bridge"
+    targetId: "SPEC-17"
+    relationType: "documents"
+    weight: 1.0
+    description: "Federazione unificata della memoria L1-L2-L3 di itinfra con il motore auto-correttivo sigillato SHA-256"
 ---
 
 # Indice Generale della Documentazione ITInfra
@@ -158,6 +176,9 @@ graph TD
     DOCS --> ONB[12-GUIDA-ONBOARDING-TECNICI-ANTIGRAVITY.md<br/>Onboarding Client Antigravity]
     DOCS --> INTER[13-SPECIFICA-CLIENT-INTERACTIVE-AUTO-DISTRIBUTION.md<br/>Client Interactivity & Auto-Dist]
     DOCS --> PIPE[14-PIPELINE-CREAZIONE-GUIDATA-ANTIGRAVITY-OKF.md<br/>Pipeline Creazione Guidata Antigravity]
+    DOCS --> VIS[15-SPEC-VISUAL-DOCUMENT-INGESTION-OKF.md<br/>Visual Document Ingestion OKF]
+    DOCS --> TPL[16-SPEC-ENTERPRISE-DOCUMENT-TEMPLATES-BRANDING.md<br/>Enterprise Document Templates & Branding]
+    DOCS --> COG[17-SPEC-UNIFIED-COGNITIVE-MEMORY-BRIDGE.md<br/>Unified Cognitive Memory Bridge]
     
     CLI -.-> CLI_PY[scripts/itinfra.py]
     GLOBAL -.-> INV_CLI[scripts/itinfra_inventory.py]
@@ -168,6 +189,7 @@ graph TD
     ONB -.-> SKILL_SETUP[.agents/skills/itinfra-setup/]
     TROUBLE -.-> SKILL_TB[.agents/skills/itinfra-troubleshooter/]
     AGENT -.-> SKILL[.agents/skills/itinfra-assistant/]
+    COG -.-> COG_PY[../itinfra-business-ops/scripts/core/cognitive_bridge.py]
     MANIF -.-> PROJ_DIR[projects/<slug>/]
     COMPL -.-> TPL_DIR[templates/]
 ```
@@ -192,6 +214,9 @@ graph TD
 | [`12-GUIDA-ONBOARDING-TECNICI-ANTIGRAVITY.md`](./12-GUIDA-ONBOARDING-TECNICI-ANTIGRAVITY.md) | `guide` | Manuale di benvenuto e setup rapido per client Windows 11, automazione One-Click e skill itinfra-setup. |
 | [`13-SPECIFICA-CLIENT-INTERACTIVE-AUTO-DISTRIBUTION.md`](./13-SPECIFICA-CLIENT-INTERACTIVE-AUTO-DISTRIBUTION.md) | `specification` | Architettura di Continuous Delivery automatica su share master, Client Startup Auto-Sync, VS Code Tasks GUI e Generative UI. |
 | [`14-PIPELINE-CREAZIONE-GUIDATA-ANTIGRAVITY-OKF.md`](./14-PIPELINE-CREAZIONE-GUIDATA-ANTIGRAVITY-OKF.md) | `guide` | Architettura e diagramma della pipeline di creazione guidata OKF v0.2 con Google Antigravity, auto-scaffolding e Zero-Hallucination. |
+| [`15-SPEC-VISUAL-DOCUMENT-INGESTION-OKF.md`](./15-SPEC-VISUAL-DOCUMENT-INGESTION-OKF.md) | `specification` | Architettura SOTA di ingestione visiva nativa (Pixel-to-Markdown) conforme a OKF v0.2, modularizzazione pacchetti multi-documento e audit deterministico. |
+| [`16-SPEC-ENTERPRISE-DOCUMENT-TEMPLATES-BRANDING.md`](./16-SPEC-ENTERPRISE-DOCUMENT-TEMPLATES-BRANDING.md) | `specification` | Specifica template professionali, brand identity Aure System, vettorializzazione logo SVG e motori di esportazione DOCX, PDF A4 e HTML Zero-CDN. |
+| [`17-SPEC-UNIFIED-COGNITIVE-MEMORY-BRIDGE.md`](./17-SPEC-UNIFIED-COGNITIVE-MEMORY-BRIDGE.md) | `specification` | Specifica del Cognitive Bridge unificato: federazione tra la memoria ibrida L1-L2-L3 di itinfra e il motore auto-correttivo attestato con sigillo crittografico SHA-256. |
 
 ---
 
