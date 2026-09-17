@@ -30,6 +30,7 @@ Questo è l'ambiente di lavoro per la documentazione tecnica, governance, automa
 | **Auto-Scaffold Template da Manifest** | `scaffold <slug>` | `it scaffold <slug>` |
 | **Verificare Stato 7 Fasi** | `stato <slug>` | `it status <slug>` |
 | **Valida Documento Attivo** | `valida` *(o tasto `Ctrl+Shift+B`)* | `it validate <percorso_file>` |
+| **Ingestione Documenti Tecnici (OKF v0.2)** | `ingest <file>` | `it ingest <file> [--slug <slug>] [--apply]` |
 | **Cruscotto Grafico Esecutivo** | `ui` *(o `dashboard`)* | `it ui` |
 | **Collaudo Completo Sistema** | `test-suite` | `it test-suite` |
 | **Avvio Quotidiano "1-Clic"** | *Doppio clic sull'icona Desktop:*<br>**`ITInfra - Aggiorna e Avvia`** | `it start` |
@@ -42,6 +43,7 @@ Questo è l'ambiente di lavoro per la documentazione tecnica, governance, automa
 Se l'utente digita uno di questi trigger rapidi, **NON fare domande, NON chiedere conferme preliminari e NON cercare file**: esegui immediatamente il relativo comando:
 - **`"start <slug>"`** o **`"avvia <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py start <slug>` ed incorpora nella risposta il tag `<agent-embed src="file:///...">` stampato dall'output del comando.
 - **`"ui"`** o **`"dashboard"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py ui` ed incorpora nella risposta il tag `<agent-embed src="file:///...">` stampato dall'output del comando. *(⚠️ CRITICO: NON inserire MAI codice HTML all'interno del tag `<agent-embed>`. Deve contenere ESCLUSIVAMENTE l'attributo `src="file:///..."`, altrimenti l'interfaccia mostrerà l'errore "Invalid embed:").*
+- **`"ingest <file>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py ingest <file> [--slug <slug>] [--apply]` e mostra l'audit di estrazione.
 - **`"aggiorna"`** o **`"update"`** $\rightarrow$ Esegui subito: `python scripts/itinfra_sync.py` e mostra il report di sincronizzazione.
 - **`"controlla"`** o **`"check"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py check-share` e mostra la tabella di salute.
 - **`"pubblica <slug>"`** $\rightarrow$ Esegui subito: `python scripts/itinfra.py publish <slug>` e mostra l'esito del Quality Gate.
@@ -54,6 +56,51 @@ Se l'utente digita uno di questi trigger rapidi, **NON fare domande, NON chieder
 Il divieto di ricerca è circoscritto rigorosamente a saluti, comandi e orientamento. Le ricerche e l'uso degli strumenti sono pienamente permesse per:
 - Interrogazione dell'inventario hardware enterprise: usa `python scripts/itinfra.py inventory find "<query>"`.
 - Lavoro documentale ordinario su progetti specifici: consultazione e redazione di file in `projects/<slug>/`.
+
+---
+
+## 📸 Protocollo Obbligatorio: Analisi Visiva Nativa SOTA (Pixel-to-Markdown) & OKF v0.2
+
+Quando l'utente carica o allega un file (PDF, distinta tecnica, datasheet apparato di rete, schema topologico, offerta fornitore, scansione, capitolato tecnico, certificazione cablaggio):
+1. **Analisi Visiva Nativa (Pixel-Level)**:
+   - È **obbligatorio analizzare il documento a livello visivo nativo** (pixel-to-markdown) per preservare l'ordine di lettura corretto su colonne complesse, grafici, firme, quote rack e tabelle dense.
+   - Attiva il massimo livello di **Deep Thinking** per decifrare codici prodotto, porte di rete, interfacce, memorie, dischi e specifiche elettriche/fisiche.
+2. **Generazione Immediata dell'Artefatto OKF v0.2 (`.md`)**:
+   - Genera un file Artefatto Markdown conforme allo standard **OKF v0.2** composto da:
+     - **Frontmatter YAML**:
+       ```yaml
+       ---
+       okf_version: "0.2"
+       id: "spec-[slug]-[titolo]-01"
+       title: "[Titolo effettivo del documento]"
+       type: "specification" # o "concept", "architecture"
+       description: "[Abstract sintetico del contenuto tecnico]"
+       domain: "IT Infrastructure & Technical Ingestion"
+       tags:
+         - "document-intelligence"
+         - "estrazione-sota"
+         - "okf-v0.2"
+       generated.at: "[ISO 8601 Timestamp]"
+       sources:
+         - "file://@[nome_documento.pdf]"
+       ---
+       ```
+     - **Corpo del Documento Markdown**:
+       - `# Punti Chiave`: specifiche salienti, vincoli di compatibilità e vincoli d'alimentazione/rack con indicazione `[Pagina X]`.
+       - `# Contenuto Semantico`: architettura, topologia e ruoli logici con capitoli e note.
+       - `# Tabelle Estratte`: tutte le tabelle BOM (Bill of Materials) e matrici hardware interamente ricostruite cella per cella in Markdown, senza omettere alcun componente, part number o quantità.
+3. **Zero-Hallucination & Provenance Guardrail**:
+   - È **SEVERAMENTE VIETATO** inventare indirizzi IP, apparati di rete, VLAN o porte non dichiarati nel documento.
+   - I dettagli di configurazione non presenti nel documento devono essere esplicitamente contrassegnati come `DA-RICHIEDERE` o `NOT_FOUND`.
+4. **Alimentazione Deterministica delle Pipeline**:
+   - L'artefatto OKF v0.2 viene memorizzato in `projects/<slug>/docs/` (o cartella documentale di progetto) e ingerito deterministicamente tramite la CLI (`it ingest <file.okf.md> --slug <slug> --apply`) per popolare `project-manifest.yaml`, `06-As-Built.md` e `09-Handover-Inventory.md`.
+
+---
+
+## 🔒 Principi di Integrazione Hub-and-Spoke con itinfra-business-ops
+1. **Separation of Concerns**: I dati contabili, i margini di ricarico e la fatturazione risiedono esclusivamente nel repository commerciale `itinfra-business-ops`.
+2. **Read-Only Bridge**: L'applicativo business legge in sola lettura i manifest e gli As-Built tecnici in `projects/<slug>/` per effettuare il cross-check di coerenza commerciale.
+3. **Shared Customer Slug**: Lo slug cliente (es. `teatek-spa`, `severino-srl`) deve essere rigorosamente identico tra i due repository.
 
 ---
 

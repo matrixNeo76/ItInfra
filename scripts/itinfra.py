@@ -2804,6 +2804,57 @@ def cmd_interview(args: argparse.Namespace) -> int:
 
     return run_interview(args)
 
+def cmd_ingest(args: argparse.Namespace) -> int:
+    """Handler per l'ingestione documentale tecnica OKF v0.2."""
+    try:
+        from itinfra_ingest import TechnicalOKFParser, apply_ingestion_to_project
+    except ImportError:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from itinfra_ingest import TechnicalOKFParser, apply_ingestion_to_project
+
+    repo_root = Path(__file__).resolve().parent.parent
+    file_path = Path(args.file)
+    if not file_path.is_file():
+        print(colorize(f"ERRORE: File non trovato: {file_path}", COLOR_RED), file=sys.stderr)
+        return 1
+
+    extraction = TechnicalOKFParser.parse_file(file_path)
+
+    if args.apply:
+        if not args.slug:
+            print(colorize("ERRORE: --apply richiede lo slug del progetto (--slug <slug>)", COLOR_RED), file=sys.stderr)
+            return 1
+        actions = apply_ingestion_to_project(repo_root, args.slug, extraction)
+        extraction["applied_actions"] = actions
+
+    if getattr(args, "as_json", False):
+        import json
+        print(json.dumps(extraction, indent=2, ensure_ascii=False))
+        return 0
+
+    print(colorize("\n" + "=" * 68, COLOR_BOLD + COLOR_CYAN))
+    print(f"  📸 INGESTIONE DOCUMENTALE TECNICA ITINFRA: {file_path.name}")
+    print("=" * 68)
+    print(f"  Titolo       : {extraction['frontmatter'].get('title', 'N/D')}")
+    print(f"  Tipo         : {extraction['frontmatter'].get('type', 'N/D')}")
+    print(f"  Sorgente     : {extraction['frontmatter'].get('sources', ['N/D'])[0]}")
+    print(f"  Componenti   : {len(extraction['components'])} elementi hardware rilevati")
+    print("-" * 68)
+    for c in extraction["components"]:
+        role_tag = f"[{c['role']}]"
+        print(f"  - {role_tag:<20} {c['quantity']}x {c['description']}")
+
+    if args.apply:
+        print("-" * 68)
+        print(colorize("  AZIONI APPLICATE AL PROGETTO:", COLOR_BOLD + COLOR_GREEN))
+        for a in extraction.get("applied_actions", []):
+            print(f"   [✓] {a}")
+    else:
+        print(colorize("\n  [!] Modalità simulazione. Usa --apply per aggiornare i file di progetto.", COLOR_YELLOW))
+    print("=" * 68 + "\n")
+    return 0
+
 def cmd_start(args: argparse.Namespace) -> int:
     """Handler unificato per avviare l'onboarding di un progetto o l'ambiente ITInfra (Release v0.9.11)."""
     repo_root = Path(__file__).resolve().parent.parent
@@ -3400,6 +3451,13 @@ def main():
     p_start.add_argument("--force", action="store_true", help="Forza la creazione anche se esistono progetti con nome simile (Typo Guard)")
     p_start.add_argument("--open", action="store_true", help="Apre la dashboard nel browser predefinito")
 
+    # Comando ingest (Release v0.9.15 - OKF v0.2 Visual Ingestion)
+    p_ing = subparsers.add_parser("ingest", help="Ingerisce artefatti tecnici OKF v0.2 estraendo componenti hardware e aggiornando i documenti di progetto")
+    p_ing.add_argument("file", help="Percorso dell'artefatto .okf.md")
+    p_ing.add_argument("--slug", help="Slug del progetto ITInfra target (es. teatek-spa)")
+    p_ing.add_argument("--apply", action="store_true", help="Applica le modifiche a project-manifest.yaml e As-Built")
+    p_ing.add_argument("--json", dest="as_json", action="store_true", help="Output in formato JSON")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -3458,6 +3516,8 @@ def main():
         return cmd_interview(args)
     elif args.command == "start":
         return cmd_start(args)
+    elif args.command == "ingest":
+        return cmd_ingest(args)
     else:
         parser.print_help()
         return 1

@@ -1,0 +1,54 @@
+{
+  "source": "teatek-server.okf.md",
+  "slug": "teatek-spa",
+  "components_count": 6,
+  "components": [
+    {
+      "category": "BAREBONE / Server",
+      "description": "2U ZFS OpenStor JovianDSS Rack Storage (iSCSI/NFS/SMB/FC) 24 Bay 2.5\" NVMe - DUAL INTEL XEON 6 - 2x100GbE QSFP28 for metrocluster - 2*1GbE - 2000W Redundant PSU Titanium Level",
+      "quantity": 2,
+      "notes": "Licenza Jovian Metro Cluster inclusa",
+      "role": "compute_node"
+    },
+    {
+      "category": "CPU / SERVER",
+      "description": "Intel Xeon 6507P (8C/16T, base 3,50GHz - turbo 4,30GHz, 48MB Cache, LGA4710, TDP 150W, 88 PCIe lanes)",
+      "quantity": 4,
+      "notes": "2 CPU per nodo",
+      "role": "processor"
+    },
+    {
+      "category": "Memoria",
+      "description": "32GB DDR5-5600 ECC Registered",
+      "quantity": 16,
+      "notes": "512GB RAM totali (256GB per nodo)",
+      "role": "memory"
+    },
+    {
+      "category": "HDD / 2,5\" NVMe",
+      "description": "Kioxia CM7-V U.3 15mm 3.200 GB SIE 3 DWPD PCIe Gen5 1x4 (ZIL Write Log, fino a 2.700K IOPS)",
+      "quantity": 2,
+      "notes": "1 disco ZIL ad alta resistenza per nodo",
+      "role": "storage_media"
+    },
+    {
+      "category": "HDD / 2,5\" NVMe",
+      "description": "Samsung PM9A3 3.8TB NVMe PCIe 4.0 x4 U.2 7mm 1 DWPD SED Opal (fino a 1.000K IOPS)",
+      "quantity": 20,
+      "notes": "10 dischi storage dati per nodo (76,8TB Raw)",
+      "role": "storage_media"
+    },
+    {
+      "category": "Servizi / Garanzia",
+      "description": "Estensione Garanzia a 3 Anni ON-SITE con supporto sistemistico certificato",
+      "quantity": 1,
+      "notes": "[OPZIONE] Attivabile su richiesta cliente",
+      "role": "support_service"
+    }
+  ],
+  "applied_actions": [
+    "Aggiornato project-manifest.yaml: censiti 5 asset hardware (5 nuovi)",
+    "06-As-Built.md verificato: componenti OpenStor già presenti e conformi all'As-Built."
+  ],
+  "timestamp": "2026-09-17T16:40:00Z"
+}
