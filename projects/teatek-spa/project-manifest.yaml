@@ -21,9 +21,9 @@ sites:
   role: Branch
   location: Corso Buenos Aires 45, Milano
 network_baseline:
-  supernet_ipv4: "10.0.0.0/8"
-  lan_office_subnet_ipv4: "192.168.10.0/24"
-  supernet_ipv6: "2001:db8:100::/48"
+  supernet_ipv4: 10.0.0.0/8
+  lan_office_subnet_ipv4: 192.168.10.0/24
+  supernet_ipv6: 2001:db8:100::/48
   bgp_asn_internal: 65100
   bgp_asn_external_primary: 65200
   dns_servers:
@@ -77,3 +77,39 @@ hardware_inventory:
   quantity: 20
   role: storage_media
   category: HDD / 2,5" NVMe
+- description: Canone Noleggio Base Mensile
+  quantity: 1
+  role: hardware
+  category: ''
+- description: Rata Fatturazione Semestrale Canone
+  quantity: 1
+  role: hardware
+  category: ''
+- description: Franchigia Stampe Bianco e Nero Incluse
+  quantity: 1
+  role: hardware
+  category: ''
+- description: Franchigia Stampe Colore Incluse
+  quantity: 1
+  role: hardware
+  category: ''
+- description: Costo Copia Eccedente Bianco e Nero
+  quantity: 1
+  role: hardware
+  category: ''
+- description: Costo Copia Eccedente Colore
+  quantity: 1
+  role: hardware
+  category: ''
+- description: Consumabili (Toner, Developer, Drum)
+  quantity: 1
+  role: hardware
+  category: ''
+- description: Parti di Ricambio & Manodopera
+  quantity: 1
+  role: hardware
+  category: ''
+- description: Carta per Stampa
+  quantity: 1
+  role: hardware
+  category: ''

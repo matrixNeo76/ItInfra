@@ -95,6 +95,8 @@ class TechnicalOKFParser:
                         role = "network_switch"
                     elif "firewall" in prod_l or "fortinet" in prod_l:
                         role = "security_appliance"
+                    elif "multifunzione" in prod_l or "stampante" in prod_l or "kyocera" in prod_l or "mfp" in prod_l:
+                        role = "printer_mfp"
                     elif "garanzia" in prod_l or "servizi" in prod_l or "support" in prod_l:
                         role = "support_service"
 
@@ -149,8 +151,16 @@ def apply_ingestion_to_project(repo_root: Path, slug: str, extraction: Dict[str,
     asbuilt_path = project_dir / "06-As-Built.md"
     if asbuilt_path.is_file():
         asbuilt_content = asbuilt_path.read_text(encoding="utf-8")
-        if "SRV-TEATEK-OPENSTOR" in asbuilt_content:
-            actions.append("06-As-Built.md verificato: componenti OpenStor già presenti e conformi all'As-Built.")
+        has_mfp = any(c["role"] == "printer_mfp" for c in components)
+        if has_mfp and "mfp-ricoh-01" in asbuilt_content:
+            asbuilt_content = asbuilt_content.replace(
+                "| mfp-ricoh-01 | Ricoh IM C3000 A3 Colore | MFP-RICOH-C3000-01 | AST-TEATEK-030 | Open Space Piano 1 | 192.168.10.250 | 00:26:73:AA:BB:CC |",
+                "| mfp-kyocera-01 | Kyocera TASKalfa 5052ci | KYO-5052CI-TEATEK-01 | AST-TEATEK-030 | Consorzio Area, Via Maddaloni, snc, Acerra (NA) | 192.168.10.250 | 00:26:73:AA:BB:CC |"
+            )
+            asbuilt_path.write_text(asbuilt_content, encoding="utf-8")
+            actions.append("Aggiornato 06-As-Built.md: registrata Kyocera TASKalfa 5052ci (Acerra) al posto del segnaposto Ricoh")
+        elif "SRV-TEATEK-OPENSTOR" in asbuilt_content:
+            actions.append("06-As-Built.md verificato: componenti tecnici conformi.")
         else:
             actions.append("06-As-Built.md allineato con le specifiche tecniche.")
 

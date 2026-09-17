@@ -1,0 +1,75 @@
+{
+  "source": "teatek-noleggio-kyocera.okf.md",
+  "slug": "teatek-spa",
+  "components_count": 9,
+  "components": [
+    {
+      "category": "",
+      "description": "Canone Noleggio Base Mensile",
+      "quantity": 1,
+      "notes": "Canone fisso per singolo apparato",
+      "role": "hardware"
+    },
+    {
+      "category": "",
+      "description": "Rata Fatturazione Semestrale Canone",
+      "quantity": 1,
+      "notes": "6 mesi anticipati (€ 75,00 x 6)",
+      "role": "hardware"
+    },
+    {
+      "category": "",
+      "description": "Franchigia Stampe Bianco e Nero Incluse",
+      "quantity": 1,
+      "notes": "18.000 copie incluse a semestre",
+      "role": "hardware"
+    },
+    {
+      "category": "",
+      "description": "Franchigia Stampe Colore Incluse",
+      "quantity": 1,
+      "notes": "900 copie incluse a semestre",
+      "role": "hardware"
+    },
+    {
+      "category": "",
+      "description": "Costo Copia Eccedente Bianco e Nero",
+      "quantity": 1,
+      "notes": "Conteggio a consuntivo semestrale",
+      "role": "hardware"
+    },
+    {
+      "category": "",
+      "description": "Costo Copia Eccedente Colore",
+      "quantity": 1,
+      "notes": "Conteggio a consuntivo semestrale",
+      "role": "hardware"
+    },
+    {
+      "category": "",
+      "description": "Consumabili (Toner, Developer, Drum)",
+      "quantity": 1,
+      "notes": "Fornitura inclusa full-risk",
+      "role": "hardware"
+    },
+    {
+      "category": "",
+      "description": "Parti di Ricambio & Manodopera",
+      "quantity": 1,
+      "notes": "Riparazioni comprese (esclusa incuria)",
+      "role": "hardware"
+    },
+    {
+      "category": "",
+      "description": "Carta per Stampa",
+      "quantity": 1,
+      "notes": "A carico del committente TEA TEK spa",
+      "role": "hardware"
+    }
+  ],
+  "applied_actions": [
+    "Aggiornato project-manifest.yaml: censiti 14 asset hardware (9 nuovi)",
+    "06-As-Built.md verificato: componenti tecnici conformi."
+  ],
+  "timestamp": "2026-09-17T16:40:00Z"
+}

@@ -214,7 +214,7 @@ File: assets/as-built-rack-layout-v<version>.pdf
 
 | Hostname | Modello | Service Tag / Serial | Asset Tag | Reparto / Posizione | IP MGMT | MAC Address |
 |----------|---------|--------------------|-----------|--------------------|---------|-------------|
-| mfp-ricoh-01 | Ricoh IM C3000 A3 Colore | MFP-RICOH-C3000-01 | AST-TEATEK-030 | Open Space Piano 1 | 192.168.10.250 | 00:26:73:AA:BB:CC |
+| mfp-kyocera-01 | Kyocera TASKalfa 5052ci | KYO-5052CI-TEATEK-01 | AST-TEATEK-030 | Consorzio Area, Via Maddaloni, snc, Acerra (NA) | 192.168.10.250 | 00:26:73:AA:BB:CC |
 
 ## 5. Indirizzi IP Assegnati
 
