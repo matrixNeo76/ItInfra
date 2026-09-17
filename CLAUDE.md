@@ -130,6 +130,7 @@ Claude Code dispone dell'esecuzione di comandi da terminale (`Bash`). Usala atti
 ### Anti-pattern da evitare (Zero-Hallucination Policy)
 
 - ❌ **Non inventare parametri:** divieto assoluto di generare IP, subnet, password o seriali non forniti; usa sempre `<DA-RICHIEDERE>`
+- ❌ **DIVIETO ASSOLUTO DI CHAT LEAKAGE:** Non chiedere MAI e non farsi MAI incollare password o secret in chiaro in chat. Istruire sempre l'utente a eseguire `it vault set <slug> <chiave>` nel terminale con input mascherato.
 - ❌ Non usare `Complete` tool: non stai sviluppando un'app web, stai compilando documentazione
 - ❌ Non creare file README o documentazione aggiuntiva non richiesta
 - ❌ Non eseguire comandi bash per modificare il vault senza esplicita autorizzazione

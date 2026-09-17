@@ -280,7 +280,57 @@ class OKFValidator:
                 except ValueError:
                     result["warnings"].append(f"Formato data 'stale_after' non valido ('{stale_after}'). Atteso YYYY-MM-DD.")
 
+        # 13. Controllo Sintassi Diagrammi Mermaid (Release v0.9.13)
+        mermaid_blocks = re.findall(r'```mermaid\s*\n(.*?)```', content, re.DOTALL)
+        result["stats"]["mermaid_diagrams_count"] = len(mermaid_blocks)
+        for m_idx, m_block in enumerate(mermaid_blocks, start=1):
+            m_errs, m_warns = self._validate_mermaid_syntax(m_block)
+            for err in m_errs:
+                result["errors"].append(f"Diagramma Mermaid #{m_idx}: {err}")
+            for warn in m_warns:
+                result["warnings"].append(f"Diagramma Mermaid #{m_idx}: {warn}")
+
         return result
+
+    @staticmethod
+    def _validate_mermaid_syntax(diagram_text: str) -> Tuple[List[str], List[str]]:
+        """Valida la sintassi di base e il bilanciamento parentesi di un blocco Mermaid (Release v0.9.13)."""
+        errors = []
+        warnings = []
+        lines = [line.strip() for line in diagram_text.strip().splitlines() if line.strip() and not line.strip().startswith("%%")]
+        if not lines:
+            warnings.append("[Mermaid] Blocco diagramma vuoto.")
+            return errors, warnings
+
+        header = lines[0].split()[0].lower() if lines[0].split() else ""
+        valid_headers = {
+            "flowchart", "graph", "sequencediagram", "classdiagram", "statediagram",
+            "statediagram-v2", "erdiagram", "journey", "gantt", "pie", "gitgraph",
+            "mindmap", "quadrantchart", "xychart-beta", "block-beta", "packet-beta",
+            "architecture-beta", "timeline", "sankey-beta", "zenuml", "c4context",
+            "c4container", "c4component", "c4dynamic", "c4deployment"
+        }
+        if header not in valid_headers:
+            errors.append(f"[Mermaid] Header diagramma non riconosciuto o assente: '{lines[0]}'. Atteso tipo valido (es. 'flowchart TD', 'graph LR', 'sequenceDiagram').")
+
+        # Bilanciamento parentesi (escludendo commenti)
+        clean_text = "\n".join(lines)
+        open_sq, close_sq = clean_text.count("["), clean_text.count("]")
+        open_pr, close_pr = clean_text.count("("), clean_text.count(")")
+        open_cr, close_cr = clean_text.count("{"), clean_text.count("}")
+
+        if open_sq != close_sq:
+            errors.append(f"[Mermaid] Parentesi quadre sbilanciate: aperte={open_sq}, chiuse={close_sq}.")
+        if open_pr != close_pr:
+            errors.append(f"[Mermaid] Parentesi tonde sbilanciate: aperte={open_pr}, chiuse={close_pr}.")
+        if open_cr != close_cr:
+            errors.append(f"[Mermaid] Parentesi graffe sbilanciate: aperte={open_cr}, chiuse={close_cr}.")
+
+        # Avviso raccomandazione quoting per caratteri speciali
+        if re.search(r'\[[^"\]\n]*\([^\)\n]*\)[^"\]\n]*\]', clean_text):
+            warnings.append("[Mermaid] Rilevate parentesi tonde dentro nodi non quotati. Raccomandato usare apici: id[\"Label (Info)\"].")
+
+        return errors, warnings
 
 def cmd_list_templates(args: argparse.Namespace) -> int:
     repo_root = Path(__file__).resolve().parent.parent
@@ -1570,8 +1620,21 @@ def cmd_vault(args) -> int:
     elif action == "set":
         key = args.key
         val = args.value
-        if val is None:
-            val = getpass.getpass(f"Inserisci il valore per il secret '{key}': ")
+        if val is not None:
+            print(colorize(
+                "⚠️  [SICUREZZA] Attenzione: l'uso del flag '--value' memorizza il secret in chiaro nella shell history.\n"
+                "    Si raccomanda di omettere '--value' (input mascherato getpass) o passare il secret via 'ITINFRA_SECRET_VAL'.",
+                COLOR_YELLOW
+            ))
+        else:
+            env_val = os.environ.get("ITINFRA_SECRET_VAL")
+            if env_val:
+                val = env_val
+            elif not sys.stdin.isatty():
+                val = sys.stdin.read().strip()
+            else:
+                val = getpass.getpass(f"Inserisci il valore per il secret '{key}': ")
+
         if not passphrase:
             passphrase = getpass.getpass("Inserisci la Master Passphrase del Vault: ")
         try:
@@ -1856,6 +1919,29 @@ def cmd_audit_consistency(args) -> int:
             content = md_file.read_text(encoding="utf-8")
         except Exception:
             continue
+
+        # Parsing blocchi canonici strutturati fenced YAML (Release v0.9.13)
+        yaml_blocks = re.findall(r'```yaml:(?:inventory|network|infrastructure)\s*\n(.*?)```', content, re.DOTALL)
+        for y_block in yaml_blocks:
+            try:
+                parsed_block = yaml.safe_load(y_block) if yaml else None
+                if isinstance(parsed_block, dict):
+                    devices = parsed_block.get("devices") or parsed_block.get("hosts") or []
+                    if isinstance(devices, list):
+                        for dev in devices:
+                            if isinstance(dev, dict):
+                                d_ip = dev.get("ip")
+                                d_role = str(dev.get("role") or "").lower()
+                                d_host = str(dev.get("hostname") or "").lower()
+                                d_model = str(dev.get("model") or "").lower()
+                                if d_ip and isinstance(d_ip, str):
+                                    all_found_ips.setdefault(d_ip, []).append((md_file.name, 1))
+                                    if "dc" in d_host or "domain" in d_role or "controller" in d_role:
+                                        dc_ips.setdefault(d_ip, []).append(md_file.name)
+                                    if "sw" in d_host or "switch" in d_role or "crs" in d_model or "core" in d_role:
+                                        switch_ips.setdefault(d_ip, []).append(md_file.name)
+            except Exception:
+                pass
 
         lines = content.splitlines()
         for l_num, line in enumerate(lines, start=1):
@@ -2513,13 +2599,14 @@ def cmd_ui(args: argparse.Namespace) -> int:
     return 0
 
 def cmd_scaffold(args: argparse.Namespace) -> int:
-    """Propaga determinismo dal manifesto ai 10 documenti OKF v0.2 del progetto (Release v0.9.10)."""
+    """Propaga determinismo dal manifesto ai 10 documenti OKF v0.2 del progetto (Release v0.9.10 / v0.9.13)."""
     try:
         from itinfra_scaffold import cmd_scaffold as run_scaffold
     except ImportError:
         import sys
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         from itinfra_scaffold import cmd_scaffold as run_scaffold
+    return run_scaffold(args)
 
 def cmd_reconcile(args: argparse.Namespace) -> int:
     """Handler per la Reverse Reconciliation da As-Built verso il manifesto (Release v0.9.12)."""
@@ -2639,9 +2726,10 @@ version: "0.1.0"
         from itinfra_scaffold import ProjectScaffolder
 
     scaffolder = ProjectScaffolder(repo_root=repo_root)
-    ok, msg, stats = scaffolder.scaffold(slug, dry_run=False, force=False)
+    phase_arg = getattr(args, "phase", "all")
+    ok, msg, stats = scaffolder.scaffold(slug, dry_run=False, force=False, phase=phase_arg)
     if ok:
-        print(colorize(f"  ✓ {stats['files_scaffolded']} documenti OKF v0.2 generati/allineati ({stats['replacements_count']} sostituzioni).", COLOR_GREEN))
+        print(colorize(f"  ✓ {stats['files_scaffolded']} documenti OKF v0.2 generati/allineati (Fase: {stats.get('phase', 'all')}, {stats['replacements_count']} sostituzioni).", COLOR_GREEN))
     else:
         print(colorize(f"  ⚠️ Avviso scaffolding: {msg}", COLOR_YELLOW))
 
@@ -3108,11 +3196,12 @@ def main():
     p_ui.add_argument("--out", default=None, help="Percorso del file HTML di output (opzionale)")
     p_ui.add_argument("--open", action="store_true", help="Apre la dashboard nel browser predefinito")
 
-    # Comando scaffold (Release v0.9.10)
-    p_scaf = subparsers.add_parser("scaffold", help="Propaga automaticamente i dati del manifesto nei 10 documenti OKF v0.2 (Release v0.9.10)")
+    # Comando scaffold (Release v0.9.10 / v0.9.13)
+    p_scaf = subparsers.add_parser("scaffold", help="Propaga automaticamente i dati del manifesto nei documenti OKF v0.2 (Release v0.9.10 / v0.9.13)")
     p_scaf.add_argument("slug", help="Slug del progetto da scaffoldare")
     p_scaf.add_argument("--dry-run", action="store_true", help="Simula lo scaffolding senza scrivere su disco")
     p_scaf.add_argument("--force", action="store_true", help="Forza la riscrittura dei template esistenti")
+    p_scaf.add_argument("--phase", default="all", help="Milestone / Fase di scaffolding: assessment (01), design (01-03), staging (01-05), deployment (01-06), testing (01-07), handover (01-09), all (01-10) [default: all]")
 
     # Comando reconcile (Release v0.9.12)
     p_rec = subparsers.add_parser("reconcile", help="Riconcilia a ritroso le modifiche di 06-As-Built.md nel manifesto di progetto (Release v0.9.12)")
@@ -3128,11 +3217,12 @@ def main():
     p_int.add_argument("--block", choices=["scope", "network", "compute", "security", "atp"], help="Seleziona il blocco tematico attivo")
     p_int.add_argument("--set", nargs="+", help="Salva una o più risposte nel formato chiave=valore")
 
-    # Comando start (Release v0.9.11)
-    p_start = subparsers.add_parser("start", help="Avvia l'onboarding completo del progetto (init + scaffold + ui) o mostra le opzioni di avvio (Release v0.9.11)")
+    # Comando start (Release v0.9.11 / v0.9.13)
+    p_start = subparsers.add_parser("start", help="Avvia l'onboarding completo del progetto (init + scaffold + ui) o mostra le opzioni di avvio (Release v0.9.11 / v0.9.13)")
     p_start.add_argument("slug", nargs="?", default=None, help="Slug del progetto da avviare (opzionale)")
     p_start.add_argument("--client", default=None, help="Nome del cliente (opzionale)")
     p_start.add_argument("--name", default=None, help="Titolo del progetto (opzionale)")
+    p_start.add_argument("--phase", default="all", help="Milestone / Fase di scaffolding iniziale: assessment, design, staging, deployment, testing, handover, all (default: all)")
     p_start.add_argument("--force", action="store_true", help="Forza la creazione anche se esistono progetti con nome simile (Typo Guard)")
     p_start.add_argument("--open", action="store_true", help="Apre la dashboard nel browser predefinito")
 

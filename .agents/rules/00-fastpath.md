@@ -53,3 +53,6 @@ Se l'utente digita uno di questi trigger rapidi, esegui immediatamente con `run_
 - **`"stato <slug>"`** $\rightarrow$ `python scripts/itinfra.py status <slug>`
 - **`"valida <file>"`** $\rightarrow$ `python scripts/itinfra.py validate <file>`
 - **`"test-suite"`** $\rightarrow$ `python scripts/itinfra.py test-suite --no-html`
+
+### 🛑 Regola di Sicurezza: Divieto Chat Leakage
+L'agente AI non deve MAI chiedere, né farsi incollare credenziali o password in chiaro nella chat. Per registrare secret nel vault, istruire sempre l'utente a eseguire `it vault set <slug> <chiave>` direttamente nel terminale host con input mascherato da getpass.

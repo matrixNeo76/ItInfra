@@ -17,6 +17,7 @@ import re
 import json
 import time
 import shutil
+import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
@@ -26,8 +27,8 @@ CONFIG_FILE_NAME = ".itinfra_config.json"
 
 # Regex per rilevare secret in chiaro (non conformi a vault://)
 CLEARTEXT_SECRET_PATTERNS = [
-    re.compile(r'(?:password|secret|token|api_key|priv_key)\s*:\s*["\'](?!vault:\/\/|<DA-RICHIEDERE>|da-richiedere)([^"\']+)["\']', re.IGNORECASE),
-    re.compile(r'(?:password|secret|token|chiave)\s*=\s*["\'](?!vault:\/\/|<DA-RICHIEDERE>|da-richiedere)([^"\']+)["\']', re.IGNORECASE),
+    re.compile(r'(?:password|secret|token|api_key|priv_key)\s*:\s*["\'](?!vault:\/\/|<DA-RICHIEDERE>|da-richiedere|\$|<)([^"\']+)["\']', re.IGNORECASE),
+    re.compile(r'(?:password|secret|token|chiave)\s*=\s*["\'](?!vault:\/\/|<DA-RICHIEDERE>|da-richiedere|\$|<)([^"\']+)["\']', re.IGNORECASE),
 ]
 
 class RemoteShareLock:
@@ -206,6 +207,15 @@ class ProjectPublisher:
         is_valid = (len(errors) == 0)
         return is_valid, errors, warnings
 
+    @staticmethod
+    def _hash_file(path: Path) -> str:
+        """Calcola SHA-256 di un file."""
+        hasher = hashlib.sha256()
+        with open(path, "rb") as f:
+            while chunk := f.read(65536):
+                hasher.update(chunk)
+        return hasher.hexdigest()
+
     def publish_project(
         self,
         slug: str,
@@ -215,7 +225,8 @@ class ProjectPublisher:
         include_vault: bool = False
     ) -> Tuple[bool, str, Dict[str, Any]]:
         """
-        Pubblica in modo atomico il progetto locale su storage centrale con lock distribuito anti-race.
+        Pubblica in modo atomico il progetto locale su storage centrale con lock distribuito anti-race
+        e rilevamento del drift/conflitti da modifiche dirette sulla share.
         """
         dest_share_str = self.get_central_share(target_share)
         dest_share = Path(dest_share_str)
@@ -255,7 +266,7 @@ class ProjectPublisher:
         dest_projects_dir = dest_share / "projects"
         dest_project_slug_dir = dest_projects_dir / slug
 
-        # 3. Protezione da sovrascrittura di progetti remoti approvati
+        # 3. Protezione da sovrascrittura di progetti remoti approvati e Drift Detection
         if dest_project_slug_dir.exists() and not force:
             for remote_md in dest_project_slug_dir.glob("*.md"):
                 try:
@@ -270,6 +281,35 @@ class ProjectPublisher:
                         return False, msg, stats
                 except Exception:
                     pass
+
+            # Rilevamento modifiche non tracciate / Drift sulla share remota (Release v0.9.13)
+            remote_manifest_file = dest_project_slug_dir / ".publish_manifest.json"
+            if remote_manifest_file.exists():
+                try:
+                    with open(remote_manifest_file, "r", encoding="utf-8") as f:
+                        remote_manifest = json.load(f)
+                    recorded_files = remote_manifest.get("files", {})
+                    for rel_str, recorded_sha in recorded_files.items():
+                        r_file = dest_project_slug_dir / rel_str
+                        l_file = self.workspace_root / "projects" / slug / rel_str
+                        if r_file.exists():
+                            curr_remote_sha = self._hash_file(r_file)
+                            if curr_remote_sha != recorded_sha:
+                                curr_local_sha = self._hash_file(l_file) if l_file.exists() else None
+                                if curr_remote_sha != curr_local_sha:
+                                    msg = (
+                                        f"[CONFLITTO REMOTO RILEVATO] Il file '{rel_str}' sulla share remota e' stato "
+                                        f"modificato direttamente al di fuori della pipeline locale!\n"
+                                        f"  SHA remoto attuale: {curr_remote_sha[:10]}\n"
+                                        f"  SHA registrato al publish: {recorded_sha[:10]}\n"
+                                        f"  SHA locale: {curr_local_sha[:10] if curr_local_sha else 'assente'}\n"
+                                        f"Sovrascrivendo la cartella andrebbero perse le modifiche apportate sulla share.\n"
+                                        f"Utilizzare '--force' per forzare la sovrascrittura o riconciliare prima i file."
+                                    )
+                                    stats["status"] = "remote_conflict_detected"
+                                    return False, msg, stats
+                except Exception as e:
+                    warnings.append(f"Impossibile verificare coerenza .publish_manifest.json remoto: {e}")
 
         source_dir = self.workspace_root / "projects" / slug
         files_to_copy = []
@@ -324,6 +364,26 @@ class ProjectPublisher:
                 stg_target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(src_file, stg_target)
 
+            # Genera .publish_manifest.json per tracciare gli hash dei file pubblicati
+            import getpass, socket
+            user_str = "unknown"
+            try:
+                user_str = f"{getpass.getuser()}@{socket.gethostname()}"
+            except Exception:
+                pass
+
+            manifest_data = {
+                "published_at": datetime.now(timezone.utc).isoformat(),
+                "published_by": user_str,
+                "slug": slug,
+                "files": {}
+            }
+            for src_file, rel_path in files_to_copy:
+                manifest_data["files"][str(rel_path).replace("\\", "/")] = self._hash_file(src_file)
+
+            manifest_path = staging_dir / ".publish_manifest.json"
+            manifest_path.write_text(json.dumps(manifest_data, indent=2), encoding="utf-8")
+
             # Trasferimento atomico nello storage definitivo
             dest_project_slug_dir.mkdir(parents=True, exist_ok=True)
             for src_file, rel_path in files_to_copy:
@@ -333,6 +393,12 @@ class ProjectPublisher:
                 shutil.copy2(stg_file, final_target)
                 stats["files_copied"] += 1
                 stats["bytes_copied"] += final_target.stat().st_size
+
+            # Copia anche il manifest di pubblicazione
+            final_manifest = dest_project_slug_dir / ".publish_manifest.json"
+            shutil.copy2(manifest_path, final_manifest)
+            stats["files_copied"] += 1
+            stats["bytes_copied"] += final_manifest.stat().st_size
 
             # Pulizia staging
             shutil.rmtree(staging_dir, ignore_errors=True)

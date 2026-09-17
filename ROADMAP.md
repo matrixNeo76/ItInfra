@@ -442,8 +442,27 @@ timeline
 - [x] **Vault Team Governance & Secure Bundling (`it vault export-bundle / import-bundle`):**
   - Esportazione e importazione cross-workstation di secret cifrati (.vbundle) con passphrase di team (PBKDF2 + AES-256-GCM).
   - Opzione `--include-vault` controllata per la pubblicazione su storage centrale.
-- [x] **Enterprise System Test Suite (MOD-14):**
-  - Collaudo end-to-end su tutti i 14 moduli architetturali con 100% Pass Rate.
+---
+
+### ✅ Release v0.9.13 — Enterprise Integrity, Mermaid Linter, Anti-Leak & Remote Drift Guard (Completato)
+- [x] **Vault Anti-Leak & Policy Enforcement:**
+  - Avviso di sicurezza quando si usa `--value` in CLI per prevenire secret leaks nella cronologia della shell (`.bash_history`, PowerShell History).
+  - Supporto per inserimento secret mascherato tramite getpass interattivo, stdin (`Get-Content secret.txt | it vault set <slug> <key>`) e variabile d'ambiente `ITINFRA_SECRET_VAL`.
+  - Direttiva tassativa `DIVIETO ASSOLUTO CHAT LEAKAGE` integrata nei manuali operativi AI (`AGENTS.md`, `GEMINI.md`, `CLAUDE.md`, `.agents/rules/00-fastpath.md`).
+- [x] **Blocchi Canonici Fenced YAML (`yaml:inventory`, `yaml:network`):**
+  - Supporto prioritario per blocchi strutturati delimitati da ```yaml:inventory e ```yaml:network all'interno dei documenti Markdown.
+  - Parsing deterministico e tipizzato direttamente con PyYAML in `audit-consistency` e `reconcile`, eliminando la fragilità del parsing di tabelle Markdown a espressioni regolari e mantenendo piena leggibilità visiva.
+- [x] **Remote Drift & Conflict Detection su Storage SMB (`it publish <slug>`):**
+  - Generazione atomica di `.publish_manifest.json` con fingerprint crittografico SHA-256 di tutti i file sincronizzati su share centrale.
+  - Verifica preliminare di integrità prima della sovrascrittura: intercettazione di modifiche manuali o non coordinate effettuate direttamente sulla share e blocco preventivo con `[CONFLITTO REMOTO RILEVATO]` per proteggere le modifiche out-of-band a meno di `--force`.
+- [x] **Phased & Milestone Scaffolding (`it scaffold <slug> --phase`):**
+  - Scaffolding selettivo e progressivo dei documenti suddiviso per milestone di progetto: `assessment` (01), `design` (01-03), `staging` (01-05), `deployment` (01-06), `testing` (01-07), `handover` (01-09), `all` (01-10).
+  - Previene il sovraccarico documentale precoce (Day-1 noise) e mantiene pulito il Quality Gate nelle fasi iniziali di assessment e design.
+- [x] **Mermaid Syntax Linter & Structural Validator (`OKFValidator`):**
+  - Analisi sintattica offline-first (Zero dipendenze npm/Node.js) dei blocchi ```mermaid all'interno del linter formale OKF v0.2.
+  - Validazione di 24 tipi di diagramma standard, controllo del bilanciamento di parentesi quadre `[ ]`, tonde `( )` e graffe `{ }`, e raccomandazione quoting per label con caratteri speciali.
+- [x] **Enterprise System Test Suite (MOD-15):**
+  - Collaudo unificato completo con 15 moduli architetturali (15/15 PASS, 100% Pass Rate).
 
 ---
 

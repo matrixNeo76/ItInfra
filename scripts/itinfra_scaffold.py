@@ -51,8 +51,35 @@ class ProjectScaffolder:
         ]
         return difflib.get_close_matches(slug, existing, n=3, cutoff=cutoff)
 
-    def scaffold(self, slug: str, dry_run: bool = False, force: bool = False) -> Tuple[bool, str, Dict[str, Any]]:
-        """Esegue lo scaffolding dei 10 documenti OKF v0.2 per lo slug indicato."""
+    PHASE_MAP = {
+        "1": ["01"],
+        "assessment": ["01"],
+        "2": ["01", "02", "03"],
+        "design": ["01", "02", "03"],
+        "3": ["01", "02", "03", "04", "05"],
+        "staging": ["01", "02", "03", "04", "05"],
+        "procurement": ["01", "02", "03", "04", "05"],
+        "4": ["01", "02", "03", "04", "05", "06"],
+        "deployment": ["01", "02", "03", "04", "05", "06"],
+        "5": ["01", "02", "03", "04", "05", "06", "07"],
+        "testing": ["01", "02", "03", "04", "05", "06", "07"],
+        "commissioning": ["01", "02", "03", "04", "05", "06", "07"],
+        "6": ["01", "02", "03", "04", "05", "06", "07", "08", "09"],
+        "handover": ["01", "02", "03", "04", "05", "06", "07", "08", "09"],
+        "golive": ["01", "02", "03", "04", "05", "06", "07", "08", "09"],
+        "7": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"],
+        "operations": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"],
+        "all": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"],
+    }
+
+    def scaffold(
+        self,
+        slug: str,
+        dry_run: bool = False,
+        force: bool = False,
+        phase: str = "all"
+    ) -> Tuple[bool, str, Dict[str, Any]]:
+        """Esegue lo scaffolding dei documenti OKF v0.2 per lo slug e la fase indicati (Release v0.9.13)."""
         project_dir = self.projects_dir / slug
         manifest_file = project_dir / "project-manifest.yaml"
 
@@ -147,7 +174,7 @@ version: "0.1.0"
         tier1_rto = str(sla.get("tier1_rto") or "")
         tier1_rpo = str(sla.get("tier1_rpo") or "")
 
-        # 3. Mappa dei template standard (1-10)
+        # 3. Mappa dei template standard (1-10) con supporto Phased Scaffolding (Release v0.9.13)
         template_files = sorted([
             f for f in self.templates_dir.glob("*.md")
             if re.match(r"^\d{2}-", f.name) and not f.name.startswith("00-") and not f.name.startswith("99-")
@@ -156,8 +183,20 @@ version: "0.1.0"
         if not template_files:
             return False, f"Nessun template numerato trovato in: {self.templates_dir}", {}
 
+        phase_key = str(phase).lower().strip() if phase else "all"
+        if phase_key in self.PHASE_MAP:
+            allowed_prefixes = self.PHASE_MAP[phase_key]
+            template_files = [
+                f for f in template_files
+                if any(f.name.startswith(p + "-") for p in allowed_prefixes)
+            ]
+        elif phase_key != "all":
+            valid_phases = ", ".join(list(self.PHASE_MAP.keys()))
+            return False, f"Fase '{phase}' non valida. Fasi ammesse: {valid_phases}", {}
+
         stats = {
             "slug": slug,
+            "phase": phase_key,
             "auto_initialized": auto_initialized,
             "files_scaffolded": 0,
             "files_skipped": 0,
@@ -332,15 +371,17 @@ version: "0.1.0"
 def cmd_scaffold(args) -> int:
     """Handler CLI per il comando scaffold."""
     scaffolder = ProjectScaffolder()
+    phase = getattr(args, "phase", "all")
     ok, msg, stats = scaffolder.scaffold(
         slug=args.slug.strip().lower(),
         dry_run=getattr(args, "dry_run", False),
-        force=getattr(args, "force", False)
+        force=getattr(args, "force", False),
+        phase=phase
     )
 
     if ok:
         print(colorize("\n" + "=" * 65, COLOR_BOLD + COLOR_GREEN))
-        print(f"  [OK] AUTO-SCAFFOLDING COMPLETATO PER: '{args.slug}'")
+        print(f"  [OK] AUTO-SCAFFOLDING COMPLETATO PER: '{args.slug}' (Fase: {stats.get('phase', 'all')})")
         print("=" * 65)
         if stats.get("auto_initialized"):
             print(colorize(f"  [AUTO-INIT] Progetto '{args.slug}' non presente: manifesto inizializzato automaticamente.", COLOR_CYAN + COLOR_BOLD))
@@ -363,5 +404,6 @@ if __name__ == "__main__":
     parser.add_argument("slug", help="Slug del progetto da scaffoldare")
     parser.add_argument("--dry-run", action="store_true", help="Simula lo scaffolding senza scrivere su disco")
     parser.add_argument("--force", action="store_true", help="Forza la riscrittura dei template esistenti")
+    parser.add_argument("--phase", default="all", help="Milestone / Fase di scaffolding: assessment, design, staging, deployment, testing, handover, all (default: all)")
     args = parser.parse_args()
     sys.exit(cmd_scaffold(args))

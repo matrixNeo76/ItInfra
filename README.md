@@ -182,6 +182,10 @@ python scripts/itinfra.py validate projects/acme-dc/01-RSD-URS.md
 python scripts/itinfra.py ui [--open]
 
 # Reverse Reconciliation inversa (allinea As-Built -> manifesto con Drift Report):
+# Auto-scaffolding deterministico con supporto Phased Milestones (Release v0.9.13):
+python scripts/itinfra.py scaffold acme-dc [--phase assessment|design|staging|deployment|testing|handover|all]
+
+# Reverse Reconciliation automatica da As-Built a Manifesto (Release v0.9.12):
 python scripts/itinfra.py reconcile acme-dc [--dry-run]
 
 # Intervista modulare a checkpoint atomici (anti-saturazione del contesto):
@@ -189,18 +193,19 @@ python scripts/itinfra.py interview acme-dc --status
 python scripts/itinfra.py interview acme-dc --prompt network
 python scripts/itinfra.py interview acme-dc --block network --set dc_ip="10.100.10.10"
 
-# Pubblicazione protetta da Remote Lock atomico su share centrale:
-python scripts/itinfra.py publish acme-dc [--include-vault]
+# Pubblicazione protetta da Remote Lock e Drift Detection crittografico su share centrale (Release v0.9.13):
+python scripts/itinfra.py publish acme-dc [--include-vault] [--force]
 
-# Esegui l'Enterprise Test Suite di collaudo (14 moduli, 100% PASS):
+# Esegui l'Enterprise Test Suite di collaudo (15 moduli, 100% PASS):
 python scripts/itinfra.py test-suite --report-html
 
-# Esegui l'Audit di Coerenza Incrociata & Strict Grounding:
+# Esegui l'Audit di Coerenza Incrociata con Fenced YAML Blocks & Strict Grounding:
 python scripts/itinfra.py audit-consistency acme-dc
 
-# Gestisci il Local Encrypted Secret Vault (AES-256-GCM) e Team Bundling:
+# Gestisci il Secret Vault (AES-256-GCM) con input mascherato anti-leak e Team Bundling:
 python scripts/itinfra.py vault init acme-dc
-python scripts/itinfra.py vault set acme-dc fw/admin --value "SegretoSicuro2026!"
+python scripts/itinfra.py vault set acme-dc fw/admin            # Mascherato con getpass (zero leak)
+Get-Content secret.txt | python scripts/itinfra.py vault set acme-dc fw/admin # Tramite stdin sicuro
 python scripts/itinfra.py vault export-bundle acme-dc --out projects/acme-dc/team.vbundle
 python scripts/itinfra.py vault import-bundle acme-dc --in projects/acme-dc/team.vbundle
 

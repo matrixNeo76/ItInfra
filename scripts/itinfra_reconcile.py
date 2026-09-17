@@ -109,14 +109,56 @@ class ProjectReconciler:
 
         return True, summary_str, drift_report
 
-    def _extract_as_built_info(self, text: str) -> Dict[str, Any]:
+    def _extract_as_built_info(self, text_or_path: Any) -> Dict[str, Any]:
         """Estrae dati tecnici, hardware, deviazioni e IP da 06-As-Built.md."""
+        if isinstance(text_or_path, Path) or hasattr(text_or_path, "read_text"):
+            text = text_or_path.read_text(encoding="utf-8")
+        else:
+            text = str(text_or_path)
+
         info = {
             "deviations": [],
             "hardware": [],
+            "vlans": [],
             "ip_addresses": {},
             "network_entities": {}
         }
+
+        # 0. Parsing prioritario blocchi canonici fenced YAML (Release v0.9.13)
+        yaml_blocks = re.findall(r'```yaml:(?:inventory|network|infrastructure)\s*\n(.*?)```', text, re.DOTALL)
+        for y_block in yaml_blocks:
+            try:
+                parsed = yaml.safe_load(y_block) if yaml else None
+                if isinstance(parsed, dict):
+                    devices = parsed.get("devices") or parsed.get("hosts") or parsed.get("hardware") or []
+                    for dev in devices:
+                        if isinstance(dev, dict):
+                            h = str(dev.get("hostname") or dev.get("name") or "")
+                            m = str(dev.get("model") or "")
+                            s = str(dev.get("serial") or "")
+                            ip = str(dev.get("ip") or dev.get("ip_address") or "")
+                            cat = str(dev.get("category") or dev.get("role") or "Hardware")
+                            if m:
+                                info["hardware"].append({
+                                    "category": cat,
+                                    "hostname": h,
+                                    "model": m,
+                                    "serial": s,
+                                    "ip": ip
+                                })
+                            if "dc" in h.lower() or "domain" in str(dev.get("role", "")).lower():
+                                if ip:
+                                    info["network_entities"]["dc_ip"] = ip
+                            if "sw" in h.lower() or "switch" in str(dev.get("role", "")).lower():
+                                if m:
+                                    info["network_entities"]["core_switch_model"] = m
+
+                    vlans = parsed.get("vlans") or []
+                    for v in vlans:
+                        if isinstance(v, dict):
+                            info["vlans"].append(v)
+            except Exception:
+                pass
 
         # Parsing Deviazioni §3
         dev_table_match = re.search(r'## 3\.\s*Deviazioni dal LLD.*?\n\|.*?\|.*?\n((?:\|.*?\n)+)', text, re.DOTALL)

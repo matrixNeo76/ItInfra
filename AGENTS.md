@@ -136,9 +136,13 @@ Il frontmatter DEVE contenere i **campi canonici OKF v0.2** (riconosciuti dal pa
 - **Lingua**: il documento DEVE essere in italiano (campo `lang: it`), inclusi label, sezioni e istruzioni. Eventuali termini tecnici inglesi (HLD, LLD, MOP, ecc.) restano in inglese.
 - **Nessun emoji** a meno che non sia esplicitamente richiesto dall'utente.
 
-### 4. Gestione delle credenziali
+### 4. Gestione delle credenziali e Direttiva Anti-Leak
 
-**VIETATO inserire password, chiavi API, token o qualsiasi secret in chiaro nel documento.**
+🛑 **DIVIETO ASSOLUTO CHAT LEAKAGE & CLI HISTORY LEAK:**
+- È SEVERAMENTE VIETATO chiedere o consentire all'utente di digitare o incollare password, chiavi API o secret in chiaro all'interno della chat agentica o nei prompt LLM.
+- È SEVERAMENTE VIETATO utilizzare l'argomento CLI `--value "<secret>"` in comandi di terminale pubblici per non esporre le credenziali nella cronologia della shell (`.bash_history` o PowerShell History).
+- Per memorizzare secret nel vault, utilizzare sempre il prompt interattivo mascherato (`it vault set <slug> <key>`), input da standard input (`Get-Content secret.txt | it vault set <slug> <key>`) o la variabile d'ambiente `ITINFRA_SECRET_VAL`.
+- **VIETATO inserire password, chiavi API, token o qualsiasi secret in chiaro nei documenti Markdown.** Usa SEMPRE riferimenti URI `vault://it/projects/<slug>/...` oppure il token `<DA-RICHIEDERE>`.
 
 Usa SEMPRE riferimenti al vault aziendale:
 
@@ -272,6 +276,7 @@ Prima di restituire il documento compilato:
 - ❌ In assenza di un'informazione tecnica, l'UNICO valore ammesso è tassativamente `<DA-RICHIEDERE>`, da registrare nella sezione Open Issues.
 - ❌ Non cambiare la struttura del template (sezioni, tabelle, ordine) senza esplicita richiesta dell'utente.
 - ❌ Non inserire secret in chiaro: usare sempre `vault://it/projects/<slug>/...`.
+- ❌ **DIVIETO ASSOLUTO DI CHAT LEAKAGE:** Non chiedere MAI e non farsi MAI incollare password, chiavi o secret in chiaro in chat. Per registrare credenziali, istruire l'utente a eseguire `it vault set <slug> <chiave>` nel terminale con input mascherato da getpass.
 - ❌ Non mescolare lingue (mantieni l'italiano coerente; termini tecnici inglesi solo se standard).
 - ❌ Non lasciare placeholder generici `<...>` nelle sezioni critiche (requisiti, IP, configurazioni).
 - ❌ Non creare documenti "orfani": ogni documento DEVE avere almeno un `related_docs` e idealmente un `depends_on`.
