@@ -1,0 +1,54 @@
+project_id: roberto-viola
+project_name: Progetto Infrastruttura Roberto-viola
+customer: Studio Legale Avv. Roberto Viola
+lead_architect: System Architect
+owner_team: Network & Infrastructure Engineering
+status: in-planning
+version: 0.1.0
+created_at: '2026-09-15'
+updated_at: '2026-09-17'
+sites:
+- code: HQ-NAP-VIOLA
+  name: Studio Legale Avv. Roberto Viola
+  role: Headquarter & On-Premise AI Server Room
+  location: Via Porta Nolana, 28 - 80142 Napoli (NA)
+hardware_inventory:
+- serial_number: HP-Z6G4-VIOLA-01
+  hostname: srv-viola-01
+  role: Host Hyper-V On-Premise & AI Runtime
+  model: HP Z6 G4 Workstation (2x Xeon Silver 4108, 128GB ECC, 4TB, RTX GPU 16GB)
+- serial_number: SW-GEST-VIOLA-01
+  hostname: sw-lan-01
+  role: Switch Gestito LAN di Studio
+  model: Gigabit Managed Switch 24p
+network_baseline:
+  supernet_ipv4: 10.0.0.0/8
+  lan_office_subnet_ipv4: 192.168.20.0/24
+  supernet_ipv6: 2001:db8:100::/48
+  bgp_asn_internal: 65100
+  bgp_asn_external_primary: 65200
+  dns_servers:
+  - 10.100.10.11
+  - 10.100.10.12
+  ntp_servers:
+  - 10.100.10.21
+  - 10.100.10.22
+  syslog_server: 10.100.20.50
+  vault_secret_prefix: vault://it/projects/acme-milano-dc
+sla_baseline:
+  tier1_rto: 15 minuti
+  tier1_rpo: 0 minuti (RPO zero sincrono)
+  tier2_rto: 4 ore
+  tier2_rpo: 1 ora
+  change_window: Sabato 22:00 - Domenica 06:00 CET
+documents:
+  01-RSD-URS: draft
+  02-HLD: draft
+  03-LLD: draft
+  04-MOP: draft
+  05-Rollback: draft
+  06-As-Built: draft
+  07-ATP: draft
+  08-SOP-Runbook: draft
+  09-Handover-Inventory: draft
+  10-RCA-Troubleshooting: draft
