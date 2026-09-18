@@ -42,6 +42,7 @@ related_docs:
   - "SPEC-21"
   - "SPEC-22"
   - "SPEC-23"
+  - "SPEC-24"
 depends_on: []
 classification: "public"
 retention: "permanent"
@@ -231,6 +232,7 @@ graph TD
 | [`21-SPEC-WORKFLOW-ORCHESTRATION-AND-LIFECYCLE-ASSURANCE.md`](./21-SPEC-WORKFLOW-ORCHESTRATION-AND-LIFECYCLE-ASSURANCE.md) | `specification` | Orchestrazione Workflow a Stati Finiti (FSM), checkpoint atomici, ripresa da errore e CI/CD. |
 | [`22-SPEC-EVENT-DRIVEN-TRIGGER-SYSTEM-AND-ACTION-GATE.md`](./22-SPEC-EVENT-DRIVEN-TRIGGER-SYSTEM-AND-ACTION-GATE.md) | `specification` | Sistema Proattivo a Trigger Event-Driven, append-only event bus e Safe Action Gate (Human-in-the-Loop). |
 | [`23-SPEC-TASSONOMIA-ARCHITETTURALE-INTEGRATA.md`](./23-SPEC-TASSONOMIA-ARCHITETTURALE-INTEGRATA.md) | `concept` | Tassonomia Architetturale Integrata dei 10 concetti (Trigger, Daemon, Automazioni, Hook, Pipeline, Bridge, Workflow, Cognitive Bridge, Agent, Swarm) e matrice di determinismo. |
+| [`24-SPEC-CONFORMITA-ITALIANA-ED-ESTENSIONI.md`](./24-SPEC-CONFORMITA-ITALIANA-ED-ESTENSIONI.md) | `specification` | Presidio di conformità nazionale italiana (P.IVA Luhn, CF omocodie, SDI/IPA, D.Lgs. 231/2002, CCNL ICT) e triade di estensioni ad alto ritorno (Incident-to-Report Bridge, Credit Daemon, Technical Workflows FSM). |
 
 ---
 
