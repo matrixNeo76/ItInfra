@@ -1,0 +1,53 @@
+# ITInfra Project Manifest — Unisped AG S.a.s.
+# Parametri globali condivisi per il ciclo lavorativo IT di Unisped AG S.a.s.
+
+project_id: "unisped-ag-sas"
+project_name: "Infrastruttura ICT, Rete Doganale & Cybersicurezza 231"
+customer: "Unisped AG S.a.s."
+lead_architect: "Eduardo Possumato"
+owner_team: "Aure System Infrastructure & Security Team"
+status: "completed"
+version: "1.0.0"
+created_at: "2025-08-20"
+updated_at: "2026-09-18"
+
+# Siti e sedi coinvolti
+sites:
+  - code: "HQ-NAP"
+    name: "Sede Operativa e Doganale Unisped AG S.a.s."
+    role: "Primary HQ"
+    location: "Via San Nicola alla Dogana, 9 - 80133 Napoli"
+
+# Baseline di rete condivisa (ereditata in HLD, LLD, MOP, As-Built, IPAM)
+network_baseline:
+  supernet_ipv4: "192.168.10.0/24"
+  gateway_ip: "192.168.10.1"
+  core_firewall_model: "Fortinet FortiGate-60F"
+  domain_controller_ip: "192.168.10.15"
+  active_directory_domain: "unisped.lan"
+  vault_secret_prefix: "vault://it/projects/unisped-ag-sas"
+
+# Baseline hardware e virtualizzazione
+hardware_baseline:
+  hypervisor_host: "Dell PowerEdge R450 Rack 1U"
+  hypervisor_os: "Proxmox VE 8.2 / VMware ESXi 8.0"
+  core_firewall: "Fortinet FortiGate-60F"
+  vm_bastion: "Debian 12 Linux Bastion (192.168.10.15)"
+  vm_exchange: "Microsoft Exchange Server 2019 CU12 (192.168.10.20)"
+  vm_portal: "Apache Tomcat 9.0 Portale Dogana (192.168.10.25)"
+
+# Requisiti di SLA e Operativi
+sla_baseline:
+  tier1_rto: "4 ore"
+  tier1_rpo: "2 ore"
+  change_window: "Sabato 14:00 - 20:00 CET"
+
+# Matrice di avanzamento del ciclo lavorativo a 7 fasi
+documents:
+  01-RSD-URS: "approved"
+  02-HLD: "approved"
+  03-LLD: "approved"
+  04-Network-IPAM: "approved"
+  05-Rollback: "approved"
+  06-As-Built: "approved"
+  07-ATP: "approved"

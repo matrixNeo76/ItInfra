@@ -120,7 +120,7 @@ La produttività si basa sulla sinergia tra due componenti complementari:
 
 | Componente | Ruolo nel Sistema | A cosa risponde | Funzionalità Chiave |
 | :--- | :--- | :--- | :--- |
-| **🎛️ Cruscotto Esecutivo (Generative UI)** | **La Mente Visiva & Telemetria** | *"Cosa c'è e cosa manca?"* | • Matrice a colori dei 10 documenti per cliente (`Approved`, `In-Review`, `Draft`, `Missing`)<br>• Stato della share di rete centrale e diagnostica permessi<br>• Selettore dinamico dei progetti (`demo-aure`, `severino-srl`, ecc.)<br>• Pulsanti Click-to-Action (zero sforzo per ricordare la sintassi CLI) |
+| **🎛️ Cruscotto Esecutivo (Generative UI)** | **La Mente Visiva & Telemetria** | *"Cosa c'è e cosa manca?"* | • Matrice a colori dei 10 documenti per cliente (`Approved`, `In-Review`, `Draft`, `Missing`)<br>• Stato della share di rete centrale e diagnostica permessi<br>• Selettore dinamico dei progetti (`demo-aure`, `severino-srl`, `unisped-ag-sas`, ecc.)<br>• Pulsanti Click-to-Action (zero sforzo per ricordare la sintassi CLI) |
 | **🧠 Assistente AI (Chat Antigravity / Claude / Cursor)** | **Il Braccio Esecutivo & Architetto** | *"Come progettare e compilare?"* | • Intervista guidata a blocchi logici (Scope → Rete → Compute → Sicurezza → ATP)<br>• Politica **Zero-Hallucination**: calcolo IP/VLAN e nessun dato inventato (`<DA-RICHIEDERE>`)<br>• Generazione schemi topologici Mermaid e configurazioni RouterOS/PowerShell<br>• Validazione semantica incrociata e compilazione diretta su disco |
 
 ### 🔄 Il Ciclo di Lavoro Quotidiano

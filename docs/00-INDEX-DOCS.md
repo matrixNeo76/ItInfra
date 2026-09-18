@@ -36,6 +36,8 @@ related_docs:
   - "specification-itinfra-visual-ingestion-v01"
   - "specification-enterprise-document-templates-branding-v01"
   - "SPEC-17"
+  - "SPEC-18"
+  - "SPEC-19"
 depends_on: []
 classification: "public"
 retention: "permanent"
@@ -179,6 +181,8 @@ graph TD
     DOCS --> VIS[15-SPEC-VISUAL-DOCUMENT-INGESTION-OKF.md<br/>Visual Document Ingestion OKF]
     DOCS --> TPL[16-SPEC-ENTERPRISE-DOCUMENT-TEMPLATES-BRANDING.md<br/>Enterprise Document Templates & Branding]
     DOCS --> COG[17-SPEC-UNIFIED-COGNITIVE-MEMORY-BRIDGE.md<br/>Unified Cognitive Memory Bridge]
+    DOCS --> SOTA[18-SPEC-SOTA-PIPELINES-EVOLUTION.md<br/>SOTA Pipelines Evolution Level-2]
+    DOCS --> GAP[19-SPEC-GAP-ANALYSIS-PIPELINE.md<br/>Gap Analysis & Shadow IT Bridge]
     
     CLI -.-> CLI_PY[scripts/itinfra.py]
     GLOBAL -.-> INV_CLI[scripts/itinfra_inventory.py]
@@ -217,6 +221,8 @@ graph TD
 | [`15-SPEC-VISUAL-DOCUMENT-INGESTION-OKF.md`](./15-SPEC-VISUAL-DOCUMENT-INGESTION-OKF.md) | `specification` | Architettura SOTA di ingestione visiva nativa (Pixel-to-Markdown) conforme a OKF v0.2, modularizzazione pacchetti multi-documento e audit deterministico. |
 | [`16-SPEC-ENTERPRISE-DOCUMENT-TEMPLATES-BRANDING.md`](./16-SPEC-ENTERPRISE-DOCUMENT-TEMPLATES-BRANDING.md) | `specification` | Specifica template professionali, brand identity Aure System, vettorializzazione logo SVG e motori di esportazione DOCX, PDF A4 e HTML Zero-CDN. |
 | [`17-SPEC-UNIFIED-COGNITIVE-MEMORY-BRIDGE.md`](./17-SPEC-UNIFIED-COGNITIVE-MEMORY-BRIDGE.md) | `specification` | Specifica del Cognitive Bridge unificato: federazione tra la memoria ibrida L1-L2-L3 di itinfra e il motore auto-correttivo attestato con sigillo crittografico SHA-256. |
+| [`18-SPEC-SOTA-PIPELINES-EVOLUTION.md`](./18-SPEC-SOTA-PIPELINES-EVOLUTION.md) | `specification` | Evoluzione SOTA Level-2 di Settembre 2026: FPA12 PA, CIG/CUP, CAMT.053, Pasqua Gaussiana, sicurezza margini, SNMP v3 USM. |
+| [`19-SPEC-GAP-ANALYSIS-PIPELINE.md`](./19-SPEC-GAP-ANALYSIS-PIPELINE.md) | `specification` | Pipeline di Gap Analysis & Compliance 231 (Art. 24-bis reati informatici), scoring CVSS v4.0 e bridge As-Built per Shadow IT. |
 
 ---
 

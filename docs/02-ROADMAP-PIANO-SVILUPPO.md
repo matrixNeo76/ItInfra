@@ -165,3 +165,9 @@ gantt
 
 
 
+
+### Fase 6: v0.9 SOTA Level-2 & Hub-and-Spoke 231 (Completata — Settembre 2026)
+- [x] **SPEC-18**: Evoluzione SOTA Level-2 interoperabile con `itinfra-business-ops`.
+- [x] **SPEC-19**: Pipeline 10 di Gap Analysis & Compliance D.Lgs. 231/2001 (Art. 24-bis).
+- [x] **Cross-Check As-Built / IPAM Shadow IT**: Bridge deterministico in sola lettura con verifica corrispondenza apparati (zero Shadow IT per `unisped-ag-sas`).
+- [x] **Nuovo Cliente Doganale `unisped-ag-sas`**: Scaffolding documentale con `manifest.yaml`, `00-Overview.okf.md`, `04-Network-IPAM.md`, `06-As-Built.md`.
