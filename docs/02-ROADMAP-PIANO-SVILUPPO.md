@@ -178,3 +178,4 @@ gantt
 - [x] **Git Guard Hooks Multipiattaforma**: Hook pre-commit e pre-push con verifica segreti, schemi YAML e consistenza Hub-and-Spoke.
 - [x] **Mission Control & Proactive Daemons**: Dashboard 360° e monitoraggio proattivo apparati/SLA.
 - [x] **Antigravity Skills Management**: Catalogo e orchestrazione di agenti specializzati con garanzia deterministica.
+- [x] **SPEC-21**: State-Machine Workflow Orchestration & Lifecycle Assurance (Chiusura Mensile, Onboarding-to-Live, Incident-to-Lesson, GitHub Actions CI/CD).

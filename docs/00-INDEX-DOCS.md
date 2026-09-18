@@ -39,6 +39,7 @@ related_docs:
   - "SPEC-18"
   - "SPEC-19"
   - "SPEC-20"
+  - "SPEC-21"
 depends_on: []
 classification: "public"
 retention: "permanent"
