@@ -233,6 +233,7 @@ graph TD
 | [`22-SPEC-EVENT-DRIVEN-TRIGGER-SYSTEM-AND-ACTION-GATE.md`](./22-SPEC-EVENT-DRIVEN-TRIGGER-SYSTEM-AND-ACTION-GATE.md) | `specification` | Sistema Proattivo a Trigger Event-Driven, append-only event bus e Safe Action Gate (Human-in-the-Loop). |
 | [`23-SPEC-TASSONOMIA-ARCHITETTURALE-INTEGRATA.md`](./23-SPEC-TASSONOMIA-ARCHITETTURALE-INTEGRATA.md) | `concept` | Tassonomia Architetturale Integrata dei 10 concetti (Trigger, Daemon, Automazioni, Hook, Pipeline, Bridge, Workflow, Cognitive Bridge, Agent, Swarm) e matrice di determinismo. |
 | [`24-SPEC-CONFORMITA-ITALIANA-ED-ESTENSIONI.md`](./24-SPEC-CONFORMITA-ITALIANA-ED-ESTENSIONI.md) | `specification` | Presidio di conformità nazionale italiana (P.IVA Luhn, CF omocodie, SDI/IPA, D.Lgs. 231/2002, CCNL ICT) e triade di estensioni ad alto ritorno (Incident-to-Report Bridge, Credit Daemon, Technical Workflows FSM). |
+| [`GUIDA-UTENTE-ECOSISTEMA-COMPLETO.okf.md`](./GUIDA-UTENTE-ECOSISTEMA-COMPLETO.okf.md) | `manual` | **Guida Globale Utente dell'Ecosistema Integrato**: manuale funzionale per sistemisti, commerciali e amministrazione che presenta tutte le funzionalità dei due progetti in modo semplice e accessibile. |
 
 ---
 

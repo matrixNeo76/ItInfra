@@ -9,6 +9,8 @@
 >
 > Progettato per essere guidato e compilato da agenti AI (Google Antigravity, Claude Code, Cursor, Windsurf, Copilot) tramite interviste a blocchi, salvato in un knowledge vault con `entities` e `relations` ontologiche, e collaudato programmaticamente con una test suite integrata.
 
+> 📖 **Sei un utente, sistemista o nuovo collaboratore?** Consulta la **[Guida Globale Utente dell'Ecosistema](docs/GUIDA-UTENTE-ECOSISTEMA-COMPLETO.okf.md)** per scoprire come lavorano insieme `itinfra` e `itinfra-business-ops`, tutti i casi d'uso pratici e la guida rapida a 1 clic.
+
 ---
 
 ## 🎯 A chi è rivolto
