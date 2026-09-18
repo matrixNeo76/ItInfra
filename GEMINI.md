@@ -390,3 +390,13 @@ Riepilogo:
 - **Domande FAQ**: `README.md` sezione "Domande frequenti"
 
 Se ti trovi di fronte a un caso non coperto da queste istruzioni, **fermati e chiedi chiarimenti all'utente** invece di improvisare. La tracciabilità e la correttezza tecnica sono più importanti della velocità di compilazione.
+
+
+---
+
+## 🔗 Integrazione Hub-and-Spoke con `itinfra-business-ops` (SPEC-20..24)
+
+1. **Shared Customer Slug**: La cartella `projects/<slug>/` corrisponde esattamente a `clients/<slug>/` nel repository operativo `itinfra-business-ops`.
+2. **Ponte Incident-to-Report (SPEC-24)**: Ogni fascicolo `10-RCA.md` completato genera automaticamente un evento per la fatturazione/scarico SLA straordinario con maggiorazioni CCNL nel repository business.
+3. **Workflow Tecnici FSM (SPEC-24)**: I comandi `it-ops workflow run [dr-drill|firmware-upgrade|hardware-decommissioning-raee] <slug>` eseguono procedure tecniche resilienti a stati finiti conforme a GDPR Art. 32 e D.Lgs. 49/2014.
+4. **Presidio Fiscale Nazionale**: Tutte le anagrafiche sono verificate con controlli formali su Partita IVA (Luhn), Codice Fiscale (omocodie DM 23/12/1976) e canali SDI.

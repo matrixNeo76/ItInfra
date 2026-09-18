@@ -161,3 +161,35 @@ Per soddisfare le policy Zero-Leakage:
 2. **Confinamento Ermetico dei Secret:** La conoscenza condivisa è circoscritta unicamente a vincoli architetturali generici, incompatibilità di apparati note e linee guida di vendor. Tutti i secret rimangono confinati nel `.vault.enc` di ciascun cliente.
 3. **Collaudo Continuo:** Il modulo `MOD-03` e `MOD-07` dell'Enterprise System Test Suite (`scripts/itinfra_test_suite.py`) verifica costantemente l'assenza di leakage crittografico su tutti i file del repository.
 
+
+
+---
+
+## 6. Presidio di Conformità Nazionale Italiana & Workflow Tecnici FSM (SPEC-24)
+
+In conformità ai requisiti cogenti della legislazione italiana e alle migliori pratiche di settore:
+
+### 6.1 Esercitazione Annuale Disaster Recovery (GDPR Art. 32 & D.Lgs. 231/2001)
+- **Base Giuridica**: L'Art. 32, Par. 1 lett. d) del Regolamento UE 2016/679 prescrive una procedura periodica per testare, verificare e valutare regolarmente l'efficacia delle misure tecniche di sicurezza. L'Art. 24-bis del D.Lgs. 231/2001 punisce i delitti informatici e la negligenza nella protezione dei dati aziendali.
+- **Workflow `dr-drill` (5 Step)**:
+  1. `audit-backup-status`: ispezione del catalogo dei salvataggi (NAS immutabile e mirror cloud).
+  2. `staging-restore`: ripristino su sandbox isolata senza interferenze sulla produzione.
+  3. `data-integrity-verification`: controllo checksum crittografico SHA-256 e avvio servizi.
+  4. `rto-rpo-measurement`: rilevazione e calcolo analitico di Recovery Time Objective e Recovery Point Objective effettivi.
+  5. `compliance-certificate-generation`: redazione automatica del Verbale Ufficiale di Esercitazione conforme OKF v0.2 destinato all'Organismo di Vigilanza (OdV) e al DPO.
+
+### 6.2 Aggiornamento Sicuro del Firmware di Rete (Resilienza Operativa)
+- **Workflow `firmware-upgrade` (5 Step)**:
+  1. `preflight-config-backup`: backup della configurazione attiva nel vault cifrato locale.
+  2. `firmware-hash-verification`: controllo dell'impronta hash SHA-256 dell'immagine del produttore.
+  3. `staged-deployment`: applicazione in modalità protetta (*Safe Mode*) con timer di auto-rollback in caso di interruzione del canale di gestione.
+  4. `post-upgrade-smoke-test`: test deterministico delle tabelle di routing, VLAN e tunnel VPN.
+  5. `commit-or-rollback`: conferma dell'aggiornamento o ripristino istantaneo dello stato antecedente.
+
+### 6.3 Dismissione Sicura Hardware & Gestione RAEE (D.Lgs. 49/2014 & Garante Privacy)
+- **Base Giuridica**: Provvedimento del Garante per la Protezione dei Dati Personali del 13 ottobre 2008 (*Sicurezza dei dati nella dismissione di apparati informatici*) e D.Lgs. 49/2014 di attuazione della Direttiva RAEE 2012/19/UE.
+- **Workflow `hardware-decommissioning-raee` (4 Step)**:
+  1. `identify-asset`: individuazione matricola in `06-As-Built.md` e abbinamento a contratti attivi.
+  2. `secure-sanitization`: sovrascrittura certificata conforme allo standard NIST SP 800-88 Rev. 1 (Purge/Clear).
+  3. `topology-and-sla-detach`: rimozione dall'infrastruttura As-Built e stralcio dai contratti commerciali.
+  4. `raee-handover-dossier`: compilazione del Formulario di Identificazione Rifiuti (FIR RAEE Cat. 3 o 4) con codice CER 16 02 14 per il conferimento a centro autorizzato.

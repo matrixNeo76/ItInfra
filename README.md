@@ -60,7 +60,14 @@ ItInfra/
 │   ├── 14-PIPELINE-CREAZIONE-GUIDATA-ANTIGRAVITY-OKF.md ← Pipeline di creazione guidata OKF v0.2 con Antigravity
 │   ├── 15-SPEC-VISUAL-DOCUMENT-INGESTION-OKF.md ← Ingestione visiva SOTA Pixel-to-Markdown e pacchetti OKF
 │   ├── 16-SPEC-ENTERPRISE-DOCUMENT-TEMPLATES-BRANDING.md ← Template aziendali, brand Aure System e rendering DOCX/PDF/HTML
-│   └── 17-SPEC-UNIFIED-COGNITIVE-MEMORY-BRIDGE.md ← Bridge cognitivo federato e auto-correzione cross-repo con itinfra-business-ops
+│   ├── 17-SPEC-UNIFIED-COGNITIVE-MEMORY-BRIDGE.md ← Bridge cognitivo federato e auto-correzione cross-repo con itinfra-business-ops
+│   ├── 18-SPEC-SOTA-PIPELINES-EVOLUTION.md        ← Evoluzione SOTA Level-2 di Settembre 2026 (FPA12 PA, CIG/CUP, CAMT.053, SNMP v3)
+│   ├── 19-SPEC-GAP-ANALYSIS-PIPELINE.md           ← Pipeline Gap Analysis & Compliance 231 (Art. 24-bis reati informatici) e CVSS v4.0
+│   ├── 20-SPEC-MISSION-CONTROL-AND-AUTONOMOUS-SWARM.md ← Mission Control Dashboard 360°, Swarm di Agenti Deterministici e Git Guard Hooks
+│   ├── 21-SPEC-WORKFLOW-ORCHESTRATION-AND-LIFECYCLE-ASSURANCE.md ← Orchestrazione Workflow a Stati Finiti (FSM) con checkpoint atomici
+│   ├── 22-SPEC-EVENT-DRIVEN-TRIGGER-SYSTEM-AND-ACTION-GATE.md ← Sistema Proattivo Trigger Event-Driven e Safe Action Gate
+│   ├── 23-SPEC-TASSONOMIA-ARCHITETTURALE-INTEGRATA.md ← Tassonomia Architetturale Integrata dei 10 concetti e Matrice di Determinismo
+│   └── 24-SPEC-CONFORMITA-ITALIANA-ED-ESTENSIONI.md ← Presidio Conformità Nazionale Italiana (P.IVA, CF, 231/2002, CCNL) e Workflow Tecnici FSM
 │
 ├── projects/                          ← Registro progetti e manifest globali
 │   ├── _schema/                       ← Schema JSON formale del manifest
@@ -83,7 +90,7 @@ ItInfra/
 │   ├── itinfra_scaffold.py            ← Motore di auto-scaffolding atomico con auto-inizializzazione trasparente
 │   ├── itinfra_ui.py                  ← Motore Enterprise Generative UI Dashboard (Zero-CDN)
 │   ├── itinfra_sync.py                ← Motore di sincronizzazione automatica bidirezionale SMB / Git
-│   ├── itinfra_test_suite.py          ← Suite di collaudo unificata (13 moduli) e generatore HTML Zero-CDN
+│   ├── itinfra_test_suite.py          ← Suite di collaudo unificata (16 moduli enterprise) e generatore HTML Zero-CDN
 │   ├── itinfra_inventory.py           ← Motore globale di asset & entity inventory cross-progetto
 │   ├── itinfra_memory.py              ← Gestore della Memoria Locale Ibrida a 3 Livelli, Global Memory e Trust Signals
 │   ├── itinfra_vault.py               ← Motore crittografico locale AES-256-GCM con atomic file locking

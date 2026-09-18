@@ -204,3 +204,7 @@ Al termine dell'indagine, l'agente AI DEVE produrre:
 
 ### D: Il ticket RCA aggiorna automaticamente la documentazione As-Built?
 **R:** L'RCA contiene relazioni ontologiche (`relations`) ed esplicita nella Sezione 9 quali documenti devono essere aggiornati. L'agente o l'operatore applicherà quindi l'aggiornamento a LLD, As-Built e Runbook per chiudere il ciclo CAPA.
+
+
+### D: Cosa accade al rapporto contrattuale e al monte ore del cliente dopo la redazione di un 10-RCA.md?
+**R:** Grazie al ponte cross-repo **SPEC-24 / SPEC-22**, la redazione o aggiornamento di un fascicolo `10-RCA.md` in `itinfra` emette automaticamente l'evento `telemetry.incident.created` verso `itinfra-business-ops`. Il Safe Action Gate propone la generazione immediata della bozza di rapportino straordinario (Pipeline B) con calcolo delle maggiorazioni orarie del **CCNL Metalmeccanico / Terziario ICT** (*notturno +20%, festivo +30%/+50%*) e scarico contestuale dal monte ore del contratto SLA attivo del cliente, garantendo zero mancato fatturato o consumo non tracciato.

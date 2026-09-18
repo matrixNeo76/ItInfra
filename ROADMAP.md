@@ -486,6 +486,26 @@ timeline
 
 ---
 
+
+---
+
+### ✅ Release v0.9.15 — SOTA Level-2, Gap Analysis 231 & Mission Control Swarm (SPEC-18, SPEC-19, SPEC-20) (Completato)
+- [x] **Evoluzione SOTA Level-2 Interoperabile (`SPEC-18`):** fatturazione FPA12 per la Pubblica Amministrazione, tracciabilità CIG/CUP, riconciliazione bancaria CAMT.053, calendario perpetuo con Pasqua Gaussiana e telemetria SNMP v3 USM.
+- [x] **Gap Analysis & Compliance D.Lgs. 231/2001 (`SPEC-19`):** perizia tecnica delitti informatici (Art. 24-bis), calcolo score di conformità, scoring CVSS v4.0 FIRST e bridge As-Built per il rilevamento di Shadow IT.
+- [x] **Mission Control & Autonomous Swarm System (`SPEC-20`):** Cruscotto 360° per stato contratti, ticket e apparati; sciame di 4 agenti deterministici bounded (`audit-231`, `finance-reconciler`, `infrastructure-sentinel`, `contract-guardian`); demoni di background per monitoraggio SLA e consumabili stampanti; Git Guard hooks deterministici pre-commit e pre-push; gestore catalogo 300+ skills con installazione 1-clic.
+
+---
+
+### ✅ Release v0.9.16 — FSM Workflows, Event-Driven Triggers & Conformità Nazionale Italiana (SPEC-21, SPEC-22, SPEC-23, SPEC-24) (Completato)
+- [x] **Orchestrazione Workflows a Stati Finiti (`SPEC-21`):** macchina a stati deterministica (FSM) con checkpoint atomici, ripresa sicura da errori (`resume`), dry-run simulation e test suite continua.
+- [x] **Sistema Proattivo a Trigger & Safe Action Gate (`SPEC-22`):** append-only event bus per eventi di telemetria, scadenze temporali e modifiche As-Built; Safe Action Gate obbligatorio con presidio umano autorizzativo per ogni azione ad impatto economico o contrattuale.
+- [x] **Tassonomia Architetturale Integrata (`SPEC-23`):** formalizzazione della matrice di determinismo dei 10 pattern architetturali (Trigger, Daemon, Automazioni, Hook, Pipeline, Bridge, Workflow, Cognitive Bridge, Agent, Swarm).
+- [x] **Presidio di Conformità Nazionale Italiana & Triade di Estensioni ad Alto Ritorno (`SPEC-24`):**
+  - Validatore deterministico `ItalianComplianceGuard`: Partita IVA con Luhn modificato, Codice Fiscale con tabella omocodie ministeriali DM 23/12/1976 ed enti a 11 cifre, codici canale SDI B2B e IPA per PA.
+  - Ponte cross-repo Incident-to-Report: generazione automatica bozze di rapportino straordinario da disservizi `10-RCA.md` con maggiorazioni tariffarie CCNL ICT e scarico SLA.
+  - Demone Crediti `CreditDaemon`: calcolo interessi di mora ex D.Lgs. 231/2002 (tasso BCE + 8%), indennizzo forfettario € 40,00 (Art. 6) e solleciti graduati a 3 stadi (Cortesia, Mora 231, Diffida ex art. 1219 c.c.).
+  - Workflow Tecnici FSM per itinfra: `dr-drill` (Disaster Recovery annuale ex Art. 32 GDPR / D.Lgs. 231/2001), `firmware-upgrade` (aggiornamento apparati in safe mode con rollback timer) e `hardware-decommissioning-raee` (sanitizzazione NIST 800-88, distacco da As-Built e FIR RAEE ex D.Lgs. 49/2014).
+
 ### 🔮 Release v0.10 — Advanced Topology Engine, Offline Exporters & Automated CI/CD (Pianificato Q1 2027)
 - [ ] **Architettura 100% Offline-First & Zero-Dipendenze (Design Philosophy Confermato):**
   - Mantenimento dell'infrastruttura snella basata su filesystem locale, Python standard e Git/SMB. Nessuna dipendenza da server MCP esterni, demoni o microservizi REST API da manutenere.
