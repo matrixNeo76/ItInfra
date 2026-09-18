@@ -180,3 +180,4 @@ gantt
 - [x] **Antigravity Skills Management**: Catalogo e orchestrazione di agenti specializzati con garanzia deterministica.
 - [x] **SPEC-21**: State-Machine Workflow Orchestration & Lifecycle Assurance (Chiusura Mensile, Onboarding-to-Live, Incident-to-Lesson, GitHub Actions CI/CD).
 - [x] **SPEC-22**: Event-Driven Proactive Trigger System & Safe Action Gate (As-Built Sensors, MPS/SLA Thresholds, Human-in-the-Loop Governance).
+- [x] **SPEC-23**: Tassonomia Architetturale Integrata & Matrice di Determinismo (10 pattern dal rigore matematico 100% all'intelligenza agentica e Swarm).

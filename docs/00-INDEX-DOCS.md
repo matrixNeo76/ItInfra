@@ -41,6 +41,7 @@ related_docs:
   - "SPEC-20"
   - "SPEC-21"
   - "SPEC-22"
+  - "SPEC-23"
 depends_on: []
 classification: "public"
 retention: "permanent"
@@ -226,6 +227,10 @@ graph TD
 | [`17-SPEC-UNIFIED-COGNITIVE-MEMORY-BRIDGE.md`](./17-SPEC-UNIFIED-COGNITIVE-MEMORY-BRIDGE.md) | `specification` | Specifica del Cognitive Bridge unificato: federazione tra la memoria ibrida L1-L2-L3 di itinfra e il motore auto-correttivo attestato con sigillo crittografico SHA-256. |
 | [`18-SPEC-SOTA-PIPELINES-EVOLUTION.md`](./18-SPEC-SOTA-PIPELINES-EVOLUTION.md) | `specification` | Evoluzione SOTA Level-2 di Settembre 2026: FPA12 PA, CIG/CUP, CAMT.053, Pasqua Gaussiana, sicurezza margini, SNMP v3 USM. |
 | [`19-SPEC-GAP-ANALYSIS-PIPELINE.md`](./19-SPEC-GAP-ANALYSIS-PIPELINE.md) | `specification` | Pipeline di Gap Analysis & Compliance 231 (Art. 24-bis reati informatici), scoring CVSS v4.0 e bridge As-Built per Shadow IT. |
+| [`20-SPEC-MISSION-CONTROL-AND-AUTONOMOUS-SWARM.md`](./20-SPEC-MISSION-CONTROL-AND-AUTONOMOUS-SWARM.md) | `specification` | Mission Control Dashboard 360°, Swarm di Agenti Deterministici e Git Guard Pre-Commit/Pre-Push. |
+| [`21-SPEC-WORKFLOW-ORCHESTRATION-AND-LIFECYCLE-ASSURANCE.md`](./21-SPEC-WORKFLOW-ORCHESTRATION-AND-LIFECYCLE-ASSURANCE.md) | `specification` | Orchestrazione Workflow a Stati Finiti (FSM), checkpoint atomici, ripresa da errore e CI/CD. |
+| [`22-SPEC-EVENT-DRIVEN-TRIGGER-SYSTEM-AND-ACTION-GATE.md`](./22-SPEC-EVENT-DRIVEN-TRIGGER-SYSTEM-AND-ACTION-GATE.md) | `specification` | Sistema Proattivo a Trigger Event-Driven, append-only event bus e Safe Action Gate (Human-in-the-Loop). |
+| [`23-SPEC-TASSONOMIA-ARCHITETTURALE-INTEGRATA.md`](./23-SPEC-TASSONOMIA-ARCHITETTURALE-INTEGRATA.md) | `concept` | Tassonomia Architetturale Integrata dei 10 concetti (Trigger, Daemon, Automazioni, Hook, Pipeline, Bridge, Workflow, Cognitive Bridge, Agent, Swarm) e matrice di determinismo. |
 
 ---
 
