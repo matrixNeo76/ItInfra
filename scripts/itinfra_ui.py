@@ -2,10 +2,11 @@
 """
 scripts/itinfra_ui.py
 ---------------------
-Modulo Enterprise Generative UI per Google Antigravity (Release v0.9.10).
+Modulo Enterprise Generative UI per Google Antigravity & ITInfra Suite.
 Genera il Cockpit Esecutivo Sistemistico interattivo, Dynamic Project Switcher,
-Matrice di Stato a 10 Documenti e Pre-Flight Quality Gate Cards
-conforme ai design tokens di Google Antigravity e standard OKF v0.2.
+Matrice di Stato a 10 Documenti, Workflow Tecnici (SPEC-24: dr-drill, firmware-upgrade, raee),
+Pre-Flight Quality Gate Cards e Bridge Hub-and-Spoke con itinfra-business-ops.
+Conforme ai design tokens di Google Antigravity e standard OKF v0.2.
 """
 
 import os
@@ -111,9 +112,9 @@ def render_enterprise_dashboard(
     templates_count: int = 10,
     active_project: Optional[str] = None,
     vault_status: str = "AES-256-GCM (Zero Leak)",
-    test_suite_status: str = "12/12 Pass (100%)"
+    test_suite_status: str = "16/16 Pass (100%)"
 ) -> str:
-    """Genera l'Enterprise Cockpit Dashboard compatto (<460px, zero scroll) con Project Switcher e 10-Doc Matrix."""
+    """Genera l'Enterprise Cockpit Dashboard compatto con Project Switcher, 10-Doc Matrix e Workflow Tecnici SPEC-24."""
     share_label = "Share Online" if share_reachable else "Share Offline"
     pulse_class = "animate-pulse" if share_reachable else ""
 
@@ -137,6 +138,15 @@ def render_enterprise_dashboard(
   <meta charset="UTF-8">
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <style>
+    :root {{
+      --background: #070d1e;
+      --card: #0f1c3f;
+      --foreground: #f8fafc;
+      --muted-foreground: #94a3b8;
+      --border: #223c7c;
+      --primary: #38bdf8;
+    }}
+    body {{ background: transparent; color: var(--foreground); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }}
     .tab-active {{
       background: rgba(14, 165, 233, 0.15) !important;
       color: #38bdf8 !important;
@@ -173,9 +183,9 @@ def render_enterprise_dashboard(
         <div>
           <div class="flex items-center gap-2">
             <h2 class="text-sm font-bold tracking-tight text-sky-400">ITInfra Enterprise Suite</h2>
-            <span class="text-[9px] uppercase font-semibold px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">v0.9.10</span>
+            <span class="text-[9px] uppercase font-semibold px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">v0.9.15 (SPEC-24)</span>
           </div>
-          <p class="text-[10px] text-[var(--muted-foreground)]">Governance OKF v0.2 • Ciclo Lavorativo 7 Fasi</p>
+          <p class="text-[10px] text-[var(--muted-foreground)]">Governance OKF v0.2 • Hub Tecnico Federato a Business Ops</p>
         </div>
       </div>
       
@@ -195,14 +205,17 @@ def render_enterprise_dashboard(
       <button id="btn-tab-phases" onclick="switchTab('tab-phases')" class="flex-1 py-1 px-2 rounded-lg text-xs font-semibold border border-transparent text-[var(--muted-foreground)] transition-all text-center flex items-center justify-center gap-1.5">
         <span>🔄</span> Progetti & 10 Doc
       </button>
+      <button id="btn-tab-tech" onclick="switchTab('tab-tech')" class="flex-1 py-1 px-2 rounded-lg text-xs font-semibold border border-transparent text-[var(--muted-foreground)] transition-all text-center flex items-center justify-center gap-1.5">
+        <span>⚙️</span> Workflow Tecnici
+      </button>
       <button id="btn-tab-kpi" onclick="switchTab('tab-kpi')" class="flex-1 py-1 px-2 rounded-lg text-xs font-semibold border border-transparent text-[var(--muted-foreground)] transition-all text-center flex items-center justify-center gap-1.5">
-        <span>📊</span> Telemetria & KPI
+        <span>📊</span> Telemetria
       </button>
     </div>
 
     <!-- 3. Contenuti Tab -->
 
-    <!-- TAB 1: AZIONI RAPIDE (DEFAULT ACTIVE - CLICK TO COPY) -->
+    <!-- TAB 1: AZIONI RAPIDE -->
     <div id="tab-actions" class="space-y-2">
       <div class="text-[10px] text-[var(--muted-foreground)] flex items-center justify-between px-0.5">
         <span>💡 <em>Clicca su un'azione per copiare il comando negli appunti e incollarlo in chat:</em></span>
@@ -253,16 +266,31 @@ def render_enterprise_dashboard(
         <div onclick="copyCmd('test-suite')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-purple-400/60 bg-[var(--background)] cursor-pointer transition-all">
           <div>
             <div class="text-xs font-semibold flex items-center gap-1"><span>🧪</span> Collaudo Totale</div>
-            <div class="text-[9px] text-[var(--muted-foreground)]">Suite 13 moduli di test</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Suite 16 moduli core</div>
           </div>
           <span class="copy-badge text-[10px] bg-slate-800 text-purple-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">test-suite</span>
+        </div>
+
+        <div onclick="copyCmd('.\\it-ops.cmd ui')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-cyan-400/60 bg-[var(--background)] cursor-pointer transition-all">
+          <div>
+            <div class="text-xs font-semibold flex items-center gap-1"><span>📊</span> Mission Control 360°</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Cockpit Commerciale & SLA</div>
+          </div>
+          <span class="copy-badge text-[10px] bg-slate-800 text-cyan-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">it-ops ui</span>
+        </div>
+
+        <div onclick="copyCmd('.\\it-ops.cmd triggers pending')" class="action-card flex items-center justify-between p-2 rounded-xl border border-[var(--border)] hover:border-rose-400/60 bg-[var(--background)] cursor-pointer transition-all">
+          <div>
+            <div class="text-xs font-semibold flex items-center gap-1"><span>🛡️</span> Safe Action Gate</div>
+            <div class="text-[9px] text-[var(--muted-foreground)]">Presidio Human-in-the-Loop</div>
+          </div>
+          <span class="copy-badge text-[10px] bg-slate-800 text-rose-300 font-mono px-2 py-0.5 rounded border border-slate-700 transition-all">triggers pending</span>
         </div>
       </div>
     </div>
 
     <!-- TAB 2: PROGETTI & MATRICE 10 DOCUMENTI -->
     <div id="tab-phases" class="hidden space-y-2.5">
-      <!-- Project Switcher Pills -->
       <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
         <span class="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase mr-1">Progetto:</span>
         <div id="project-pills-container" class="flex items-center gap-1.5">
@@ -270,7 +298,6 @@ def render_enterprise_dashboard(
         </div>
       </div>
 
-      <!-- Project Info Banner -->
       <div class="bg-[var(--background)] p-2 rounded-xl border border-[var(--border)] flex items-center justify-between text-xs">
         <div>
           <span id="mat-proj-customer" class="font-bold text-sky-300">Caricamento...</span>
@@ -279,13 +306,45 @@ def render_enterprise_dashboard(
         <div id="mat-proj-stats" class="text-[10px] font-mono font-semibold"></div>
       </div>
 
-      <!-- 10 Document Matrix (2x5 Grid) -->
       <div id="matrix-container" class="grid grid-cols-5 gap-1.5 text-center text-[9px]">
         <!-- Injected dynamically by JS -->
       </div>
     </div>
 
-    <!-- TAB 3: TELEMETRIA & KPI -->
+    <!-- TAB 3: WORKFLOW TECNICI (SPEC-24) -->
+    <div id="tab-tech" class="hidden space-y-2">
+      <div class="text-[10px] text-[var(--muted-foreground)] px-0.5">
+        <span>⚙️ <em>Workflow Tecnici Deterministi FSM per l'infrastruttura (SPEC-24):</em></span>
+      </div>
+
+      <div class="space-y-2">
+        <div onclick="copyActiveCmd('dr-drill')" class="action-card p-2.5 rounded-xl border border-[var(--border)] hover:border-sky-400 bg-[var(--background)] cursor-pointer transition-all">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-bold text-sky-400">dr-drill &bull; Disaster Recovery Drill</span>
+            <span class="text-[9px] font-mono bg-sky-500/20 text-sky-300 px-1.5 py-0.5 rounded">GDPR Art. 32 / 231</span>
+          </div>
+          <div class="text-[10px] text-[var(--muted-foreground)]">Verifica periodica backup immutabili, restore sandbox, misura RTO/RPO e verbale OdV.</div>
+        </div>
+
+        <div onclick="copyActiveCmd('firmware')" class="action-card p-2.5 rounded-xl border border-[var(--border)] hover:border-emerald-400 bg-[var(--background)] cursor-pointer transition-all">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-bold text-emerald-400">firmware-upgrade &bull; Canary Upgrade Rollout</span>
+            <span class="text-[9px] font-mono bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">Safe-Mode Rollback</span>
+          </div>
+          <div class="text-[10px] text-[var(--muted-foreground)]">Aggiornamento switch e firewall con snapshot nel Vault, validazione hash e rollback rapido.</div>
+        </div>
+
+        <div onclick="copyActiveCmd('raee')" class="action-card p-2.5 rounded-xl border border-[var(--border)] hover:border-amber-400 bg-[var(--background)] cursor-pointer transition-all">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-bold text-amber-400">hardware-decommissioning &bull; Dismissione RAEE</span>
+            <span class="text-[9px] font-mono bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">NIST 800-88 & FIR</span>
+          </div>
+          <div class="text-[10px] text-[var(--muted-foreground)]">Sanificazione sicura dischi DoD/NIST, distacco dall'As-Built e rilascio formulario FIR RAEE.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: TELEMETRIA & KPI -->
     <div id="tab-kpi" class="hidden space-y-2.5">
       <div class="grid grid-cols-4 gap-2">
         <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
@@ -301,7 +360,7 @@ def render_enterprise_dashboard(
         <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
           <div class="text-[10px] font-medium text-[var(--muted-foreground)]">Test Suite</div>
           <div class="text-base font-bold text-indigo-400 mt-0.5">100% Pass</div>
-          <div class="text-[9px] text-indigo-400 mt-0.5">13 Moduli Core</div>
+          <div class="text-[9px] text-indigo-400 mt-0.5">16 Moduli Core</div>
         </div>
         <div class="bg-[var(--background)] p-2.5 rounded-xl border border-[var(--border)]">
           <div class="text-[10px] font-medium text-[var(--muted-foreground)]">Storage Master</div>
@@ -315,13 +374,13 @@ def render_enterprise_dashboard(
           <span class="text-sky-400">⚡</span>
           <span>Workspace Locale: <strong class="font-mono text-sky-300">C:\\project</strong></span>
         </div>
-        <div class="text-[10px] text-[var(--muted-foreground)]">
-          Strict Grounding • Zero Hallucination
+        <div class="text-[10px] text-emerald-400 font-semibold">
+          Federato Hub-and-Spoke con Business Ops
         </div>
       </div>
     </div>
 
-    <!-- 4. Floating Toast Notification (Click-to-Copy Feedback) -->
+    <!-- 4. Floating Toast Notification -->
     <div id="toast" class="hidden absolute bottom-2 left-1/2 -translate-x-1/2 bg-emerald-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl shadow-2xl border border-emerald-300 flex items-center gap-1.5 z-50 animate-bounce">
       <span>✓</span> <span id="toast-msg">Copiato negli appunti!</span>
     </div>
@@ -339,6 +398,7 @@ def render_enterprise_dashboard(
 
     function renderProjectPills() {{
       const container = document.getElementById("project-pills-container");
+      if (!container) return;
       container.innerHTML = "";
       PROJECTS.forEach(p => {{
         const btn = document.createElement("button");
@@ -354,7 +414,6 @@ def render_enterprise_dashboard(
       currentSlug = slug;
       const proj = PROJECTS.find(p => p.slug === slug) || PROJECTS[0];
 
-      // Update pills
       PROJECTS.forEach(p => {{
         const el = document.getElementById("pill-" + p.slug);
         if (el) {{
@@ -366,19 +425,24 @@ def render_enterprise_dashboard(
         }}
       }});
 
-      // Update Tab 1 buttons & labels
-      document.getElementById("lbl-active-slug").textContent = slug;
-      document.getElementById("btn-copy-pubblica").textContent = "pubblica " + slug;
-      document.getElementById("btn-copy-stato").textContent = "stato " + slug;
-      document.getElementById("btn-copy-scaffold").textContent = "it scaffold " + slug;
+      const lbl = document.getElementById("lbl-active-slug");
+      if (lbl) lbl.textContent = slug;
+      const btnPub = document.getElementById("btn-copy-pubblica");
+      if (btnPub) btnPub.textContent = "pubblica " + slug;
+      const btnStato = document.getElementById("btn-copy-stato");
+      if (btnStato) btnStato.textContent = "stato " + slug;
+      const btnScaffold = document.getElementById("btn-copy-scaffold");
+      if (btnScaffold) btnScaffold.textContent = "it scaffold " + slug;
 
-      // Update Tab 2 info
-      document.getElementById("mat-proj-customer").textContent = proj.customer;
-      document.getElementById("mat-proj-desc").textContent = proj.name;
-      document.getElementById("mat-proj-stats").innerHTML = '<span class="text-emerald-400 font-bold">' + proj.stats.approved + ' Approvati</span> • <span class="text-amber-400">' + proj.stats.in_review + ' In Corso</span> • <span class="text-slate-400">' + proj.stats.missing + ' Mancanti</span>';
+      const cust = document.getElementById("mat-proj-customer");
+      if (cust) cust.textContent = proj.customer;
+      const desc = document.getElementById("mat-proj-desc");
+      if (desc) desc.textContent = proj.name;
+      const stats = document.getElementById("mat-proj-stats");
+      if (stats) stats.innerHTML = '<span class="text-emerald-400 font-bold">' + proj.stats.approved + ' Approvati</span> • <span class="text-amber-400">' + proj.stats.in_review + ' In Corso</span> • <span class="text-slate-400">' + proj.stats.missing + ' Mancanti</span>';
 
-      // Render 10-doc matrix
       const mat = document.getElementById("matrix-container");
+      if (!mat) return;
       mat.innerHTML = "";
       proj.docs.forEach(d => {{
         const card = document.createElement("div");
@@ -409,15 +473,22 @@ def render_enterprise_dashboard(
       if (type === "pubblica") copyCmd("pubblica " + currentSlug);
       else if (type === "stato") copyCmd("stato " + currentSlug);
       else if (type === "scaffold") copyCmd("it scaffold " + currentSlug);
+      else if (type === "dr-drill") copyCmd(".\\it-ops.cmd workflow run dr-drill " + currentSlug);
+      else if (type === "firmware") copyCmd(".\\it-ops.cmd workflow run firmware-upgrade " + currentSlug);
+      else if (type === "raee") copyCmd(".\\it-ops.cmd workflow run hardware-decommissioning-raee " + currentSlug);
     }}
 
     function switchTab(tabId) {{
-      ['tab-actions', 'tab-kpi', 'tab-phases'].forEach(id => {{
-        document.getElementById(id).classList.add('hidden');
-        document.getElementById('btn-' + id).classList.remove('tab-active');
+      ['tab-actions', 'tab-kpi', 'tab-phases', 'tab-tech'].forEach(id => {{
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+        const btn = document.getElementById('btn-' + id);
+        if (btn) btn.classList.remove('tab-active');
       }});
-      document.getElementById(tabId).classList.remove('hidden');
-      document.getElementById('btn-' + tabId).classList.add('tab-active');
+      const target = document.getElementById(tabId);
+      if (target) target.classList.remove('hidden');
+      const targetBtn = document.getElementById('btn-' + tabId);
+      if (targetBtn) targetBtn.classList.add('tab-active');
     }}
 
     function copyCmd(cmd) {{
@@ -462,7 +533,6 @@ def render_enterprise_dashboard(
 </html>"""
     return html.strip()
 
-# Alias per retrocompatibilità
 render_welcome_card = render_enterprise_dashboard
 
 def render_quality_gate_card(
