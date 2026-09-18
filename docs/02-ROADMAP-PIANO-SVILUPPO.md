@@ -171,3 +171,10 @@ gantt
 - [x] **SPEC-19**: Pipeline 10 di Gap Analysis & Compliance D.Lgs. 231/2001 (Art. 24-bis).
 - [x] **Cross-Check As-Built / IPAM Shadow IT**: Bridge deterministico in sola lettura con verifica corrispondenza apparati (zero Shadow IT per `unisped-ag-sas`).
 - [x] **Nuovo Cliente Doganale `unisped-ag-sas`**: Scaffolding documentale con `manifest.yaml`, `00-Overview.okf.md`, `04-Network-IPAM.md`, `06-As-Built.md`.
+
+### Fase 7: v1.0 Mission Control, Deterministic Swarm & Continuous Assurance (SPEC-20) (Completata — Settembre 2026)
+- [x] **SPEC-20**: Mission Control, Bounded Deterministic Swarm & Continuous Assurance System.
+- [x] **Pipeline 11 (`OnboardPipeline`)**: Orchestrazione onboarding unificato e atomico con scaffolding simultaneo del workspace tecnico (`itinfra/projects/<slug>/`) e commerciale (`itinfra-business-ops/clients/<slug>/`), con certificazione immediata di zero-drift.
+- [x] **Git Guard Hooks Multipiattaforma**: Hook pre-commit e pre-push con verifica segreti, schemi YAML e consistenza Hub-and-Spoke.
+- [x] **Mission Control & Proactive Daemons**: Dashboard 360° e monitoraggio proattivo apparati/SLA.
+- [x] **Antigravity Skills Management**: Catalogo e orchestrazione di agenti specializzati con garanzia deterministica.
